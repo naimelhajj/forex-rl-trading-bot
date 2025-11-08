@@ -379,17 +379,19 @@ class DQNAgent:
         """Current number of transitions in replay buffer."""
         return len(self.replay_buffer)
 
-    def select_action(self, state: np.ndarray, explore: bool = True, mask: list = None, eval_mode: bool = False) -> int:
+    def select_action(self, state: np.ndarray, explore: bool = True, mask: list = None, eval_mode: bool = False, env=None) -> int:
         """
         Select action using epsilon-greedy or NoisyNet exploration.
         PATCH #1: Added eval_mode parameter for deterministic evaluation (eps=0, freeze NoisyNet).
         PHASE-2: Use EMA model for evaluation if available.
+        PHASE-2.8e: Added env parameter for soft bias steering.
         
         Args:
             state: Current state
             explore: Whether to use exploration (epsilon-greedy or noisy net)
             mask: Optional boolean mask [HOLD, LONG, SHORT, MOVE_SL_CLOSER]
             eval_mode: If True, use deterministic policy (epsilon=0, freeze noise, use EMA model)
+            env: Optional environment for soft bias computation (Phase 2.8e)
             
         Returns:
             Selected action index
@@ -428,6 +430,14 @@ class DQNAgent:
                 s = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
                 q = eval_net(s).squeeze(0).cpu().numpy()
             
+            # PHASE 2.8e: Apply soft bias if environment provides it (NoisyNet path)
+            if env is not None and hasattr(env, 'get_action_bias'):
+                try:
+                    bias = env.get_action_bias()
+                    q = q + bias
+                except Exception:
+                    pass  # Silently continue if bias computation fails
+            
             # Apply mask if provided
             if mask is not None:
                 for i, ok in enumerate(mask):
@@ -437,18 +447,18 @@ class DQNAgent:
             return int(np.argmax(q))
         else:
             # Epsilon-greedy exploration
-            if explore and not eval_mode and hasattr(self, 'epsilon') and random.random() < eps:
-                # Random exploration but respect mask
-                if mask is not None:
-                    valid_actions = [i for i, ok in enumerate(mask) if ok]
-                    if valid_actions:
-                        return random.choice(valid_actions)
-                return random.randrange(self.action_size)
-            
             # Greedy action selection
             with torch.no_grad():
                 s = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
                 q = eval_net(s).squeeze(0).cpu().numpy()
+            
+            # PHASE 2.8e: Apply soft bias if environment provides it (epsilon-greedy path)
+            if env is not None and hasattr(env, 'get_action_bias'):
+                try:
+                    bias = env.get_action_bias()
+                    q = q + bias
+                except Exception:
+                    pass  # Silently continue if bias computation fails
             
             # Apply mask if provided
             if mask is not None:

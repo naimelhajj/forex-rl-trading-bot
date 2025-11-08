@@ -435,7 +435,7 @@ def evaluate_agent(agent, test_env, config: Config):
     
     done = False
     while not done:
-        action = agent.select_action(state, explore=False)
+        action = agent.select_action(state, explore=False, eval_mode=True, env=test_env)
         next_state, reward, done, info = test_env.step(action)
         state = next_state
         episode_reward += reward

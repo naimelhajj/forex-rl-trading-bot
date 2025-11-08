@@ -215,6 +215,28 @@ class ForexTradingEnv:
         self.context_dim = 23  # Portfolio features
         self.state_size = self.feature_dim * self.stack_n + self.context_dim
         
+        # PHASE 2.8e: Soft bias parameters (loaded from config in reset)
+        self.directional_bias_beta = 0.08
+        self.hold_bias_gamma = 0.05
+        self.bias_check_interval = 10
+        self.bias_margin_low = 0.35
+        self.bias_margin_high = 0.65
+        self.hold_ceiling = 0.80
+        self.circuit_breaker_enabled = True
+        self.circuit_breaker_threshold_low = 0.10
+        self.circuit_breaker_threshold_high = 0.90
+        self.circuit_breaker_lookback = 500
+        self.circuit_breaker_mask_duration = 30
+        
+        # Soft bias tracking (episode-level)
+        self.long_trades = 0
+        self.short_trades = 0
+        self.action_counts = [0, 0, 0, 0]  # [HOLD, LONG, SHORT, MOVE_SL]
+        self.circuit_breaker_active = False
+        self.circuit_breaker_counter = 0
+        self.circuit_breaker_side = None  # 'long' or 'short'
+        self._action_history = []  # Rolling window for circuit-breaker
+        
     def reset(self) -> np.ndarray:
         """
         Reset environment to initial state.
@@ -243,16 +265,17 @@ class ForexTradingEnv:
         self.bars_since_close = 0
         self.last_action = [0, 0, 0, 0]
         
+        # PHASE 2.8e: Reset soft bias tracking
+        self.long_trades = 0
+        self.short_trades = 0
+        self.action_counts = [0, 0, 0, 0]
+        self.circuit_breaker_active = False
+        self.circuit_breaker_counter = 0
+        self.circuit_breaker_side = None
+        self._action_history = []
+        
         # PATCH #2: Reset frame stack
         self._frame_stack = None
-
-        return self._get_state()
-        self.trading_locked = False
-        self.cost_budget_pct = 0.05  # 5% of initial balance
-        # reset churn control state
-        self.bars_in_position = 0
-        self.bars_since_close = 0
-        self.last_action = [0, 0, 0, 0]
 
         return self._get_state()
     
@@ -466,6 +489,9 @@ class ForexTradingEnv:
             done = True
         self.prev_equity = curr
         
+        # PHASE 2.8e: Track action counts for soft bias
+        self.action_counts[action] += 1
+        
         # Update churn control state tracking
         if self.position is not None:
             self.bars_in_position += 1
@@ -484,6 +510,88 @@ class ForexTradingEnv:
         self.last_action[action] = 1
 
         return next_state, reward, done, info
+    
+    def get_action_bias(self) -> np.ndarray:
+        """
+        PHASE 2.8e: Compute soft biases for action selection (steering, not penalties).
+        
+        This method applies symmetric, soft nudges to Q-values at action-selection time
+        to encourage balanced trading without corrupting the reward signal.
+        
+        Returns:
+            np.ndarray: Bias vector [HOLD, LONG, SHORT, MOVE_SL_CLOSER]
+        """
+        bias = np.zeros(4, dtype=np.float32)  # [HOLD, LONG, SHORT, MOVE_SL]
+        
+        # Only apply bias periodically (every bias_check_interval steps)
+        if self.current_step % self.bias_check_interval != 0:
+            return bias
+        
+        # 1. Directional bias (L/S balance)
+        total_trades = self.long_trades + self.short_trades
+        if total_trades >= 10:  # Need minimum history
+            long_ratio = self.long_trades / total_trades
+            
+            # Check if circuit-breaker should trigger (extreme lock-in with hysteresis)
+            if self.circuit_breaker_enabled:
+                # Add current state to history
+                self._action_history.append(('long' if self.position and self.position['type'] == 'long' else 
+                                            'short' if self.position and self.position['type'] == 'short' else 'flat'))
+                
+                # Keep only lookback window
+                if len(self._action_history) > self.circuit_breaker_lookback:
+                    self._action_history = self._action_history[-self.circuit_breaker_lookback:]
+                
+                # Check if we're in extreme territory for sustained period
+                if len(self._action_history) >= self.circuit_breaker_lookback:
+                    long_count = sum(1 for a in self._action_history if a == 'long')
+                    lookback_long_ratio = long_count / len(self._action_history)
+                    
+                    # Trigger circuit-breaker if sustained extreme
+                    if lookback_long_ratio > self.circuit_breaker_threshold_high and not self.circuit_breaker_active:
+                        self.circuit_breaker_active = True
+                        self.circuit_breaker_side = 'long'
+                        self.circuit_breaker_counter = self.circuit_breaker_mask_duration
+                    elif lookback_long_ratio < self.circuit_breaker_threshold_low and not self.circuit_breaker_active:
+                        self.circuit_breaker_active = True
+                        self.circuit_breaker_side = 'short'
+                        self.circuit_breaker_counter = self.circuit_breaker_mask_duration
+            
+            # Apply circuit-breaker if active (hard mask for short duration)
+            if self.circuit_breaker_active and self.circuit_breaker_counter > 0:
+                if self.circuit_breaker_side == 'long':
+                    # Mask LONG heavily, encourage SHORT
+                    bias[1] -= 10.0  # Strong discouragement
+                    bias[2] += 0.5   # Mild encouragement
+                elif self.circuit_breaker_side == 'short':
+                    # Mask SHORT heavily, encourage LONG
+                    bias[2] -= 10.0
+                    bias[1] += 0.5
+                
+                self.circuit_breaker_counter -= 1
+                if self.circuit_breaker_counter <= 0:
+                    self.circuit_breaker_active = False
+                    self.circuit_breaker_side = None
+            
+            # Apply soft directional bias (if not in circuit-breaker mode)
+            elif long_ratio > self.bias_margin_high:  # >65% long
+                # Discourage LONG, encourage SHORT
+                bias[1] -= self.directional_bias_beta
+                bias[2] += self.directional_bias_beta
+            elif long_ratio < self.bias_margin_low:  # <35% long (too many shorts)
+                # Discourage SHORT, encourage LONG
+                bias[2] -= self.directional_bias_beta
+                bias[1] += self.directional_bias_beta
+        
+        # 2. Hold bias (prevent passivity)
+        total_actions = sum(self.action_counts)
+        if total_actions > 50:  # Need minimum history
+            hold_rate = self.action_counts[0] / total_actions
+            if hold_rate > self.hold_ceiling:  # >80% holding
+                # Discourage HOLD
+                bias[0] -= self.hold_bias_gamma
+        
+        return bias
     
     def _portfolio_features(self, current_data: pd.Series) -> np.ndarray:
         """
@@ -768,6 +876,12 @@ class ForexTradingEnv:
                 )
             except Exception:
                 pass
+        
+        # PHASE 2.8e: Track long/short trades for soft bias
+        if side == 'long':
+            self.long_trades += 1
+        elif side == 'short':
+            self.short_trades += 1
 
         # simple survivability/margin check (reduce lots if insufficient margin)
         try:

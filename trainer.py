@@ -320,7 +320,7 @@ class Trainer:
         while not done:
             # SURGICAL PATCH: Get legal action mask and select action
             mask = getattr(self.train_env, 'legal_action_mask', lambda: None)()
-            action = self.agent.select_action(state, explore=True, mask=mask)
+            action = self.agent.select_action(state, explore=True, mask=mask, env=self.train_env)
             
             # DIVERSITY: Hold-streak breaker (training version - mirrors validation logic)
             if action == HOLD_ACTION:
@@ -560,7 +560,7 @@ class Trainer:
                     action = HOLD_ACTION  # Fall back to HOLD if no legal non-HOLD
             else:
                 # Normal greedy action with eval_mode=True
-                action = self.agent.select_action(state, explore=False, mask=mask, eval_mode=True)
+                action = self.agent.select_action(state, explore=False, mask=mask, eval_mode=True, env=self.val_env)
                 
                 # PATCH: Hold-streak breaker (only when not using epsilon)
                 if action == HOLD_ACTION:
