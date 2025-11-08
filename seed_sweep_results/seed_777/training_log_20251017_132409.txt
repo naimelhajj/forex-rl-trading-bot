@@ -1,0 +1,116 @@
+Seed: 777
+Episodes: 50
+Timestamp: 2025-10-17 13:24:09.139794
+
+==================================================
+FOREX RL TRADING BOT
+==================================================
+Mode: train
+
+==================================================
+PREPARING DATA
+==================================================
+
+Generating sample data for 21 pairs: ['EURUSD', 'GBPUSD', 'AUDUSD', 'NZDUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'EURGBP', 'EURJPY', 'EURCHF', 'EURAUD', 'EURCAD', 'GBPJPY', 'GBPCHF', 'GBPAUD', 'GBPCAD', 'AUDJPY', 'AUDCHF', 'AUDCAD', 'CADJPY', 'CADCHF']
+
+Primary trading pair: EURUSD
+Data shape: (10000, 5)
+Date range: 2023-01-01 00:00:00 to 2024-02-21 15:00:00
+
+Computing features...
+Computing currency strengths for majors: ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF']
+Using 51 features:
+  - Base features: 23
+  - Currency strengths: 28
+  - Total: 51
+
+Splitting data...
+
+Computing robust feature scaler from training data...
+  Feature median range: [-0.3172, 50.7034]
+  Feature MAD range: [0.0000, 11.3703]
+
+==================================================
+CREATING ENVIRONMENTS
+==================================================
+
+FX lookup created for 21 pairs (for dynamic pip values)
+
+Environment config:
+  Spread: 0.00015
+  Commission: $7.00
+  Slippage: 0.8 pips
+  Risk/trade: 0.75%
+  ATR SL mult: 2.5
+  TP mult: 2.0
+  Min hold: 8 bars
+  Cooldown: 16 bars
+  Max trades/ep: 120
+  Flip penalty: 0.0005
+  Trade penalty: 0.0
+
+Environments created:
+  State size: 176
+  Action space: 4
+  Initial balance: $1000.0
+
+==================================================
+CREATING AGENT
+==================================================
+
+Agent created:
+  State size: 176
+  Action size: 4
+  Learning rate: 0.0001
+  Learning starts: 1000
+  Update every: 4 steps
+  Grad steps: 2
+  Hidden layers: [256, 256, 128]
+  NoisyNet: True
+  Buffer type: prioritized
+  Weight decay: 1e-6
+
+==================================================
+TRAINING AGENT
+==================================================
+
+Starting training for 50 episodes...
+[PREFILL] Collecting 3000 baseline transitions...
+  Collected 1000/3000 transitions
+  Collected 2000/3000 transitions
+  Collected 3000/3000 transitions
+[PREFILL] Complete. Buffer size: 2994
+[FIRST LEARN] Buffer size: 2994 | Learning starts: 1000
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+Traceback (most recent call last):
+  File "C:\Development\forex_rl_bot\trainer.py", line 468, in validate
+    print(f"[VAL] window {i+1}: {start_time} \u2192 {end_time}  ({hi-lo} bars)")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 18: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Development\forex_rl_bot\main.py", line 572, in <module>
+    main()
+    ~~~~^^
+  File "C:\Development\forex_rl_bot\main.py", line 556, in main
+    history = train_agent(agent, train_env, val_env, config)
+  File "C:\Development\forex_rl_bot\main.py", line 389, in train_agent
+    history = trainer.train(
+        num_episodes=config.training.num_episodes,
+    ...<2 lines>...
+        verbose=True
+    )
+  File "C:\Development\forex_rl_bot\trainer.py", line 696, in train
+    val_stats = self.validate()
+  File "C:\Development\forex_rl_bot\trainer.py", line 470, in validate
+    print(f"[VAL] window {i+1}: idx {lo} \u2192 {hi}  ({hi-lo} bars)")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 22: character maps to <undefined>

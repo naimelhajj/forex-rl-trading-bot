@@ -1,0 +1,394 @@
+Seed: 777
+Episodes: 50
+Timestamp: 2025-10-18 16:08:26.742649
+
+==================================================
+FOREX RL TRADING BOT
+==================================================
+Mode: train
+
+==================================================
+PREPARING DATA
+==================================================
+
+Generating sample data for 21 pairs: ['EURUSD', 'GBPUSD', 'AUDUSD', 'NZDUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'EURGBP', 'EURJPY', 'EURCHF', 'EURAUD', 'EURCAD', 'GBPJPY', 'GBPCHF', 'GBPAUD', 'GBPCAD', 'AUDJPY', 'AUDCHF', 'AUDCAD', 'CADJPY', 'CADCHF']
+
+Primary trading pair: EURUSD
+Data shape: (10000, 5)
+Date range: 2023-01-01 00:00:00 to 2024-02-21 15:00:00
+
+Computing features...
+Computing currency strengths for majors: ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF']
+Using 51 features:
+  - Base features: 23
+  - Currency strengths: 28
+  - Total: 51
+
+Splitting data...
+
+Computing robust feature scaler from training data...
+  Feature median range: [-0.3172, 50.7034]
+  Feature MAD range: [0.0000, 11.3703]
+
+==================================================
+CREATING ENVIRONMENTS
+==================================================
+
+FX lookup created for 21 pairs (for dynamic pip values)
+
+Environment config:
+  Spread: 0.00015
+  Commission: $7.00
+  Slippage: 0.8 pips
+  Risk/trade: 0.75%
+  ATR SL mult: 2.5
+  TP mult: 2.0
+  Min hold: 8 bars
+  Cooldown: 16 bars
+  Max trades/ep: 120
+  Flip penalty: 0.0005
+  Trade penalty: 0.0
+
+Environments created:
+  State size: 176
+  Action space: 4
+  Initial balance: $1000.0
+
+==================================================
+CREATING AGENT
+==================================================
+
+Agent created:
+  State size: 176
+  Action size: 4
+  Learning rate: 0.0001
+  Learning starts: 1000
+  Update every: 4 steps
+  Grad steps: 2
+  Hidden layers: [256, 256, 128]
+  NoisyNet: True
+  Buffer type: prioritized
+  Weight decay: 1e-6
+
+==================================================
+TRAINING AGENT
+==================================================
+
+Starting training for 50 episodes...
+[PREFILL] Collecting 3000 baseline transitions...
+  Collected 1000/3000 transitions
+  Collected 2000/3000 transitions
+  Collected 3000/3000 transitions
+[PREFILL] Complete. Buffer size: 2994
+[FIRST LEARN] Buffer size: 2994 | Learning starts: 1000
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-0.982 | IQR=0.246 | adj=-1.068 | trades=17.0 | mult=1.00 | score=-1.068
+  [BEST] New best fitness (EMA): -1.0683 (raw: -1.0683)
+
+Episode 1/50
+  Train - Reward: -0.08, Equity: $957.87, Trades: 39, Win Rate: 33.33%
+  Val   - Reward: -0.05, Equity: $972.70, Fitness: -1.0683 | Sharpe: -2.81 | CAGR: -26.35%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-0.850 | IQR=0.193 | adj=-0.917 | trades=25.0 | mult=1.00 | score=-0.917
+  [BEST] New best fitness (EMA): -1.0230 (raw: -0.9175)
+
+Episode 2/50
+  Train - Reward: -0.13, Equity: $911.57, Trades: 39, Win Rate: 30.77%
+  Val   - Reward: -0.05, Equity: $969.44, Fitness: -0.9175 | Sharpe: -3.25 | CAGR: -39.73%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-1.680 | IQR=0.006 | adj=-1.683 | trades=23.0 | mult=1.00 | score=-1.683
+
+Episode 3/50
+  Train - Reward: -0.07, Equity: $966.79, Trades: 37, Win Rate: 40.54%
+  Val   - Reward: -0.09, Equity: $933.57, Fitness: -1.6826 | Sharpe: -5.00 | CAGR: -62.75%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-0.145 | IQR=0.058 | adj=-0.166 | trades=12.0 | mult=1.00 | score=-0.166
+  [BEST] New best fitness (EMA): -0.9043 (raw: -0.1656)
+
+Episode 4/50
+  Train - Reward: -0.12, Equity: $919.78, Trades: 41, Win Rate: 29.27%
+  Val   - Reward: -0.03, Equity: $991.97, Fitness: -0.1656 | Sharpe: -1.10 | CAGR: -11.20%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-1.697 | IQR=0.028 | adj=-1.707 | trades=24.0 | mult=1.00 | score=-1.707
+
+Episode 5/50
+  Train - Reward: -0.00, Equity: $1037.17, Trades: 36, Win Rate: 50.00%
+  Val   - Reward: -0.09, Equity: $928.80, Fitness: -1.7068 | Sharpe: -5.00 | CAGR: -63.72%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-1.021 | IQR=0.171 | adj=-1.081 | trades=24.0 | mult=1.00 | score=-1.081
+
+Episode 6/50
+  Train - Reward: -0.09, Equity: $943.99, Trades: 37, Win Rate: 35.14%
+  Val   - Reward: -0.06, Equity: $963.11, Fitness: -1.0806 | Sharpe: -3.48 | CAGR: -45.20%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.7880 (raw: 0.0000)
+
+Episode 7/50
+  Train - Reward: -0.02, Equity: $1016.10, Trades: 31, Win Rate: 51.61%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-1.531 | IQR=0.006 | adj=-1.533 | trades=7.0 | mult=0.75 | score=-1.150
+
+Episode 8/50
+  Train - Reward: -0.06, Equity: $971.08, Trades: 28, Win Rate: 39.29%
+  Val   - Reward: -0.04, Equity: $966.29, Fitness: -1.1498 | Sharpe: -5.00 | CAGR: -41.08%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.6276 (raw: 0.0000)
+
+Episode 9/50
+  Train - Reward: -0.04, Equity: $981.53, Trades: 14, Win Rate: 28.57%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.4393 (raw: 0.0000)
+
+Episode 10/50
+  Train - Reward: -0.04, Equity: $973.10, Trades: 9, Win Rate: 22.22%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.3075 (raw: 0.0000)
+
+Episode 11/50
+  Train - Reward: -0.02, Equity: $1001.49, Trades: 9, Win Rate: 44.44%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.2153 (raw: 0.0000)
+
+Episode 12/50
+  Train - Reward: -0.02, Equity: $987.23, Trades: 7, Win Rate: 28.57%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.1507 (raw: 0.0000)
+
+Episode 13/50
+  Train - Reward: -0.00, Equity: $1008.34, Trades: 4, Win Rate: 50.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.1055 (raw: 0.0000)
+
+Episode 14/50
+  Train - Reward: 0.01, Equity: $1019.53, Trades: 5, Win Rate: 60.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0738 (raw: 0.0000)
+
+Episode 15/50
+  Train - Reward: -0.02, Equity: $992.89, Trades: 6, Win Rate: 33.33%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0517 (raw: 0.0000)
+
+Episode 16/50
+  Train - Reward: -0.01, Equity: $986.21, Trades: 2, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0362 (raw: 0.0000)
+
+Episode 17/50
+  Train - Reward: 0.02, Equity: $1032.53, Trades: 4, Win Rate: 75.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0253 (raw: 0.0000)
+
+Episode 18/50
+  Train - Reward: 0.00, Equity: $1005.07, Trades: 2, Win Rate: 50.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0177 (raw: 0.0000)
+
+Episode 19/50
+  Train - Reward: -0.01, Equity: $986.40, Trades: 2, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0124 (raw: 0.0000)
+
+Episode 20/50
+  Train - Reward: -0.02, Equity: $987.57, Trades: 2, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0087 (raw: 0.0000)
+
+Episode 21/50
+  Train - Reward: -0.01, Equity: $992.18, Trades: 1, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+  [BEST] New best fitness (EMA): -0.0061 (raw: 0.0000)
+
+Episode 22/50
+  Train - Reward: 0.02, Equity: $1022.24, Trades: 2, Win Rate: 100.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=-1.088 | IQR=0.069 | adj=-1.112 | trades=8.0 | mult=0.75 | score=-0.834
+
+Episode 23/50
+  Train - Reward: -0.01, Equity: $992.86, Trades: 1, Win Rate: 0.00%
+  Val   - Reward: -0.03, Equity: $978.79, Fitness: -0.8342 | Sharpe: -3.61 | CAGR: -27.56%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 24/50
+  Train - Reward: -0.01, Equity: $993.02, Trades: 1, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 25/50
+  Train - Reward: -0.01, Equity: $993.65, Trades: 1, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 26/50
+  Train - Reward: -0.01, Equity: $993.08, Trades: 1, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 27/50
+  Train - Reward: -0.01, Equity: $997.56, Trades: 3, Win Rate: 33.33%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 28/50
+  Train - Reward: 0.00, Equity: $1002.97, Trades: 2, Win Rate: 50.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 29/50
+  Train - Reward: -0.02, Equity: $985.91, Trades: 2, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 30/50
+  Train - Reward: 0.00, Equity: $1000.00, Trades: 0, Win Rate: 0.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+Episode 31/50
+  Train - Reward: 0.01, Equity: $1011.50, Trades: 1, Win Rate: 100.00%
+  Val   - Reward: 0.00, Equity: $1000.00, Fitness: 0.0000 | Sharpe: 0.00 | CAGR: 0.00%
+[VAL] 6 passes | window=600 | stride~180 | coverage~1.00x
+[VAL] window 1: 0 to 599  (600 bars)
+[VAL] window 2: 180 to 779  (600 bars)
+[VAL] window 3: 360 to 959  (600 bars)
+[VAL] K=6 overlapping | median fitness=0.000 | IQR=0.000 | adj=0.000 | trades=0.0 | mult=0.00 | score=0.000
+
+[EARLY STOP] Episode 32 (no fitness improvement for 10 validations)
+
+History saved to logs
+Plot saved to logs\training_curves.png
+
+==================================================
+COMPLETED
+==================================================
