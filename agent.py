@@ -373,11 +373,144 @@ class DQNAgent:
         
         # internal step counter
         self._train_step = 0
+        
+        # PHASE 2.8f: Per-step dual-variable controller with dead-zone hysteresis
+        # Action mapping: 0=HOLD, 1=LONG, 2=SHORT, 3=MOVE_SL_CLOSER
+        self.use_dual_controller = kwargs.get('use_dual_controller', True)
+        if self.use_dual_controller:
+            # EWMA proportions
+            self.p_long = 0.5
+            self.p_hold = 0.72
+            # Dual variables (Lagrange multipliers)
+            self.lambda_long = 0.0
+            self.lambda_hold = 0.0
+            # Temperature for entropy governor
+            self.tau = 1.0
+            # Anti-stickiness tracking
+            self.last_action = None
+            self.run_len = 0
+            
+            # Controller parameters (tunable)
+            self.LONG_CENTER = 0.50
+            self.LONG_BAND = 0.10      # acceptable: [0.40, 0.60]
+            self.HOLD_CENTER = 0.72
+            self.HOLD_BAND = 0.07      # acceptable: [0.65, 0.79]
+            self.ALPHA = 1.0 / 64.0    # EWMA window = 64 steps
+            self.K_LONG = 0.8          # proportional gain for long/short balance
+            self.K_HOLD = 0.6          # proportional gain for hold balance
+            self.LAMBDA_MAX = 1.2      # max magnitude of dual variables
+            self.LAMBDA_LEAK = 0.995   # leak factor to prevent wind-up
+            self.H_MIN = 0.95          # entropy floor (bits)
+            self.H_MAX = 1.10          # entropy ceiling (bits)
+            self.TAU_MIN = 0.8
+            self.TAU_MAX = 1.5
+            self.RUNLEN_CAP = 80       # anti-stickiness threshold
 
     @property
     def replay_size(self):
         """Current number of transitions in replay buffer."""
         return len(self.replay_buffer)
+    
+    # PHASE 2.8f: Dual-variable controller methods
+    def _update_ewma(self, a_idx: int):
+        """Update EWMA proportions for controller. Action indices: 0=HOLD, 1=LONG, 2=SHORT, 3=MOVE_SL"""
+        if not self.use_dual_controller:
+            return
+        self.p_long = (1 - self.ALPHA) * self.p_long + self.ALPHA * (1 if a_idx == 1 else 0)
+        self.p_hold = (1 - self.ALPHA) * self.p_hold + self.ALPHA * (1 if a_idx == 0 else 0)
+    
+    def _deadzone_err(self, x: float, center: float, band: float) -> float:
+        """
+        Compute error relative to dead-zone band.
+        Returns 0 if x is inside [center-band, center+band], otherwise returns signed error.
+        """
+        lo, hi = center - band, center + band
+        if x < lo:
+            return x - lo  # negative error
+        if x > hi:
+            return x - hi  # positive error
+        return 0.0  # inside band → no correction
+    
+    def _apply_controller(self, q_values: np.ndarray) -> np.ndarray:
+        """
+        Apply dual-variable controller to Q-values with dead-zone hysteresis.
+        
+        Args:
+            q_values: Raw Q-values [HOLD, LONG, SHORT, MOVE_SL]
+            
+        Returns:
+            Adjusted Q-values after controller nudges
+        """
+        if not self.use_dual_controller:
+            return q_values
+        
+        q = q_values.copy()
+        
+        # 1. LONG/SHORT balance (dual variable on directional bias)
+        e_long = self._deadzone_err(self.p_long, self.LONG_CENTER, self.LONG_BAND)
+        self.lambda_long = np.clip(
+            self.LAMBDA_LEAK * self.lambda_long + self.K_LONG * e_long,
+            -self.LAMBDA_MAX, self.LAMBDA_MAX
+        )
+        # Apply: discourage dominant side, encourage underrepresented side
+        q[1] -= self.lambda_long  # LONG
+        q[2] += self.lambda_long  # SHORT
+        
+        # 2. HOLD balance (dual variable on hold rate)
+        e_hold = self._deadzone_err(self.p_hold, self.HOLD_CENTER, self.HOLD_BAND)
+        self.lambda_hold = np.clip(
+            self.LAMBDA_LEAK * self.lambda_hold + self.K_HOLD * e_hold,
+            -self.LAMBDA_MAX, self.LAMBDA_MAX
+        )
+        # Apply: discourage excessive holding
+        q[0] -= self.lambda_hold  # HOLD
+        
+        # 3. Entropy governor (temperature adjustment)
+        # Compute entropy from Q-values (approximate policy entropy)
+        # Use log-sum-exp trick to prevent overflow
+        q_scaled = q / self.tau
+        q_max = np.max(q_scaled)
+        exp_q = np.exp(q_scaled - q_max)
+        probs = exp_q / (exp_q.sum() + 1e-12)
+        H = -np.sum(probs * np.log2(probs.clip(1e-12, None)))  # entropy in bits
+        
+        if H < self.H_MIN:
+            self.tau = min(self.TAU_MAX, self.tau * 1.05)  # increase temperature → more exploration
+        elif H > self.H_MAX:
+            self.tau = max(self.TAU_MIN, self.tau * 0.95)  # decrease temperature → sharper policy
+        
+        # Apply temperature scaling
+        q = q / self.tau
+        
+        # 4. Anti-stickiness nudge (prevent run-length collapse)
+        if self.run_len > self.RUNLEN_CAP and self.last_action is not None:
+            # Find opposite action
+            if self.last_action == 1:  # was LONG
+                opp = 2  # encourage SHORT
+            elif self.last_action == 2:  # was SHORT
+                opp = 1  # encourage LONG
+            else:
+                opp = 1 if self.last_action == 0 else 0  # encourage LONG if was HOLD, else HOLD
+            
+            q[self.last_action] -= 0.05
+            q[opp] += 0.05
+        
+        return q
+    
+    def _update_controller_state(self, action: int):
+        """Update controller state after action selection."""
+        if not self.use_dual_controller:
+            return
+        
+        # Update run-length tracking
+        if self.last_action == action:
+            self.run_len += 1
+        else:
+            self.run_len = 1
+            self.last_action = action
+        
+        # Update EWMA proportions
+        self._update_ewma(action)
 
     def select_action(self, state: np.ndarray, explore: bool = True, mask: list = None, eval_mode: bool = False, env=None) -> int:
         """
@@ -430,13 +563,9 @@ class DQNAgent:
                 s = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
                 q = eval_net(s).squeeze(0).cpu().numpy()
             
-            # PHASE 2.8e: Apply soft bias if environment provides it (NoisyNet path)
-            if env is not None and hasattr(env, 'get_action_bias'):
-                try:
-                    bias = env.get_action_bias()
-                    q = q + bias
-                except Exception:
-                    pass  # Silently continue if bias computation fails
+            # PHASE 2.8f: Apply dual-variable controller (replaces 2.8e soft bias)
+            if not eval_mode:  # Only apply during training, not evaluation
+                q = self._apply_controller(q)
             
             # Apply mask if provided
             if mask is not None:
@@ -444,7 +573,13 @@ class DQNAgent:
                     if not ok:
                         q[i] = -1e9
             
-            return int(np.argmax(q))
+            action = int(np.argmax(q))
+            
+            # Update controller state
+            if not eval_mode:
+                self._update_controller_state(action)
+            
+            return action
         else:
             # Epsilon-greedy exploration
             # Greedy action selection
@@ -452,13 +587,9 @@ class DQNAgent:
                 s = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
                 q = eval_net(s).squeeze(0).cpu().numpy()
             
-            # PHASE 2.8e: Apply soft bias if environment provides it (epsilon-greedy path)
-            if env is not None and hasattr(env, 'get_action_bias'):
-                try:
-                    bias = env.get_action_bias()
-                    q = q + bias
-                except Exception:
-                    pass  # Silently continue if bias computation fails
+            # PHASE 2.8f: Apply dual-variable controller (replaces 2.8e soft bias)
+            if not eval_mode:  # Only apply during training, not evaluation
+                q = self._apply_controller(q)
             
             # Apply mask if provided
             if mask is not None:
@@ -466,7 +597,26 @@ class DQNAgent:
                     if not ok:
                         q[i] = -1e9
             
-            return int(np.argmax(q))
+            # Epsilon-greedy selection
+            if explore and random.random() < eps:
+                # Explore: choose random action (respect mask)
+                if mask is not None:
+                    valid_actions = [i for i, ok in enumerate(mask) if ok]
+                    if valid_actions:
+                        action = random.choice(valid_actions)
+                    else:
+                        action = int(np.argmax(q))  # Fallback to greedy if all masked
+                else:
+                    action = random.randrange(self.action_size)
+            else:
+                # Exploit: choose best action
+                action = int(np.argmax(q))
+            
+            # Update controller state
+            if not eval_mode:
+                self._update_controller_state(action)
+            
+            return action
 
     def store_transition(self, state, action, reward, next_state, done):
         """
