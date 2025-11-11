@@ -1504,8 +1504,11 @@ class Trainer:
         self.save_history()
         
         # Export extended telemetry if requested
+        print(f"\n[DEBUG] Telemetry mode: {telemetry_mode}, Output dir: {output_dir}")
         if telemetry_mode == 'extended' and output_dir:
             self._export_extended_telemetry(output_dir)
+        elif telemetry_mode == 'extended':
+            print("[TELEMETRY] Extended telemetry requested but no output directory specified")
         
         # Close writer if present
         try:

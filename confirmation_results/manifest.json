@@ -1,0 +1,71 @@
+{
+  "protocol_version": "1.0",
+  "start_time": "2025-11-11T19:55:40.339306",
+  "seeds": [
+    42
+  ],
+  "episodes_per_seed": 2,
+  "total_episodes": 2,
+  "estimated_hours": 2.5,
+  "config_hash": null,
+  "controller_params": {
+    "W": 64,
+    "K_LONG": 0.8,
+    "K_HOLD": 0.6,
+    "LONG_BAND": 0.1,
+    "HOLD_BAND": 0.07,
+    "TAU_MIN": 0.8,
+    "TAU_MAX": 1.5,
+    "H_MIN": 0.95,
+    "H_MAX": 1.1,
+    "LEAK": 0.95,
+    "LAMBDA_CLIP": 1.2
+  },
+  "acceptance_gates": {
+    "1_mean_spr": {
+      "threshold": 0.04,
+      "type": "ge"
+    },
+    "2_std_spr": {
+      "threshold": 0.035,
+      "type": "le"
+    },
+    "3_trail5_median": {
+      "threshold": 0.25,
+      "type": "ge"
+    },
+    "4_positive_seeds": {
+      "threshold": 3,
+      "type": "ge"
+    },
+    "5_long_ratio_inband": {
+      "threshold": 0.7,
+      "type": "ge"
+    },
+    "6_hold_rate_inband": {
+      "threshold": 0.7,
+      "type": "ge"
+    },
+    "7_entropy_inband": {
+      "threshold": 0.8,
+      "type": "ge"
+    },
+    "8_switch_rate_inband": {
+      "threshold": 0.7,
+      "type": "ge"
+    },
+    "9_penalty_rate": {
+      "threshold": 0.1,
+      "type": "le"
+    }
+  },
+  "end_time": "2025-11-11T19:58:56.181552",
+  "total_elapsed_seconds": 195.8370099067688,
+  "seed_results": {
+    "42": {
+      "status": "success",
+      "elapsed_seconds": 195.8370099067688,
+      "output_dir": "confirmation_results\\seed_42"
+    }
+  }
+}
