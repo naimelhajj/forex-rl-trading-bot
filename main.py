@@ -240,11 +240,7 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
         risk_per_trade=config.risk.risk_per_trade,
         atr_mult_sl=config.risk.atr_multiplier,  # Use existing atr_multiplier
         tp_mult=config.risk.tp_multiplier,  # Use existing tp_multiplier
-        fx_lookup=fx_lookup,  # Dynamic pip value conversion
-        # PHASE-2.8d Fix Pack D2: Reward shaping parameters
-        entropy_beta=config.environment.entropy_beta,
-        ls_balance_lambda=config.environment.ls_balance_lambda,
-        hold_balance_lambda=config.environment.hold_balance_lambda
+        fx_lookup=fx_lookup  # Dynamic pip value conversion
     )
     
     print(f"\nEnvironment config:")
@@ -354,7 +350,7 @@ def create_agent(state_size: int, config: Config, train_env=None):
     return agent
 
 
-def train_agent(agent, train_env, val_env, config: Config):
+def train_agent(agent, train_env, val_env, config: Config, telemetry_mode='standard', output_dir=None):
     """
     Train the agent.
     
@@ -363,6 +359,8 @@ def train_agent(agent, train_env, val_env, config: Config):
         train_env: Training environment
         val_env: Validation environment
         config: Configuration object
+        telemetry_mode: 'standard' or 'extended' telemetry logging
+        output_dir: Output directory for results (optional)
         
     Returns:
         Training history
@@ -399,11 +397,17 @@ def train_agent(agent, train_env, val_env, config: Config):
     
     # Train
     print(f"\nStarting training for {config.training.num_episodes} episodes...")
+    print(f"Telemetry mode: {telemetry_mode}")
+    if output_dir:
+        print(f"Output directory: {output_dir}")
+    
     history = trainer.train(
         num_episodes=config.training.num_episodes,
         validate_every=config.training.validate_every,
         save_every=config.training.save_every,
-        verbose=True
+        verbose=True,
+        telemetry_mode=telemetry_mode,
+        output_dir=output_dir
     )
     
     # Plot training curves
@@ -510,6 +514,11 @@ def main():
                        help='Number of training episodes (overrides config)')
     parser.add_argument('--seed', type=int, default=None,
                        help='Random seed for reproducibility (overrides config)')
+    parser.add_argument('--telemetry', type=str, default='standard',
+                       choices=['standard', 'extended'],
+                       help='Telemetry level: standard or extended (for confirmation suite)')
+    parser.add_argument('--output-dir', type=str, default=None,
+                       help='Output directory for results (overrides default)')
     
     args = parser.parse_args()
     
@@ -523,6 +532,15 @@ def main():
     # Override seed if specified
     if args.seed is not None:
         config.random_seed = args.seed
+    
+    # Override output directory if specified
+    if args.output_dir is not None:
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        config.checkpoint_dir = str(output_dir / 'checkpoints')
+        config.log_dir = str(output_dir / 'logs')
+        Path(config.checkpoint_dir).mkdir(parents=True, exist_ok=True)
+        Path(config.log_dir).mkdir(parents=True, exist_ok=True)
     
     # Apply smoke profile for short runs
     if config.SMOKE_LEARN and args.episodes is not None and args.episodes <= 5:
@@ -572,7 +590,9 @@ def main():
     
     # Train or evaluate
     if args.mode in ['train', 'both']:
-        history = train_agent(agent, train_env, val_env, config)
+        history = train_agent(agent, train_env, val_env, config, 
+                             telemetry_mode=args.telemetry,
+                             output_dir=args.output_dir)
     
     if args.mode in ['evaluate', 'both']:
         if args.checkpoint:

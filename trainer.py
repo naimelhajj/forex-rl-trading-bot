@@ -1109,7 +1109,9 @@ class Trainer:
              num_episodes: int,
              validate_every: int = 10,
              save_every: int = 50,
-             verbose: bool = True) -> Dict:
+             verbose: bool = True,
+             telemetry_mode: str = 'standard',
+             output_dir: str = None) -> Dict:
         """
         Train agent for multiple episodes.
         
@@ -1118,6 +1120,8 @@ class Trainer:
             validate_every: Validate every N episodes
             save_every: Save checkpoint every N episodes
             verbose: Print progress
+            telemetry_mode: 'standard' or 'extended' telemetry logging
+            output_dir: Output directory for results (optional)
             
         Returns:
             Dict with training history
@@ -1498,6 +1502,11 @@ class Trainer:
         
         # Save training history
         self.save_history()
+        
+        # Export extended telemetry if requested
+        if telemetry_mode == 'extended' and output_dir:
+            self._export_extended_telemetry(output_dir)
+        
         # Close writer if present
         try:
             if getattr(self, 'writer', None) is not None:
@@ -1638,6 +1647,92 @@ class Trainer:
             
         except ImportError:
             print("Matplotlib not available for plotting")
+    
+    def _export_extended_telemetry(self, output_dir: str):
+        """
+        Export extended telemetry data for confirmation suite analysis.
+        
+        This exports episode-level metrics including controller variables
+        (lambda_long, lambda_hold, tau, H_bits) and behavioral metrics
+        (p_long_smoothed, p_hold_smoothed, run_len_max, switch_rate).
+        
+        Args:
+            output_dir: Directory to save telemetry data
+        """
+        import json
+        from pathlib import Path
+        
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Collect extended telemetry from training history
+        extended_metrics = []
+        
+        for train_stats in self.training_history:
+            episode = train_stats.get('episode', 0)
+            
+            # Get agent controller state (at end of episode)
+            lambda_long = float(getattr(self.agent, 'lambda_long', 0.0))
+            lambda_hold = float(getattr(self.agent, 'lambda_hold', 0.0))
+            tau = float(getattr(self.agent, 'tau', 1.0))
+            H_bits = float(getattr(self.agent, 'H_bits', 1.0))
+            
+            # Calculate behavioral metrics from training stats
+            # These should be collected from agent's tracking during episode
+            p_long = float(getattr(self.agent, 'p_long_smoothed', 0.5))
+            p_hold = float(getattr(self.agent, 'p_hold_smoothed', 0.7))
+            run_len_max = int(getattr(self.agent, 'run_len_max', 0))
+            
+            # Calculate switch rate from action counts if available
+            action_counts = getattr(self.agent, 'action_history', [])
+            if len(action_counts) > 1:
+                switches = sum(1 for i in range(1, len(action_counts)) if action_counts[i] != action_counts[i-1])
+                switch_rate = float(switches / max(len(action_counts), 1))
+            else:
+                switch_rate = 0.0
+            
+            # Get trades and Sharpe proxy from episode stats
+            trades = int(train_stats.get('total_trades', 0))
+            
+            # Use episode reward as SPR proxy (or calculate from equity history if available)
+            episode_reward = float(train_stats.get('episode_reward', 0.0))
+            final_equity = float(train_stats.get('final_equity', 1000.0))
+            initial_equity = 1000.0  # Default from config
+            
+            # Simple Sharpe proxy: (final - initial) / initial
+            SPR = (final_equity - initial_equity) / initial_equity if initial_equity > 0 else 0.0
+            
+            metric = {
+                'episode': int(episode),
+                'p_long_smoothed': p_long,
+                'p_hold_smoothed': p_hold,
+                'lambda_long': lambda_long,
+                'lambda_hold': lambda_hold,
+                'tau': tau,
+                'H_bits': H_bits,
+                'run_len_max': run_len_max,
+                'trades': trades,
+                'SPR': float(SPR),
+                'switch_rate': switch_rate,
+            }
+            
+            extended_metrics.append(metric)
+        
+        # Save to JSON in format expected by analyzer
+        metrics_data = {
+            'episodes': extended_metrics,
+            'config': {
+                'random_seed': int(getattr(self.config, 'random_seed', -1)),
+                'num_episodes': len(extended_metrics),
+            }
+        }
+        
+        telemetry_file = output_path / 'episode_metrics.json'
+        with open(telemetry_file, 'w') as f:
+            json.dump(metrics_data, f, indent=2)
+        
+        print(f"\n[TELEMETRY] Extended telemetry exported to: {telemetry_file}")
+        print(f"[TELEMETRY] {len(extended_metrics)} episode metrics saved")
 
 
 if __name__ == "__main__":
