@@ -290,6 +290,10 @@ class Trainer:
         Returns:
             Dict with episode statistics
         """
+        # Reset episode tracking for telemetry
+        if hasattr(self.agent, 'reset_episode_tracking'):
+            self.agent.reset_episode_tracking()
+        
         # Wire structured logger into environment for trade logging
         if hasattr(self.train_env, 'structured_logger'):
             self.train_env.structured_logger = self.structured_logger
@@ -386,6 +390,11 @@ class Trainer:
             'epsilon': self.agent.epsilon,
             **trade_stats,
         }
+        
+        # Collect extended telemetry if agent supports it
+        if hasattr(self.agent, 'get_episode_telemetry'):
+            telemetry = self.agent.get_episode_telemetry()
+            episode_stats.update(telemetry)
         
         return episode_stats
     
@@ -1674,35 +1683,24 @@ class Trainer:
         for train_stats in self.training_history:
             episode = train_stats.get('episode', 0)
             
-            # Get agent controller state (at end of episode)
-            lambda_long = float(getattr(self.agent, 'lambda_long', 0.0))
-            lambda_hold = float(getattr(self.agent, 'lambda_hold', 0.0))
-            tau = float(getattr(self.agent, 'tau', 1.0))
-            H_bits = float(getattr(self.agent, 'H_bits', 1.0))
+            # Get controller telemetry (collected during episode)
+            p_long = float(train_stats.get('p_long_smoothed', 0.5))
+            p_hold = float(train_stats.get('p_hold_smoothed', 0.7))
+            lambda_long = float(train_stats.get('lambda_long', 0.0))
+            lambda_hold = float(train_stats.get('lambda_hold', 0.0))
+            tau = float(train_stats.get('tau', 1.0))
+            H_bits = float(train_stats.get('H_bits', 1.0))
+            run_len_max = int(train_stats.get('run_len_max', 0))
+            switch_rate = float(train_stats.get('switch_rate', 0.0))
             
-            # Calculate behavioral metrics from training stats
-            # These should be collected from agent's tracking during episode
-            p_long = float(getattr(self.agent, 'p_long_smoothed', 0.5))
-            p_hold = float(getattr(self.agent, 'p_hold_smoothed', 0.7))
-            run_len_max = int(getattr(self.agent, 'run_len_max', 0))
+            # Get trades from episode stats
+            trades = int(train_stats.get('total_trades', train_stats.get('trades', 0)))
             
-            # Calculate switch rate from action counts if available
-            action_counts = getattr(self.agent, 'action_history', [])
-            if len(action_counts) > 1:
-                switches = sum(1 for i in range(1, len(action_counts)) if action_counts[i] != action_counts[i-1])
-                switch_rate = float(switches / max(len(action_counts), 1))
-            else:
-                switch_rate = 0.0
-            
-            # Get trades and Sharpe proxy from episode stats
-            trades = int(train_stats.get('total_trades', 0))
-            
-            # Use episode reward as SPR proxy (or calculate from equity history if available)
-            episode_reward = float(train_stats.get('episode_reward', 0.0))
+            # Calculate SPR from episode data
             final_equity = float(train_stats.get('final_equity', 1000.0))
             initial_equity = 1000.0  # Default from config
             
-            # Simple Sharpe proxy: (final - initial) / initial
+            # Simple return-based score
             SPR = (final_equity - initial_equity) / initial_equity if initial_equity > 0 else 0.0
             
             metric = {

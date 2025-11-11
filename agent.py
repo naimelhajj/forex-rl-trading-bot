@@ -405,6 +405,75 @@ class DQNAgent:
             self.TAU_MIN = 0.8
             self.TAU_MAX = 1.5
             self.RUNLEN_CAP = 80       # anti-stickiness threshold
+        
+        # Episode-level telemetry tracking for confirmation suite
+        self.reset_episode_tracking()
+
+    def reset_episode_tracking(self):
+        """Reset controller state tracking for new episode."""
+        self.action_history_episode = []
+        self.episode_metrics = {
+            'p_long_smoothed': 0.5,
+            'p_hold_smoothed': 0.7,
+            'lambda_long': 0.0,
+            'lambda_hold': 0.0,
+            'tau': 1.0,
+            'H_bits': 1.0,
+            'run_len_max': 0,
+            'switch_rate': 0.0,
+        }
+        # Reset controller state for new episode
+        if self.use_dual_controller:
+            self.p_long = 0.5
+            self.p_hold = 0.72
+            self.lambda_long = 0.0
+            self.lambda_hold = 0.0
+            self.tau = 1.0
+            self.last_action = None
+            self.run_len = 0
+    
+    def get_episode_telemetry(self) -> dict:
+        """Get controller telemetry for current episode."""
+        # Calculate switch rate from action history
+        switches = 0
+        if len(self.action_history_episode) > 1:
+            for i in range(1, len(self.action_history_episode)):
+                if self.action_history_episode[i] != self.action_history_episode[i-1]:
+                    switches += 1
+        switch_rate = switches / max(len(self.action_history_episode), 1)
+        
+        # Calculate max run length
+        run_len_max = 0
+        if self.action_history_episode:
+            current_run = 1
+            max_run = 1
+            for i in range(1, len(self.action_history_episode)):
+                if self.action_history_episode[i] == self.action_history_episode[i-1]:
+                    current_run += 1
+                    max_run = max(max_run, current_run)
+                else:
+                    current_run = 1
+            run_len_max = max_run
+        
+        # Calculate entropy (H_bits) from action distribution
+        if self.action_history_episode:
+            from collections import Counter
+            counts = Counter(self.action_history_episode)
+            probs = [counts[i] / len(self.action_history_episode) for i in range(4)]
+            H_bits = -sum(p * np.log2(p) if p > 0 else 0 for p in probs)
+        else:
+            H_bits = 1.0
+        
+        return {
+            'p_long_smoothed': float(getattr(self, 'p_long', 0.5)),
+            'p_hold_smoothed': float(getattr(self, 'p_hold', 0.7)),
+            'lambda_long': float(getattr(self, 'lambda_long', 0.0)),
+            'lambda_hold': float(getattr(self, 'lambda_hold', 0.0)),
+            'tau': float(getattr(self, 'tau', 1.0)),
+            'H_bits': float(H_bits),
+            'run_len_max': int(run_len_max),
+            'switch_rate': float(switch_rate),
+        }
 
     @property
     def replay_size(self):
@@ -578,6 +647,8 @@ class DQNAgent:
             # Update controller state
             if not eval_mode:
                 self._update_controller_state(action)
+                # Track action for episode telemetry
+                self.action_history_episode.append(action)
             
             return action
         else:
@@ -615,6 +686,8 @@ class DQNAgent:
             # Update controller state
             if not eval_mode:
                 self._update_controller_state(action)
+                # Track action for episode telemetry
+                self.action_history_episode.append(action)
             
             return action
 
