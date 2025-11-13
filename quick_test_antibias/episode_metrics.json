@@ -1,0 +1,138 @@
+{
+  "episodes": [
+    {
+      "episode": 1,
+      "p_long_smoothed": 0.045278294553911844,
+      "p_hold_smoothed": 0.8473162591938709,
+      "lambda_long": -2.0,
+      "lambda_hold": 2.0,
+      "tau": 1.3503656249999998,
+      "H_bits": 0.8598227142117689,
+      "run_len_max": 33,
+      "trades": 45,
+      "SPR": -0.03825610373353391,
+      "switch_rate": 0.168
+    },
+    {
+      "episode": 2,
+      "p_long_smoothed": 0.03314981992611239,
+      "p_hold_smoothed": 0.6890392301360796,
+      "lambda_long": -2.0,
+      "lambda_hold": 0.3985212154438771,
+      "tau": 1.1577697277343744,
+      "H_bits": 1.0086693338068018,
+      "run_len_max": 30,
+      "trades": 43,
+      "SPR": -0.024242179186956946,
+      "switch_rate": 0.203
+    },
+    {
+      "episode": 3,
+      "p_long_smoothed": 0.033102944765284796,
+      "p_hold_smoothed": 0.7329881746887434,
+      "lambda_long": -2.0,
+      "lambda_hold": 0.45399167235522153,
+      "tau": 1.1577697277343744,
+      "H_bits": 0.979495963436711,
+      "run_len_max": 27,
+      "trades": 44,
+      "SPR": 0.0022467233988061252,
+      "switch_rate": 0.221
+    },
+    {
+      "episode": 4,
+      "p_long_smoothed": 0.02673851183743857,
+      "p_hold_smoothed": 0.7968502715958519,
+      "lambda_long": -2.0,
+      "lambda_hold": 0.30602128782130833,
+      "tau": 1.0998812413476555,
+      "H_bits": 1.0268784440645968,
+      "run_len_max": 30,
+      "trades": 43,
+      "SPR": 0.0449359865040235,
+      "switch_rate": 0.208
+    },
+    {
+      "episode": 5,
+      "p_long_smoothed": 0.030686094935172804,
+      "p_hold_smoothed": 0.7903173010473895,
+      "lambda_long": -2.0,
+      "lambda_hold": 0.9210034786063183,
+      "tau": 1.2187049765624995,
+      "H_bits": 0.9698790344252534,
+      "run_len_max": 30,
+      "trades": 44,
+      "SPR": -0.06916463970621556,
+      "switch_rate": 0.192
+    },
+    {
+      "episode": 6,
+      "p_long_smoothed": 0.034525104729881635,
+      "p_hold_smoothed": 0.8001292126963263,
+      "lambda_long": -2.0,
+      "lambda_hold": 1.9384974176623808,
+      "tau": 1.3503656249999998,
+      "H_bits": 0.9501019774880266,
+      "run_len_max": 36,
+      "trades": 44,
+      "SPR": 0.019587672747250963,
+      "switch_rate": 0.195
+    },
+    {
+      "episode": 7,
+      "p_long_smoothed": 0.012490468190368604,
+      "p_hold_smoothed": 0.7969435219202601,
+      "lambda_long": -2.0,
+      "lambda_hold": 1.688552444448257,
+      "tau": 1.3503656249999998,
+      "H_bits": 0.9803619891060897,
+      "run_len_max": 31,
+      "trades": 42,
+      "SPR": -0.010763919593663103,
+      "switch_rate": 0.177
+    },
+    {
+      "episode": 8,
+      "p_long_smoothed": 0.009375224032313192,
+      "p_hold_smoothed": 0.6751057406607469,
+      "lambda_long": -2.0,
+      "lambda_hold": 0.43224190974824306,
+      "tau": 1.1577697277343744,
+      "H_bits": 1.0123409269654327,
+      "run_len_max": 34,
+      "trades": 44,
+      "SPR": 0.051839118842480277,
+      "switch_rate": 0.196
+    },
+    {
+      "episode": 9,
+      "p_long_smoothed": 0.018125476725997194,
+      "p_hold_smoothed": 0.7479394541940544,
+      "lambda_long": -2.0,
+      "lambda_hold": 0.7492981752019927,
+      "tau": 1.2187049765624995,
+      "H_bits": 1.0065067079269296,
+      "run_len_max": 29,
+      "trades": 43,
+      "SPR": 0.016062743001577815,
+      "switch_rate": 0.173
+    },
+    {
+      "episode": 10,
+      "p_long_smoothed": 0.04229437295425829,
+      "p_hold_smoothed": 0.7100845910784612,
+      "lambda_long": -2.0,
+      "lambda_hold": -0.4132056044655387,
+      "tau": 0.9926428203162591,
+      "H_bits": 1.0370581957278393,
+      "run_len_max": 25,
+      "trades": 41,
+      "SPR": -0.028163631197175618,
+      "switch_rate": 0.176
+    }
+  ],
+  "config": {
+    "random_seed": 42,
+    "num_episodes": 10
+  }
+}

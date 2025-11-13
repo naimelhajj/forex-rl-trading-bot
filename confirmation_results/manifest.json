@@ -1,12 +1,16 @@
 {
   "protocol_version": "1.0",
-  "start_time": "2025-11-11T19:55:40.339306",
+  "start_time": "2025-11-11T20:10:07.442758",
   "seeds": [
-    42
+    42,
+    123,
+    456,
+    789,
+    1011
   ],
-  "episodes_per_seed": 2,
-  "total_episodes": 2,
-  "estimated_hours": 2.5,
+  "episodes_per_seed": 200,
+  "total_episodes": 1000,
+  "estimated_hours": 12.5,
   "config_hash": null,
   "controller_params": {
     "W": 64,
@@ -59,13 +63,33 @@
       "type": "le"
     }
   },
-  "end_time": "2025-11-11T19:58:56.181552",
-  "total_elapsed_seconds": 195.8370099067688,
+  "end_time": "2025-11-12T21:46:17.768474",
+  "total_elapsed_seconds": 92170.25474047661,
   "seed_results": {
     "42": {
       "status": "success",
-      "elapsed_seconds": 195.8370099067688,
+      "elapsed_seconds": 9570.906825780869,
       "output_dir": "confirmation_results\\seed_42"
+    },
+    "123": {
+      "status": "success",
+      "elapsed_seconds": 67371.30549383163,
+      "output_dir": "confirmation_results\\seed_123"
+    },
+    "456": {
+      "status": "success",
+      "elapsed_seconds": 9758.617627382278,
+      "output_dir": "confirmation_results\\seed_456"
+    },
+    "789": {
+      "status": "success",
+      "elapsed_seconds": 2920.5668029785156,
+      "output_dir": "confirmation_results\\seed_789"
+    },
+    "1011": {
+      "status": "success",
+      "elapsed_seconds": 2548.857990503311,
+      "output_dir": "confirmation_results\\seed_1011"
     }
   }
 }

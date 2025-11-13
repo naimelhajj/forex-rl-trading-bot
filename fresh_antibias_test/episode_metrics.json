@@ -1,0 +1,138 @@
+{
+  "episodes": [
+    {
+      "episode": 1,
+      "p_long_smoothed": 0.2548839080497223,
+      "p_hold_smoothed": 0.29601952802318865,
+      "lambda_long": -2.0,
+      "lambda_hold": -2.0,
+      "tau": 1.5,
+      "H_bits": 1.558905690136576,
+      "run_len_max": 13,
+      "trades": 89,
+      "SPR": -0.034180534889862994,
+      "switch_rate": 0.547
+    },
+    {
+      "episode": 2,
+      "p_long_smoothed": 0.25076607486557034,
+      "p_hold_smoothed": 0.5563933471671314,
+      "lambda_long": -2.0,
+      "lambda_hold": -2.0,
+      "tau": 1.5,
+      "H_bits": 1.5066216392025138,
+      "run_len_max": 19,
+      "trades": 84,
+      "SPR": -0.05907153460507664,
+      "switch_rate": 0.522
+    },
+    {
+      "episode": 3,
+      "p_long_smoothed": 0.24723804275073605,
+      "p_hold_smoothed": 0.6576321868387367,
+      "lambda_long": -2.0,
+      "lambda_hold": -0.47912818822625597,
+      "tau": 1.5,
+      "H_bits": 1.2937854182624755,
+      "run_len_max": 17,
+      "trades": 82,
+      "SPR": -0.04513129318956885,
+      "switch_rate": 0.55
+    },
+    {
+      "episode": 4,
+      "p_long_smoothed": 0.23579640182587552,
+      "p_hold_smoothed": 0.6665006779179167,
+      "lambda_long": -2.0,
+      "lambda_hold": -0.12191555598365425,
+      "tau": 1.5,
+      "H_bits": 1.1298681355448128,
+      "run_len_max": 25,
+      "trades": 68,
+      "SPR": -0.07809939085798237,
+      "switch_rate": 0.529
+    },
+    {
+      "episode": 5,
+      "p_long_smoothed": 0.2568410763485582,
+      "p_hold_smoothed": 0.6541656151757809,
+      "lambda_long": -2.0,
+      "lambda_hold": -1.4810730890436314,
+      "tau": 1.5,
+      "H_bits": 1.1287559010300625,
+      "run_len_max": 23,
+      "trades": 71,
+      "SPR": -0.059815847809267096,
+      "switch_rate": 0.505
+    },
+    {
+      "episode": 6,
+      "p_long_smoothed": 0.2523924521397141,
+      "p_hold_smoothed": 0.7010038243711756,
+      "lambda_long": -2.0,
+      "lambda_hold": -0.26645094456106466,
+      "tau": 1.5,
+      "H_bits": 1.203856617056872,
+      "run_len_max": 23,
+      "trades": 75,
+      "SPR": -0.04966815282271625,
+      "switch_rate": 0.515
+    },
+    {
+      "episode": 7,
+      "p_long_smoothed": 0.25878718317734917,
+      "p_hold_smoothed": 0.7018203448901176,
+      "lambda_long": -2.0,
+      "lambda_hold": -0.9045942171664907,
+      "tau": 1.5,
+      "H_bits": 1.1640508239249214,
+      "run_len_max": 30,
+      "trades": 58,
+      "SPR": -0.03188388134145941,
+      "switch_rate": 0.477
+    },
+    {
+      "episode": 8,
+      "p_long_smoothed": 0.26040434780568844,
+      "p_hold_smoothed": 0.5671219779826957,
+      "lambda_long": -2.0,
+      "lambda_hold": -2.0,
+      "tau": 1.5,
+      "H_bits": 1.3629051022629515,
+      "run_len_max": 23,
+      "trades": 81,
+      "SPR": -0.05645590810102158,
+      "switch_rate": 0.515
+    },
+    {
+      "episode": 9,
+      "p_long_smoothed": 0.2405005050686782,
+      "p_hold_smoothed": 0.5361044337874757,
+      "lambda_long": -2.0,
+      "lambda_hold": -2.0,
+      "tau": 1.5,
+      "H_bits": 1.3289437850365393,
+      "run_len_max": 23,
+      "trades": 77,
+      "SPR": -0.08104012989114835,
+      "switch_rate": 0.515
+    },
+    {
+      "episode": 10,
+      "p_long_smoothed": 0.2476610660054269,
+      "p_hold_smoothed": 0.5789894230882646,
+      "lambda_long": -2.0,
+      "lambda_hold": -2.0,
+      "tau": 1.5,
+      "H_bits": 1.3596161548943018,
+      "run_len_max": 21,
+      "trades": 79,
+      "SPR": -0.04836399292677265,
+      "switch_rate": 0.513
+    }
+  ],
+  "config": {
+    "random_seed": 999,
+    "num_episodes": 10
+  }
+}
