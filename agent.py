@@ -655,7 +655,7 @@ class DQNAgent:
             # ANTI-BIAS GUARD: Apply LONG exploration floor during warmup episodes
             if (not eval_mode and self.use_dual_controller and 
                 self.current_episode <= self.LONG_FLOOR_EPISODES and
-                self.p_long < 0.10 and random.random() < 0.20):  # 20% chance to enforce floor
+                self.p_long < 0.25 and random.random() < 0.50):  # More aggressive: 50% chance when p_long < 25%
                 # Force a LONG action (if valid)
                 if mask is None or (len(mask) > 1 and mask[1]):
                     action = 1  # LONG action
@@ -706,7 +706,7 @@ class DQNAgent:
             # If p_long is too low and we're in warmup, force some LONG actions
             if (not eval_mode and self.use_dual_controller and 
                 self.current_episode <= self.LONG_FLOOR_EPISODES and
-                self.p_long < 0.10 and random.random() < 0.20):  # 20% chance to enforce floor
+                self.p_long < 0.25 and random.random() < 0.50):  # More aggressive: 50% chance when p_long < 25%
                 # Force a LONG action (if valid)
                 if mask is None or (len(mask) > 1 and mask[1]):
                     action = 1  # LONG action

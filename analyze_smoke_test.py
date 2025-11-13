@@ -4,9 +4,10 @@ Analyze smoke test results for anti-bias fixes
 import json
 import numpy as np
 from pathlib import Path
+import sys
 
-# Load smoke test results
-results_dir = Path('quick_test_antibias')
+# Allow specifying directory as argument, default to fresh test
+results_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('fresh_antibias_test')
 metrics_file = results_dir / 'episode_metrics.json'
 
 if not metrics_file.exists():
