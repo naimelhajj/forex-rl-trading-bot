@@ -354,7 +354,7 @@ class ConfirmationAnalyzer:
         # Save to file if specified
         if output_file:
             output_path = Path(output_file)
-            output_path.write_text(report)
+            output_path.write_text(report, encoding='utf-8')
             print(f"\nReport saved to: {output_path}")
         
         return report

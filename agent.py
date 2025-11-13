@@ -398,8 +398,13 @@ class DQNAgent:
             self.ALPHA = 1.0 / 64.0    # EWMA window = 64 steps
             self.K_LONG = 0.8          # proportional gain for long/short balance
             self.K_HOLD = 0.6          # proportional gain for hold balance
-            self.LAMBDA_MAX = 1.2      # max magnitude of dual variables
+            self.LAMBDA_MAX = 2.0      # max magnitude of dual variables (raised from 1.2 to fix LONG bias)
             self.LAMBDA_LEAK = 0.995   # leak factor to prevent wind-up
+            
+            # Anti-bias exploration guards (temporary, first 60 episodes)
+            self.LONG_FLOOR = 0.15     # minimum LONG action frequency during warmup
+            self.LONG_FLOOR_EPISODES = 60  # episodes to apply LONG floor
+            self.current_episode = 0   # track episode count
             self.H_MIN = 0.95          # entropy floor (bits)
             self.H_MAX = 1.10          # entropy ceiling (bits)
             self.TAU_MIN = 0.8
@@ -412,6 +417,7 @@ class DQNAgent:
     def reset_episode_tracking(self):
         """Reset controller state tracking for new episode."""
         self.action_history_episode = []
+        self.long_entries_episode = 0  # Track actual LONG entries, not just action frequency
         self.episode_metrics = {
             'p_long_smoothed': 0.5,
             'p_hold_smoothed': 0.7,
@@ -431,6 +437,7 @@ class DQNAgent:
             self.tau = 1.0
             self.last_action = None
             self.run_len = 0
+            self.current_episode += 1  # Increment episode counter
     
     def get_episode_telemetry(self) -> dict:
         """Get controller telemetry for current episode."""
@@ -473,6 +480,7 @@ class DQNAgent:
             'H_bits': float(H_bits),
             'run_len_max': int(run_len_max),
             'switch_rate': float(switch_rate),
+            'long_entries': int(getattr(self, 'long_entries_episode', 0)),  # Track actual LONG entries
         }
 
     @property
@@ -644,11 +652,22 @@ class DQNAgent:
             
             action = int(np.argmax(q))
             
+            # ANTI-BIAS GUARD: Apply LONG exploration floor during warmup episodes
+            if (not eval_mode and self.use_dual_controller and 
+                self.current_episode <= self.LONG_FLOOR_EPISODES and
+                self.p_long < 0.10 and random.random() < 0.20):  # 20% chance to enforce floor
+                # Force a LONG action (if valid)
+                if mask is None or (len(mask) > 1 and mask[1]):
+                    action = 1  # LONG action
+            
             # Update controller state
             if not eval_mode:
                 self._update_controller_state(action)
                 # Track action for episode telemetry
                 self.action_history_episode.append(action)
+                # Track LONG entries
+                if action == 1:
+                    self.long_entries_episode += 1
             
             return action
         else:
@@ -683,11 +702,23 @@ class DQNAgent:
                 # Exploit: choose best action
                 action = int(np.argmax(q))
             
+            # ANTI-BIAS GUARD: Apply LONG exploration floor during warmup episodes
+            # If p_long is too low and we're in warmup, force some LONG actions
+            if (not eval_mode and self.use_dual_controller and 
+                self.current_episode <= self.LONG_FLOOR_EPISODES and
+                self.p_long < 0.10 and random.random() < 0.20):  # 20% chance to enforce floor
+                # Force a LONG action (if valid)
+                if mask is None or (len(mask) > 1 and mask[1]):
+                    action = 1  # LONG action
+            
             # Update controller state
             if not eval_mode:
                 self._update_controller_state(action)
                 # Track action for episode telemetry
                 self.action_history_episode.append(action)
+                # Track LONG entries
+                if action == 1:
+                    self.long_entries_episode += 1
             
             return action
 
