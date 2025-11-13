@@ -186,4 +186,4 @@ def compute_symmetry_loss(
 
 
 # Configuration
-SYMMETRY_LOSS_WEIGHT = 0.2  # λ_sym = 0.2 * λ_TD (start small, can increase if bias persists)
+SYMMETRY_LOSS_WEIGHT = 0.5  # Increased from 0.2 - bias persists, need stronger symmetry enforcement

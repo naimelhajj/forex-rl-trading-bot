@@ -403,7 +403,7 @@ class DQNAgent:
             
             # Anti-bias exploration guards (temporary, first 60 episodes)
             self.LONG_FLOOR = 0.15     # minimum LONG action frequency during warmup
-            self.LONG_FLOOR_EPISODES = 60  # episodes to apply LONG floor
+            self.LONG_FLOOR_EPISODES = 120  # episodes to apply LONG floor (extended from 60)
             self.current_episode = 0   # track episode count
             self.H_MIN = 0.95          # entropy floor (bits)
             self.H_MAX = 1.10          # entropy ceiling (bits)
