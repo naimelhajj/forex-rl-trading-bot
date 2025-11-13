@@ -738,6 +738,7 @@ class DQNAgent:
     def train_step(self, beta: float = 0.4):
         """Perform a training update using Double DQN with Huber loss and Polyak updates.
         PATCH 2: Supports n-step returns for faster credit assignment.
+        ANTI-BIAS B3: Sign-flip augmentation for direction-equivariant learning.
         Accepts `beta` for importance-sampling when using PER. Returns loss value (float) when updated, otherwise None.
         """
         if not hasattr(self, 'replay_buffer'):
@@ -745,6 +746,13 @@ class DQNAgent:
         buffer_len = len(self.replay_buffer)
         if buffer_len < self.replay_batch_size:
             return None
+
+        # Import augmentation module (lazy import to avoid circular dependency)
+        try:
+            from augmentation import flip_state, flip_action_batch, compute_symmetry_loss, SYMMETRY_LOSS_WEIGHT, get_direction_sensitive_mask
+            use_augmentation = True
+        except ImportError:
+            use_augmentation = False
 
         total_loss = 0.0
         updates = 0
@@ -787,7 +795,27 @@ class DQNAgent:
             # Huber loss (smooth_l1) with IS weights if PER
             td_errors = (q_vals - target).detach()
             loss_per_sample = F.smooth_l1_loss(q_vals, target, reduction='none')
-            loss = (loss_per_sample * is_weights).mean()
+            loss_td = (loss_per_sample * is_weights).mean()
+            
+            # ANTI-BIAS B3: Add symmetry loss for direction-equivariance
+            loss_sym = torch.tensor(0.0, device=self.device)
+            if use_augmentation and self.use_dual_controller:
+                try:
+                    # Create flipped states
+                    state_size = states.shape[1]
+                    sensitive_mask = get_direction_sensitive_mask(state_size)
+                    states_np = states.cpu().numpy()
+                    flipped_states_np = flip_state(states_np, sensitive_mask)
+                    flipped_states = torch.tensor(flipped_states_np, dtype=torch.float32, device=self.device)
+                    
+                    # Compute symmetry loss
+                    loss_sym = compute_symmetry_loss(self.q_net, states, flipped_states, self.device)
+                except Exception as e:
+                    # Silently skip augmentation if it fails (graceful degradation)
+                    pass
+            
+            # Total loss: TD loss + weighted symmetry loss
+            loss = loss_td + SYMMETRY_LOSS_WEIGHT * loss_sym if use_augmentation else loss_td
 
             self.optimizer.zero_grad()
             loss.backward()
