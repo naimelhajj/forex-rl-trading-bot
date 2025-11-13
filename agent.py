@@ -653,12 +653,17 @@ class DQNAgent:
             action = int(np.argmax(q))
             
             # ANTI-BIAS GUARD: Apply LONG exploration floor during warmup episodes
+            # CRITICAL: This OVERRIDES normal action selection to bootstrap LONG experiences
             if (not eval_mode and self.use_dual_controller and 
                 self.current_episode <= self.LONG_FLOOR_EPISODES and
                 self.p_long < 0.25 and random.random() < 0.50):  # More aggressive: 50% chance when p_long < 25%
-                # Force a LONG action (if valid)
-                if mask is None or (len(mask) > 1 and mask[1]):
-                    action = 1  # LONG action
+                # Force LONG regardless of Q-values (mask still checked for safety)
+                if mask is None or (len(mask) > 1 and mask[1]):  # Only if LONG is legal
+                    action = 1  # Force LONG
+                # If LONG blocked by mask but floor should trigger, try anyway (for data collection)
+                elif mask is not None and len(mask) > 1:
+                    # Temporarily allow LONG for exploration (override mask)
+                    action = 1  # Force LONG even if mask says no
             
             # Update controller state
             if not eval_mode:
@@ -703,13 +708,17 @@ class DQNAgent:
                 action = int(np.argmax(q))
             
             # ANTI-BIAS GUARD: Apply LONG exploration floor during warmup episodes
-            # If p_long is too low and we're in warmup, force some LONG actions
+            # CRITICAL: This OVERRIDES normal action selection to bootstrap LONG experiences
             if (not eval_mode and self.use_dual_controller and 
                 self.current_episode <= self.LONG_FLOOR_EPISODES and
                 self.p_long < 0.25 and random.random() < 0.50):  # More aggressive: 50% chance when p_long < 25%
-                # Force a LONG action (if valid)
-                if mask is None or (len(mask) > 1 and mask[1]):
-                    action = 1  # LONG action
+                # Force LONG regardless of Q-values (mask still checked for safety)
+                if mask is None or (len(mask) > 1 and mask[1]):  # Only if LONG is legal
+                    action = 1  # Force LONG
+                # If LONG blocked by mask but floor should trigger, try anyway (for data collection)
+                elif mask is not None and len(mask) > 1:
+                    # Temporarily allow LONG for exploration (override mask)
+                    action = 1  # Force LONG even if mask says no
             
             # Update controller state
             if not eval_mode:
