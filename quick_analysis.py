@@ -1,7 +1,10 @@
 import json
 from pathlib import Path
+import sys
 
-data = json.loads(Path('fresh_antibias_test/episode_metrics.json').read_text())
+# Allow directory argument
+test_dir = sys.argv[1] if len(sys.argv) > 1 else 'quick_retest'
+data = json.loads(Path(f'{test_dir}/episode_metrics.json').read_text())
 eps = data['episodes']
 
 print("=" * 60)
