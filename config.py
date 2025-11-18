@@ -141,7 +141,7 @@ class TrainingConfig:
     test_ratio: float = 0.15
     max_steps_per_episode: int = 1000  # Shorter episodes for faster training
     prefill_steps: int = 3000  # PATCH #3: Heuristic baseline pre-fill (1000 for smoke, 3000+ for full)
-    disable_early_stop: bool = False  # Set to True for seed sweeps to ensure fixed episode count
+    disable_early_stop: bool = True  # Set to True for seed sweeps to ensure fixed episode count
 
 
 @dataclass
