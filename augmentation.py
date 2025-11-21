@@ -140,12 +140,15 @@ def create_augmented_batch(
     # Flip actions
     flipped_actions = flip_action_batch(actions)
     
-    # Rewards and dones are symmetric (PnL same for LONG/SHORT at equivalent opportunities)
-    # N-steps unchanged
+    # CRITICAL FIX: Flip rewards for directional actions
+    flipped_rewards = rewards.copy()
+    directional_mask = (actions == 1) | (actions == 2)
+    flipped_rewards[directional_mask] = -rewards[directional_mask]
+    
     if n_steps is None:
         n_steps = np.ones_like(actions)
     
-    return flipped_states, flipped_actions, rewards, flipped_next_states, dones, n_steps
+    return flipped_states, flipped_actions, flipped_rewards, flipped_next_states, dones, n_steps
 
 
 def compute_symmetry_loss(
@@ -187,3 +190,4 @@ def compute_symmetry_loss(
 
 # Configuration
 SYMMETRY_LOSS_WEIGHT = 0.5  # Increased from 0.2 - bias persists, need stronger symmetry enforcement
+
