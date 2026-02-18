@@ -4,7 +4,7 @@ Quick test to verify Phase 2.8e soft bias implementation.
 import numpy as np
 import pandas as pd
 from environment import ForexTradingEnv
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 from config import Config
 
 def test_soft_bias():
@@ -41,7 +41,7 @@ def test_soft_bias():
     state = env.reset()
     bias = env.get_action_bias()
     print(f"   Initial bias: {bias}")
-    print(f"   Expected: [0, 0, 0, 0] (no history)")
+    print(f"   Expected: all zeros (no history)")
     assert np.allclose(bias, 0.0), "Initial bias should be zero"
     print("   ✅ PASS")
     
@@ -49,7 +49,7 @@ def test_soft_bias():
     print("\n2. Testing directional bias (heavy long)...")
     env.long_trades = 70
     env.short_trades = 30
-    env.action_counts = [0, 0, 0, 0]
+    env.action_counts = [0] * env.action_space_size
     bias = env.get_action_bias()
     print(f"   Long ratio: {env.long_trades / (env.long_trades + env.short_trades):.2%}")
     print(f"   Bias: {bias}")
@@ -78,7 +78,7 @@ def test_soft_bias():
     print("\n4. Testing hold bias (excessive holding)...")
     env.long_trades = 50
     env.short_trades = 50
-    env.action_counts = [100, 10, 10, 5]  # 80% HOLD
+    env.action_counts = [100, 10, 10, 5, 3, 2]  # ~77% HOLD
     bias = env.get_action_bias()
     print(f"   Hold rate: {env.action_counts[0] / sum(env.action_counts):.2%}")
     print(f"   Bias: {bias}")
@@ -92,7 +92,7 @@ def test_soft_bias():
     print("\n5. Testing balanced state (no bias needed)...")
     env.long_trades = 50
     env.short_trades = 50
-    env.action_counts = [30, 25, 25, 20]  # Balanced
+    env.action_counts = [30, 25, 25, 10, 5, 5]  # Balanced
     bias = env.get_action_bias()
     print(f"   Long ratio: {env.long_trades / (env.long_trades + env.short_trades):.2%}")
     print(f"   Hold rate: {env.action_counts[0] / sum(env.action_counts):.2%}")
@@ -108,7 +108,7 @@ def test_soft_bias():
     state_size = env.state_size
     agent = DQNAgent(
         state_size=state_size,
-        action_size=4,
+        action_size=ActionSpace.get_action_size(),
         config=config.agent,
         device='cpu'
     )
@@ -116,7 +116,7 @@ def test_soft_bias():
     # Select action with bias
     action_with_bias = agent.select_action(state, explore=False, env=env)
     print(f"   Action selected with bias: {action_with_bias}")
-    print(f"   Action names: {['HOLD', 'LONG', 'SHORT', 'MOVE_SL'][action_with_bias]}")
+    print(f"   Action names: {ActionSpace.get_action_name(action_with_bias)}")
     print("   ✅ PASS - Agent successfully uses environment bias")
     
     print("\n" + "=" * 60)

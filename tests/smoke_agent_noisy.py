@@ -1,12 +1,12 @@
 import numpy as np
 import random
 
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 
 
 def run_smoke():
     state_size = 30
-    action_size = 4
+    action_size = ActionSpace.get_action_size()
     agent = DQNAgent(state_size=state_size, action_size=action_size, use_noisy=True, buffer_type='simple', replay_batch_size=8, grad_steps=1)
     # populate replay buffer with random transitions
     for _ in range(64):

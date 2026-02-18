@@ -3,7 +3,7 @@ Diagnostic script to analyze why agent is stuck on HOLD.
 """
 import torch
 import numpy as np
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 from config import Config
 
 print("=" * 60)
@@ -22,7 +22,7 @@ print(f"   epsilon_start: {cfg.agent.epsilon_start}")
 
 # Load agent
 print(f"\n2. LOADING BEST MODEL")
-agent = DQNAgent(state_size=93, action_size=4, 
+agent = DQNAgent(state_size=93, action_size=ActionSpace.get_action_size(), 
                  learning_rate=cfg.agent.learning_rate,
                  use_noisy=cfg.agent.use_noisy)
 try:

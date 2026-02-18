@@ -103,9 +103,13 @@ class ForexTradingEnv:
     
     Action space:
     - 0: HOLD
-    - 1: LONG
-    - 2: SHORT
-    - 3: MOVE_SL_CLOSER
+    - 1: LONG (open-only)
+    - 2: SHORT (open-only)
+    - 3: CLOSE_POSITION
+    - 4: MOVE_SL_CLOSER
+    - 5: MOVE_SL_CLOSER_AGGRESSIVE
+    - 6: REVERSE_TO_LONG
+    - 7: REVERSE_TO_SHORT
     """
     
     def __init__(self,
@@ -116,6 +120,11 @@ class ForexTradingEnv:
                  spread: float = 0.00020,  # 2 pips spread
                  commission: float = 0.0,  # Commission per lot per side
                  slippage_pips: float = 0.8,  # Slippage in pips
+                 swap_type: str = "usd",  # "usd" or "points"
+                 swap_long_usd_per_lot_night: float = 0.0,
+                 swap_short_usd_per_lot_night: float = 0.0,
+                 swap_rollover_hour_utc: int = 22,
+                 swap_triple_weekday: int = 2,
                  weekend_close_hours: int = 3,  # Flatten positions N hours before weekend
                  max_steps: Optional[int] = None,
                  symbol: str = 'EURUSD',
@@ -130,7 +139,19 @@ class ForexTradingEnv:
                  risk_per_trade: float = 0.0075,
                  atr_mult_sl: float = 2.5,
                  tp_mult: float = 2.0,
-                 min_trail_buffer_pips: float = 1.0):
+                 min_trail_buffer_pips: float = 1.0,
+                 disable_move_sl: bool = False,
+                 allowed_actions: Optional[List[int]] = None,
+                 reward_clip: float = 0.01,
+                 holding_cost: float = 1e-4,
+                 r_multiple_reward_weight: float = 0.0,
+                 r_multiple_reward_clip: float = 2.0,
+                 min_atr_cost_ratio: float = 0.0,
+                 use_regime_filter: bool = False,
+                 regime_min_vol_z: float = 0.0,
+                 regime_align_trend: bool = True,
+                 regime_require_trending: bool = True,
+                 random_episode_start: bool = False):
         """
         Initialize trading environment.
         
@@ -139,6 +160,11 @@ class ForexTradingEnv:
             scaler_mu: Feature means for normalization (from training data)
             scaler_sig: Feature stds for normalization (from training data)
             slippage_pips: Slippage in pips
+            swap_type: "usd" (USD/lot/night) or "points" (broker swap points)
+            swap_long_usd_per_lot_night: Overnight swap for LONG positions (USD per lot per night)
+            swap_short_usd_per_lot_night: Overnight swap for SHORT positions (USD per lot per night)
+            swap_rollover_hour_utc: UTC hour when daily swap rollover is charged
+            swap_triple_weekday: Weekday index for triple swap (0=Mon..6=Sun; FX usually Wed=2)
             cooldown_bars: Bars to wait before allowing new position
             min_hold_bars: Minimum bars to hold a position
             trade_penalty: Penalty per trade (normalized)
@@ -148,17 +174,37 @@ class ForexTradingEnv:
             atr_mult_sl: ATR multiplier for stop loss (2.5)
             tp_mult: TP multiplier relative to SL distance (2.0)
             min_trail_buffer_pips: PATCH #4: Minimum pips required for meaningful SL tightening (1.0)
+            allowed_actions: Optional list of action indices to allow (0-7); None allows all
+            r_multiple_reward_weight: Reward weight for realized R-multiple shaping (0 disables)
+            r_multiple_reward_clip: Clip for realized R-multiple shaping
+            min_atr_cost_ratio: Gate new trades unless ATR >= ratio * (spread+slip+commission), 0 disables
+            use_regime_filter: Gate trades to trending/high-vol regimes
+            regime_min_vol_z: Minimum realized_vol_24h_z to allow trades (0 disables extra vol gate)
+            regime_align_trend: Require trend_96h alignment for LONG/SHORT entries
+            regime_require_trending: Require is_trending flag to allow trades
+            random_episode_start: Sample random start bars on reset (train-only usage)
         """
-        self.data = data.reset_index(drop=True)
+        self.data = data.copy()
         self.feature_columns = feature_columns
         self.initial_balance = initial_balance
         self.fx_lookup = fx_lookup if fx_lookup is not None else {}  # NEW
         self.spread = spread
         self.commission = commission
-        self.slippage_pips = slippage_pips
+        self.slippage_pips = float(slippage_pips)
+        self.swap_type = "points" if str(swap_type).lower().startswith("point") else "usd"
+        self.swap_long_usd_per_lot_night = float(swap_long_usd_per_lot_night)
+        self.swap_short_usd_per_lot_night = float(swap_short_usd_per_lot_night)
+        self.swap_rollover_hour_utc = int(max(0, min(23, swap_rollover_hour_utc)))
+        self.swap_triple_weekday = int(max(0, min(6, swap_triple_weekday)))
+        self.use_swap_charging = (
+            abs(self.swap_long_usd_per_lot_night) > 1e-12 or
+            abs(self.swap_short_usd_per_lot_night) > 1e-12
+        )
         self.weekend_close_hours = weekend_close_hours
         self.max_steps = max_steps if max_steps else len(data)
         self.symbol = symbol
+        self.allowed_actions = sorted(set(allowed_actions)) if allowed_actions else None
+        self.random_episode_start = bool(random_episode_start)
         
         # Feature normalization
         self.scaler_mu = np.array([scaler_mu.get(col, 0.0) for col in feature_columns]) if scaler_mu else None
@@ -174,13 +220,26 @@ class ForexTradingEnv:
         self.min_hold_bars = min_hold_bars
         self.trade_penalty = trade_penalty
         self.flip_penalty = flip_penalty
+        self.min_atr_cost_ratio = min_atr_cost_ratio
         self.max_trades_per_episode = max_trades_per_episode
         self.risk_per_trade = risk_per_trade
         self.atr_mult_sl = atr_mult_sl
         self.tp_mult = tp_mult
         self.min_trail_buffer_pips = min_trail_buffer_pips  # PATCH #4
+        self.disable_move_sl = disable_move_sl
+        self.reward_clip = reward_clip
+        self.holding_cost = holding_cost
         self.trades_this_ep = 0
         self._accum_entry_cost = 0.0
+        self.swap_costs_this_ep = 0.0
+        self.r_multiple_reward_weight = r_multiple_reward_weight
+        self.r_multiple_reward_clip = r_multiple_reward_clip
+        self._last_trade_r_multiple = 0.0
+        self._apply_r_multiple_reward = False
+        self.use_regime_filter = use_regime_filter
+        self.regime_min_vol_z = regime_min_vol_z
+        self.regime_align_trend = regime_align_trend
+        self.regime_require_trending = regime_require_trending
         
         # Cost accounting: use EITHER extra_entry_penalty OR equity-based costs, not both
         self.extra_entry_penalty = False  # Set to True to add normalized entry costs to reward
@@ -193,12 +252,16 @@ class ForexTradingEnv:
 
         # Risk manager
         self.risk_manager = risk_manager if risk_manager else RiskManager()
+        # Keep a single canonical slippage source on the environment and mirror to risk manager.
+        self.risk_manager.slippage_pips = float(self.slippage_pips)
         
         # Structured logger (optional - set by trainer)
         self.structured_logger = None
 
         # State variables
         self.current_step = 0
+        self.episode_step = 0
+        self.episode_start_step = 0
         self.balance = initial_balance
         self.equity = initial_balance
         self.prev_equity = initial_balance
@@ -207,12 +270,16 @@ class ForexTradingEnv:
         self.equity_history = [initial_balance]
         
         # Action space
-        self.action_space_size = 4
+        self.action_space_size = 8
+        if self.allowed_actions is not None:
+            self.allowed_actions = [a for a in self.allowed_actions if 0 <= int(a) < self.action_space_size]
+            if not self.allowed_actions:
+                self.allowed_actions = None
         
         # PATCH #2: State space size with frame stacking
-        # State = stacked market features (stack_n * feature_dim) + 23 portfolio features
+        # State = stacked market features + portfolio features (includes action one-hot)
         self.feature_dim = len(feature_columns)
-        self.context_dim = 23  # Portfolio features
+        self.context_dim = 19 + self.action_space_size
         self.state_size = self.feature_dim * self.stack_n + self.context_dim
         
         # PHASE 2.8e: Soft bias parameters (loaded from config in reset)
@@ -231,21 +298,36 @@ class ForexTradingEnv:
         # Soft bias tracking (episode-level)
         self.long_trades = 0
         self.short_trades = 0
-        self.action_counts = [0, 0, 0, 0]  # [HOLD, LONG, SHORT, MOVE_SL]
+        self.action_counts = [0] * self.action_space_size
         self.circuit_breaker_active = False
         self.circuit_breaker_counter = 0
         self.circuit_breaker_side = None  # 'long' or 'short'
         self._action_history = []  # Rolling window for circuit-breaker
         
-    def reset(self) -> np.ndarray:
+    def reset(self, start_idx: Optional[int] = None) -> np.ndarray:
         """
         Reset environment to initial state.
         PATCH #2: Initialize frame stack.
+
+        Args:
+            start_idx: Optional explicit starting bar index for this episode.
         
         Returns:
             Initial state
         """
-        self.current_step = 0
+        max_data_idx = max(0, len(self.data) - 1)
+        max_episode_steps = int(max(1, self.max_steps)) if self.max_steps is not None else max_data_idx
+        if start_idx is not None:
+            start_step = int(np.clip(start_idx, 0, max_data_idx))
+        elif self.random_episode_start:
+            latest_start = max(0, max_data_idx - max_episode_steps)
+            start_step = int(np.random.randint(0, latest_start + 1)) if latest_start > 0 else 0
+        else:
+            start_step = 0
+
+        self.current_step = start_step
+        self.episode_start_step = start_step
+        self.episode_step = 0
         self.balance = self.initial_balance
         self.equity = self.initial_balance
         self.position = None
@@ -256,6 +338,7 @@ class ForexTradingEnv:
         # reset per-episode trade counter
         self.trades_this_ep = 0
         self._accum_entry_cost = 0.0
+        self.swap_costs_this_ep = 0.0
         # SURGICAL PATCH: Reset cost budget tracking
         self.costs_this_ep = 0.0
         self.trading_locked = False
@@ -263,12 +346,15 @@ class ForexTradingEnv:
         # reset churn control state
         self.bars_in_position = 0
         self.bars_since_close = 0
-        self.last_action = [0, 0, 0, 0]
+        self.last_action = [0] * self.action_space_size
+        self._last_trade_r_multiple = 0.0
+        self._apply_r_multiple_reward = False
+        self._peak_equity = self.initial_balance
         
         # PHASE 2.8e: Reset soft bias tracking
         self.long_trades = 0
         self.short_trades = 0
-        self.action_counts = [0, 0, 0, 0]
+        self.action_counts = [0] * self.action_space_size
         self.circuit_breaker_active = False
         self.circuit_breaker_counter = 0
         self.circuit_breaker_side = None
@@ -284,7 +370,7 @@ class ForexTradingEnv:
         Execute one step in the environment.
         
         Args:
-            action: Action to take (0=HOLD, 1=LONG, 2=SHORT, 3=MOVE_SL_CLOSER)
+            action: Action to take (0=HOLD, 1=LONG, 2=SHORT, 3=CLOSE, 4=MOVE_SL, 5=MOVE_SL_AGGR, 6=REV_LONG, 7=REV_SHORT)
             
         Returns:
             Tuple of (next_state, reward, done, info)
@@ -300,7 +386,13 @@ class ForexTradingEnv:
         # Initialize reward and track if this action changed the position
         reward = 0.0
         did_trade = False
+        did_flip = False
+        swap_pnl_step = 0.0
         
+        atr_cost_ok = self._atr_cost_ratio_ok(current_price, current_atr)
+        regime_ok_long = self._regime_allows(1, current_data)
+        regime_ok_short = self._regime_allows(-1, current_data)
+
         # Update existing position (check SL/TP)
         if self.position is not None:
             pnl, hit_sl_tp = self._update_position(current_price)
@@ -312,32 +404,11 @@ class ForexTradingEnv:
         if action == 0:  # HOLD
             pass
 
-        elif action == 1:  # LONG
+        elif action == 1:  # LONG (open-only)
             # Check max trades per episode limit
             if self.trades_this_ep >= self.max_trades_per_episode:
                 pass  # Ignore action if max trades reached
-            # flip only if cooldown allows
-            elif self.position is not None and self.position['type'] == 'short':
-                if self._can_modify():
-                    pnl, _ = self._close_position(current_price)
-                    reward += pnl
-                    did_trade = True
-                    # flip penalty for immediate reversal
-                    reward -= float(self.flip_penalty)
-                    self.trades_this_ep += 1
-                    if self.trades_this_ep < self.max_trades_per_episode:
-                        self._open_position('long', current_price, current_atr)
-                        did_trade = True
-                        self.trades_this_ep += 1
-                    # account for expected round-trip cost on entry (normalized) - ONLY if extra_entry_penalty enabled
-                    if self.extra_entry_penalty:
-                        try:
-                            lots = self.position.get('lots', 0.0)
-                            rtc = (self.spread * pip_value_usd(self.symbol, current_price, lots) + 2.0 * self.commission * lots)
-                            self._accum_entry_cost += rtc / max(self.equity, 1e-9)
-                        except Exception:
-                            pass
-            elif self.position is None and self.trades_this_ep < self.max_trades_per_episode:
+            elif self.position is None and self.trades_this_ep < self.max_trades_per_episode and atr_cost_ok and regime_ok_long:
                 self._open_position('long', current_price, current_atr)
                 did_trade = True
                 self.trades_this_ep += 1
@@ -349,30 +420,11 @@ class ForexTradingEnv:
                     except Exception:
                         pass
 
-        elif action == 2:  # SHORT
+        elif action == 2:  # SHORT (open-only)
             # Check max trades per episode limit
             if self.trades_this_ep >= self.max_trades_per_episode:
                 pass  # Ignore action if max trades reached
-            elif self.position is not None and self.position['type'] == 'long':
-                if self._can_modify():
-                    pnl, _ = self._close_position(current_price)
-                    reward += pnl
-                    did_trade = True
-                    # flip penalty
-                    reward -= float(self.flip_penalty)
-                    self.trades_this_ep += 1
-                    if self.trades_this_ep < self.max_trades_per_episode:
-                        self._open_position('short', current_price, current_atr)
-                        did_trade = True
-                        self.trades_this_ep += 1
-                    if self.extra_entry_penalty:
-                        try:
-                            lots = self.position.get('lots', 0.0)
-                            rtc = (self.spread * pip_value_usd(self.symbol, current_price, lots) + 2.0 * self.commission * lots)
-                            self._accum_entry_cost += rtc / max(self.equity, 1e-9)
-                        except Exception:
-                            pass
-            elif self.position is None and self.trades_this_ep < self.max_trades_per_episode:
+            elif self.position is None and self.trades_this_ep < self.max_trades_per_episode and atr_cost_ok and regime_ok_short:
                 self._open_position('short', current_price, current_atr)
                 did_trade = True
                 self.trades_this_ep += 1
@@ -383,29 +435,78 @@ class ForexTradingEnv:
                         self._accum_entry_cost += rtc / max(self.equity, 1e-9)
                     except Exception:
                         pass
-        elif action == 3:  # MOVE_SL_CLOSER / FLATTEN (if cooldown allows)
-            if self.position is not None:
-                # if cooldown allows, permit closure; else move SL closer
-                if self._can_modify():
-                    pnl, _ = self._close_position(current_price)
-                    reward += pnl
-                    did_trade = True
-                else:
-                    # Use enhanced trailing stop method with recent price data
+        elif action == 3:  # CLOSE_POSITION
+            if self.position is not None and self._can_modify():
+                pnl, _ = self._close_position(current_price)
+                reward += pnl
+                did_trade = True
+                self.trades_this_ep += 1
+        elif action in (4, 5):  # MOVE_SL actions (never close)
+            if not self.disable_move_sl and self.position is not None:
+                recent_data = self.data.iloc[max(0, self.current_step - 40):self.current_step + 1]
+                self._move_sl_closer(recent_data, aggressive=(action == 5))
+        elif action == 6:  # REVERSE_TO_LONG
+            can_reverse = (
+                self.position is not None and
+                self.position.get('type') == 'short' and
+                self._can_modify() and
+                (not getattr(self, 'trading_locked', False)) and
+                (not should_flatten) and
+                atr_cost_ok and
+                regime_ok_long and
+                self.trades_this_ep <= (self.max_trades_per_episode - 2)
+            )
+            if can_reverse:
+                pnl, _ = self._close_position(current_price)
+                reward += pnl
+                did_trade = True
+                did_flip = True
+                self.trades_this_ep += 1
+                self._open_position('long', current_price, current_atr)
+                did_trade = True
+                self.trades_this_ep += 1
+                if self.extra_entry_penalty:
                     try:
-                        recent_data = self.data.iloc[max(0, self.current_step-20):self.current_step+1]
-                        if len(recent_data) > 5:  # Ensure sufficient data
-                            self._enhanced_move_sl_closer(recent_data)
-                        else:
-                            # Fallback to simple method
-                            self._move_sl_closer(current_price, current_atr)
+                        lots = self.position.get('lots', 0.0)
+                        rtc = (self.spread * pip_value_usd(self.symbol, current_price, lots) + 2.0 * self.commission * lots)
+                        self._accum_entry_cost += rtc / max(self.equity, 1e-9)
                     except Exception:
-                        # Fallback to simple method on any error
-                        self._move_sl_closer(current_price, current_atr)
+                        pass
+        elif action == 7:  # REVERSE_TO_SHORT
+            can_reverse = (
+                self.position is not None and
+                self.position.get('type') == 'long' and
+                self._can_modify() and
+                (not getattr(self, 'trading_locked', False)) and
+                (not should_flatten) and
+                atr_cost_ok and
+                regime_ok_short and
+                self.trades_this_ep <= (self.max_trades_per_episode - 2)
+            )
+            if can_reverse:
+                pnl, _ = self._close_position(current_price)
+                reward += pnl
+                did_trade = True
+                did_flip = True
+                self.trades_this_ep += 1
+                self._open_position('short', current_price, current_atr)
+                did_trade = True
+                self.trades_this_ep += 1
+                if self.extra_entry_penalty:
+                    try:
+                        lots = self.position.get('lots', 0.0)
+                        rtc = (self.spread * pip_value_usd(self.symbol, current_price, lots) + 2.0 * self.commission * lots)
+                        self._accum_entry_cost += rtc / max(self.equity, 1e-9)
+                    except Exception:
+                        pass
         
         # Enforce weekend rules (flatten positions if weekend approaching)
         weekend_pnl = self._enforce_weekend_rules(current_price)
         reward += weekend_pnl
+
+        # Apply overnight swap when crossing rollover while position stays open.
+        if self.position is not None:
+            swap_pnl_step = self._apply_rollover_swap_if_due()
         
         # Update equity
         # _calculate_equity updates self.equity internally and returns it; don't overwrite with None
@@ -420,6 +521,7 @@ class ForexTradingEnv:
         
         # Move to next step
         self.current_step += 1
+        self.episode_step += 1
 
         # increment position age for cooldown enforcement
         if self.position is not None:
@@ -434,15 +536,16 @@ class ForexTradingEnv:
                 self.equity_history = []
 
         # Check if episode is done
-        done = (self.current_step >= min(len(self.data) - 1, self.max_steps) or 
-                self.equity <= 0.05 * self.initial_balance)  # Ruin condition
+        reached_data_end = self.current_step >= (len(self.data) - 1)
+        reached_episode_limit = self.max_steps is not None and self.episode_step >= int(self.max_steps)
+        done = reached_data_end or reached_episode_limit or self.equity <= 0.05 * self.initial_balance
         
         # SURGICAL PATCH: Cost budget kill-switch
         costs = getattr(self, 'costs_this_ep', 0.0)
         budget = getattr(self, 'cost_budget_pct', 0.05) * self.initial_balance
         
         # PATCH 10: Assert cost budget (catch frictions drift)
-        # Allow up to 5% of initial balance in spread+commission costs per episode
+        # Allow up to 5% of initial balance in spread+commission+swap costs per episode
         if costs > budget * 1.5:  # Warning threshold at 1.5x budget
             import warnings
             warnings.warn(f"Cost budget exceeded: ${costs:.2f} > ${budget:.2f} (150% threshold)")
@@ -459,6 +562,8 @@ class ForexTradingEnv:
             'balance': self.balance,
             'position': self.position,
             'step': self.current_step,
+            'swap_pnl_step': swap_pnl_step,
+            'swap_costs_this_ep': self.swap_costs_this_ep,
         }
         
         # after price update and potential open/close, compute reward as log-return
@@ -466,22 +571,30 @@ class ForexTradingEnv:
         curr = max(self.equity, 1e-9)
         reward = np.log(curr / prev)
         # clip reward to ±0.01 for tighter Q-value stability
-        reward = float(np.clip(reward, -0.01, 0.01))
+        reward = float(np.clip(reward, -self.reward_clip, self.reward_clip))
         
         # PATCH 5: Tiny holding cost to discourage churn (only while in position)
         # ~2.5 bps per day on H1 bars (24 bars/day -> 1e-4/bar = 0.0024/day)
         if self.position is not None:
-            reward -= 1e-4
+            reward -= float(self.holding_cost)
         
         # apply small trade penalty if the action changed position
         if did_trade:
             reward -= float(self.trade_penalty)
+        if did_flip:
+            reward -= float(self.flip_penalty)
         # subtract accumulated entry cost (normalized) - only if extra_entry_penalty is True
         if self.extra_entry_penalty and getattr(self, '_accum_entry_cost', 0.0) > 0.0:
             reward -= float(self._accum_entry_cost)
             self._accum_entry_cost = 0.0
+        if self._apply_r_multiple_reward:
+            if self.r_multiple_reward_weight != 0.0:
+                clip_value = max(self.r_multiple_reward_clip, 1e-9)
+                r_multiple = float(np.clip(self._last_trade_r_multiple, -clip_value, clip_value))
+                reward += self.r_multiple_reward_weight * r_multiple
+            self._apply_r_multiple_reward = False
         # cap trades per episode to avoid runaway churn
-        if getattr(self, 'trades_this_ep', 0) > 120:
+        if getattr(self, 'trades_this_ep', 0) > max(1, int(getattr(self, 'max_trades_per_episode', 120))):
             # force flatten and signal done by setting current_step to max
             if self.position is not None:
                 self._close_position(current_price)
@@ -490,7 +603,8 @@ class ForexTradingEnv:
         self.prev_equity = curr
         
         # PHASE 2.8e: Track action counts for soft bias
-        self.action_counts[action] += 1
+        if 0 <= int(action) < len(self.action_counts):
+            self.action_counts[int(action)] += 1
         
         # Update churn control state tracking
         if self.position is not None:
@@ -506,8 +620,9 @@ class ForexTradingEnv:
             reward *= 0.25
         
         # Update last action one-hot
-        self.last_action = [0, 0, 0, 0]
-        self.last_action[action] = 1
+        self.last_action = [0] * self.action_space_size
+        if 0 <= int(action) < self.action_space_size:
+            self.last_action[int(action)] = 1
 
         return next_state, reward, done, info
     
@@ -519,9 +634,9 @@ class ForexTradingEnv:
         to encourage balanced trading without corrupting the reward signal.
         
         Returns:
-            np.ndarray: Bias vector [HOLD, LONG, SHORT, MOVE_SL_CLOSER]
+            np.ndarray: Bias vector aligned to action space indices
         """
-        bias = np.zeros(4, dtype=np.float32)  # [HOLD, LONG, SHORT, MOVE_SL]
+        bias = np.zeros(self.action_space_size, dtype=np.float32)
         
         # Only apply bias periodically (every bias_check_interval steps)
         if self.current_step % self.bias_check_interval != 0:
@@ -678,9 +793,9 @@ class ForexTradingEnv:
         # Weekend flag
         weekend_flag = 1.0 if self._should_flatten_for_weekend(current_data) else 0.0
         
-        # Last action one-hot (4 actions: HOLD, LONG, SHORT, MOVE_SL_CLOSER)
-        last_action_onehot = np.zeros(4, dtype=np.float32)
-        if hasattr(self, 'last_action') and len(self.last_action) == 4:
+        # Last action one-hot (aligned to action space size)
+        last_action_onehot = np.zeros(self.action_space_size, dtype=np.float32)
+        if hasattr(self, 'last_action') and len(self.last_action) == self.action_space_size:
             last_action_onehot = np.array(self.last_action, dtype=np.float32)
         
         # SURGICAL PATCH: Build portfolio feature array with global clipping
@@ -692,10 +807,10 @@ class ForexTradingEnv:
             equity_log_rel, leverage_used, margin_used_pct, free_margin_pct,
             entry_diff_atr, sl_dist_atr, tp_dist_atr,
             weekend_flag,
-            *last_action_onehot  # 4 elements
-        ], dtype=np.float32)  # Total: 23 features
+            *last_action_onehot
+        ], dtype=np.float32)
         
-        # Light global clip on the 23-d portfolio block (broad safety rails)
+        # Light global clip on the portfolio block (broad safety rails)
         pf = np.clip(pf, -5.0, 5.0)
         
         return pf
@@ -714,7 +829,7 @@ class ForexTradingEnv:
         PATCH #2: Get current state representation with frame stacking.
         
         Returns:
-            State vector: stacked normalized market features + 23 portfolio features
+            State vector: stacked normalized market features + portfolio features
         """
         if self.current_step >= len(self.data):
             self.current_step = len(self.data) - 1
@@ -730,7 +845,7 @@ class ForexTradingEnv:
         # PATCH #2: Stack market features for temporal context
         stacked_market = self._stack_obs(market_features)
         
-        # Portfolio features (23 balance-invariant features)
+        # Portfolio features
         portfolio_features = self._portfolio_features(current_data)
         
         # Combine stacked market features + portfolio context
@@ -809,7 +924,7 @@ class ForexTradingEnv:
         atr_pips = max(1.0, atr_val / ps)
         
         # Dynamic slippage: base + volatility component
-        slippage_pips_base = getattr(self.risk_manager, 'slippage_pips', 0.5)
+        slippage_pips_base = float(getattr(self, 'slippage_pips', 0.8))
         slippage_pips_eff = slippage_pips_base + 0.10 * np.sqrt(atr_pips)
         
         # calculate exec price with dynamic slippage and half-spread
@@ -944,6 +1059,18 @@ class ForexTradingEnv:
             'open_time': self.position['open_time'],
             'close_time': self.current_step,
         })
+
+        # Track realized R multiple for reward shaping (pnl vs SL risk).
+        self._apply_r_multiple_reward = False
+        sl_price = self.position.get('sl')
+        if sl_price is not None:
+            sl_risk_pips = abs(self.position['entry'] - sl_price) / ps
+            sl_risk_dollars = sl_risk_pips * pv(self.position['lots'])
+            if sl_risk_dollars > 0:
+                r_multiple = pnl / sl_risk_dollars
+                if np.isfinite(r_multiple):
+                    self._last_trade_r_multiple = float(r_multiple)
+                    self._apply_r_multiple_reward = True
         
         # Log trade closing if structured logger available
         if getattr(self, 'structured_logger', None) is not None:
@@ -1007,64 +1134,109 @@ class ForexTradingEnv:
         
         return pnl, hit_sl_tp
     
-    def _move_sl_closer(self, price: float, atr: float):
+    def _compute_sl_target(self, price_data: pd.DataFrame, aggressive: bool = False) -> Optional[float]:
         """
-        PATCH 4: Enhanced MOVE_SL_CLOSER with breakeven + ATR trailing.
-        Two-stage approach:
-        1. If RR >= 1.0 and SL not at entry -> move to breakeven (entry - 0.2 pip)
-        2. Else if in profit -> trail at (close - k*ATR) with k=0.6
-        
-        Args:
-            price: Current price
-            atr: Current ATR
+        Compute a structure-aware SL target for tightening.
+        The model selects HOW much tightening to apply via discrete action:
+        MOVE_SL_CLOSER (softer) or MOVE_SL_CLOSER_AGGRESSIVE (faster).
         """
-        if self.position is None:
-            return
-        
+        if self.position is None or price_data is None or len(price_data) == 0:
+            return None
+
+        current_price = float(price_data['close'].iloc[-1])
+        current_sl = float(self.position['sl'])
+        position_type = self.position['type']
+        current_atr = float(price_data.get('atr', pd.Series([0.001])).iloc[-1])
+        current_atr = max(current_atr, 1e-6)
         ps = pip_size(self.symbol)
-        entry = self.position['entry']
-        current_sl = self.position['sl']
+
+        # Keep a minimum distance from price to avoid self-triggering moves.
+        min_gap = max(float(self.min_trail_buffer_pips) * ps, 0.08 * current_atr)
+
+        # Build structure candidates from confirmed fractals and recent bar extremes.
+        top_frac = price_data.get('top_fractal_confirmed', pd.Series([np.nan]))
+        bottom_frac = price_data.get('bottom_fractal_confirmed', pd.Series([np.nan]))
+        highs = price_data['high'].tail(8)
+        lows = price_data['low'].tail(8)
+        frac_pad = (0.20 if aggressive else 0.30) * current_atr
+        trail_gap = min_gap * (0.9 if aggressive else 1.5)
+        min_step = max(ps * 0.25, ps * 0.25 * float(self.min_trail_buffer_pips))
+
+        if position_type == 'long':
+            max_sl = current_price - min_gap
+            if max_sl <= current_sl + min_step:
+                return None
+
+            candidates = [current_price - trail_gap]
+            if len(bottom_frac) > 0:
+                b = bottom_frac.iloc[-1]
+                if not np.isnan(b):
+                    candidates.append(float(b) - frac_pad)
+            if len(lows) > 0:
+                candidates.append(float(lows.min()) - 0.15 * current_atr)
+
+            raw_target = max(candidates)
+            target = min(raw_target, max_sl)
+            if target <= current_sl + min_step:
+                return None
+            return float(target)
+
+        # SHORT position
+        min_sl = current_price + min_gap
+        if min_sl >= current_sl - min_step:
+            return None
+
+        candidates = [current_price + trail_gap]
+        if len(top_frac) > 0:
+            t = top_frac.iloc[-1]
+            if not np.isnan(t):
+                candidates.append(float(t) + frac_pad)
+        if len(highs) > 0:
+            candidates.append(float(highs.max()) + 0.15 * current_atr)
+
+        raw_target = min(candidates)
+        target = max(raw_target, min_sl)
+        if target >= current_sl - min_step:
+            return None
+        return float(target)
+
+    def _move_sl_closer(self, price_data: pd.DataFrame, aggressive: bool = False) -> bool:
+        """Tighten stop-loss only; never closes a position."""
+        if self.position is None:
+            return False
+
+        current_sl = float(self.position['sl'])
+        target = self._compute_sl_target(price_data, aggressive=aggressive)
+        if target is None:
+            return False
+
+        # Action controls tightening speed. Aggressive action moves farther in one step.
+        alpha = 0.80 if aggressive else 0.45
+        new_sl = current_sl + alpha * (target - current_sl)
         pos_type = self.position['type']
-        
-        # Calculate current RR (risk-reward ratio)
+
         if pos_type == 'long':
-            risk_pips = (entry - current_sl) / ps
-            reward_pips = (price - entry) / ps
-        else:  # short
-            risk_pips = (current_sl - entry) / ps
-            reward_pips = (entry - price) / ps
-        
-        rr_ratio = reward_pips / (risk_pips + 1e-9)
-        
-        # Stage 1: Move to breakeven if RR >= 1.0
-        if rr_ratio >= 1.0:
-            if pos_type == 'long' and current_sl < entry:
-                # Move SL to entry - 0.2 pip (avoid immediate stop)
-                new_sl = entry - 0.2 * ps
-                if new_sl > current_sl:  # Only move closer (tighter)
-                    self.position['sl'] = new_sl
-                    return
-            elif pos_type == 'short' and current_sl > entry:
-                new_sl = entry + 0.2 * ps
-                if new_sl < current_sl:
-                    self.position['sl'] = new_sl
-                    return
-        
-        # Stage 2: ATR-based trailing if in profit
-        if reward_pips > 0:
-            atr_pips = max(1.0, atr / ps)
-            k = 0.6  # ATR multiplier for trail distance
-            
-            if pos_type == 'long':
-                # Trail: SL = price - k*ATR
-                new_sl = price - k * atr_pips * ps
-                if new_sl > current_sl:  # Only move closer
-                    self.position['sl'] = new_sl
-            else:  # short
-                # Trail: SL = price + k*ATR
-                new_sl = price + k * atr_pips * ps
-                if new_sl < current_sl:  # Only move closer
-                    self.position['sl'] = new_sl
+            if new_sl <= current_sl:
+                return False
+            self.position['sl'] = float(new_sl)
+        else:
+            if new_sl >= current_sl:
+                return False
+            self.position['sl'] = float(new_sl)
+
+        if getattr(self, 'structured_logger', None) is not None:
+            try:
+                self.structured_logger.log_trade_sl_move(
+                    timestamp=datetime.now(),
+                    old_sl=current_sl,
+                    new_sl=float(self.position['sl']),
+                    current_price=float(price_data['close'].iloc[-1]),
+                    step=self.current_step,
+                    method="adaptive_structure_aggr" if aggressive else "adaptive_structure",
+                )
+            except Exception:
+                pass
+        return True
     
     def _calculate_unrealized_pnl(self, price: float) -> float:
         """
@@ -1111,13 +1283,109 @@ class ForexTradingEnv:
         # unrealized PnL + balance (which already had commission deducted on open)
         self.equity = self.balance + unrealized
         return self.equity
+
+    def _get_bar_timestamp(self, step: int) -> Optional[pd.Timestamp]:
+        """Best-effort timestamp lookup for a bar index; returns None if unavailable."""
+        if step < 0 or step >= len(self.data):
+            return None
+
+        # Prefer explicit time column when present.
+        if 'time' in self.data.columns:
+            try:
+                ts = pd.to_datetime(self.data.iloc[step]['time'])
+                if not pd.isna(ts):
+                    return pd.Timestamp(ts).tz_localize(None) if getattr(ts, 'tzinfo', None) else pd.Timestamp(ts)
+            except Exception:
+                pass
+
+        # Fallback to DatetimeIndex.
+        if isinstance(self.data.index, pd.DatetimeIndex):
+            try:
+                ts = self.data.index[step]
+                return pd.Timestamp(ts).tz_localize(None) if getattr(ts, 'tzinfo', None) else pd.Timestamp(ts)
+            except Exception:
+                pass
+
+        return None
+
+    def _count_rollovers_between(self, start_ts: pd.Timestamp, end_ts: pd.Timestamp) -> int:
+        """
+        Count rollover events crossed from (start_ts, end_ts].
+        Uses UTC-hour cutoff and weekday triple-swap multiplier.
+        """
+        try:
+            s = pd.Timestamp(start_ts)
+            e = pd.Timestamp(end_ts)
+        except Exception:
+            return 0
+        if e <= s:
+            return 0
+
+        total_rollovers = 0
+        start_date = (s - pd.Timedelta(days=1)).normalize()
+        end_date = e.normalize()
+        for day in pd.date_range(start=start_date, end=end_date, freq='D'):
+            cutoff = day + pd.Timedelta(hours=self.swap_rollover_hour_utc)
+            if s < cutoff <= e:
+                wd = int(cutoff.weekday())
+                if wd >= 5:
+                    continue  # No weekend rollover charge.
+                mult = 3 if wd == self.swap_triple_weekday else 1
+                total_rollovers += mult
+        return int(total_rollovers)
+
+    def _apply_rollover_swap_if_due(self) -> float:
+        """
+        Apply swap credit/debit when crossing rollover cutoff while a position is open.
+        Returns applied USD amount (negative = cost, positive = credit).
+        """
+        if not self.use_swap_charging or self.position is None:
+            return 0.0
+        if self.current_step + 1 >= len(self.data):
+            return 0.0
+
+        start_ts = self._get_bar_timestamp(self.current_step)
+        end_ts = self._get_bar_timestamp(self.current_step + 1)
+        if start_ts is None or end_ts is None:
+            return 0.0
+
+        rollovers = self._count_rollovers_between(start_ts, end_ts)
+        if rollovers <= 0:
+            return 0.0
+
+        lots = float(self.position.get('lots', 0.0))
+        if lots <= 0:
+            return 0.0
+
+        side = self.position.get('type')
+        rate = self.swap_long_usd_per_lot_night if side == 'long' else self.swap_short_usd_per_lot_night
+        if self.swap_type == "points":
+            # Broker "swap in points": convert points -> price delta -> quote PnL -> USD.
+            symbol = str(getattr(self, "symbol", "EURUSD"))
+            quote_ccy = symbol[3:6] if len(symbol) >= 6 else "USD"
+            point_size = 0.001 if symbol.endswith("JPY") else 0.00001
+            contract_size = float(getattr(self.risk_manager, "contract_size", 100000.0))
+            quote_pnl = float(rate) * point_size * contract_size * lots * float(rollovers)
+            q2usd = _usd_conv_factor(end_ts, quote_ccy, self.fx_lookup) if self.fx_lookup else _static_usd_conv(quote_ccy)
+            swap_pnl = float(quote_pnl) * float(q2usd)
+        else:
+            # USD per lot per night.
+            swap_pnl = float(rate) * lots * float(rollovers)
+        if abs(swap_pnl) <= 1e-12:
+            return 0.0
+
+        self.balance += swap_pnl
+        self.swap_costs_this_ep += swap_pnl
+        if swap_pnl < 0.0:
+            self.costs_this_ep = getattr(self, 'costs_this_ep', 0.0) + abs(swap_pnl)
+        return swap_pnl
     
     def _should_flatten_for_weekend(self, current_data: pd.Series) -> bool:
         current_time = None
         # prefer explicit time column if present
         if 'time' in self.data.columns:
             try:
-                current_time = pd.to_datetime(self.data.loc[self.current_step, 'time'])
+                current_time = pd.to_datetime(self.data.iloc[self.current_step]['time'])
             except Exception:
                 current_time = None
         # fallback to DatetimeIndex
@@ -1264,10 +1532,22 @@ class ForexTradingEnv:
     def legal_action_mask(self) -> list:
         """
         SURGICAL PATCH: Legal action masking (stricter version).
-        Returns a boolean mask [HOLD, LONG, SHORT, MOVE_SL_CLOSER]
+        Returns a boolean mask [HOLD, LONG, SHORT, CLOSE, MOVE_SL, MOVE_SL_AGGR, REV_LONG, REV_SHORT]
         True = allowed, False = illegal right now.
         """
         hold_ok = True
+        current_price = None
+        current_atr = None
+        current_data = None
+        if self.current_step < len(self.data):
+            current_data = self.data.iloc[self.current_step]
+            current_price = float(current_data['close'])
+            current_atr = float(current_data.get('atr', 0.001))
+        atr_cost_ok = True
+        if current_price is not None:
+            atr_cost_ok = self._atr_cost_ratio_ok(current_price, current_atr)
+        regime_ok_long = self._regime_allows(1, current_data)
+        regime_ok_short = self._regime_allows(-1, current_data)
         
         # Disallow trading under episode/global locks OR max trades reached
         trading_blocked = False
@@ -1281,82 +1561,85 @@ class ForexTradingEnv:
             trading_blocked = True
         
         long_ok = short_ok = not trading_blocked
+        close_ok = False
         move_sl_ok = False
+        move_sl_aggr_ok = False
+        reverse_long_ok = False
+        reverse_short_ok = False
         
         if self.position is None:
-            # No position → can open long/short, cannot move SL
+            # Flat: only entries are legal (subject to gates).
             move_sl_ok = False
+            move_sl_aggr_ok = False
+            close_ok = False
+            reverse_long_ok = False
+            reverse_short_ok = False
         else:
-            # Enforce min-hold: cannot flip while in cooldown or min-hold period
-            if self.bars_in_position < self.min_hold_bars or not self._can_modify():
-                # Allow MOVE_SL_CLOSER but disallow flipping direction
-                if self.position['type'] == 'long':
-                    short_ok = False  # Cannot flip to short
-                    long_ok = True    # Can stay long (hold)
-                else:
-                    long_ok = False   # Cannot flip to long
-                    short_ok = True   # Can stay short (hold)
-            # Can tighten SL only if SL exists and still > min step away
-            move_sl_ok = self._can_tighten_sl()
-            
-            # Don't allow opening same side again (redundant with logic above, but explicit)
-            if self.position['type'] == 'long':
-                long_ok = False
-            else:
-                short_ok = False
+            # In-position: disallow open actions; use explicit CLOSE/MOVE_SL actions.
+            long_ok = False
+            short_ok = False
+            close_ok = self._can_modify()
+            can_tighten = self._can_tighten_sl()
+            move_sl_ok = can_tighten
+            move_sl_aggr_ok = can_tighten
+            can_reverse_common = (
+                self._can_modify() and
+                (not getattr(self, 'trading_locked', False)) and
+                (not self._should_flatten_for_weekend(self.data.iloc[self.current_step] if self.current_step < len(self.data) else None)) and
+                (self.trades_this_ep <= (self.max_trades_per_episode - 2))
+            )
+            if self.position.get('type') == 'short':
+                reverse_long_ok = can_reverse_common and atr_cost_ok and regime_ok_long
+            elif self.position.get('type') == 'long':
+                reverse_short_ok = can_reverse_common and atr_cost_ok and regime_ok_short
+
+        if self.disable_move_sl:
+            move_sl_ok = False
+            move_sl_aggr_ok = False
+
+        if not atr_cost_ok:
+            long_ok = False
+            short_ok = False
+
+        if not regime_ok_long:
+            long_ok = False
+        if not regime_ok_short:
+            short_ok = False
+
+        mask = [
+            hold_ok,
+            long_ok,
+            short_ok,
+            close_ok,
+            move_sl_ok,
+            move_sl_aggr_ok,
+            reverse_long_ok,
+            reverse_short_ok,
+        ]
+        if self.allowed_actions is not None:
+            mask = [mask[i] and (i in self.allowed_actions) for i in range(len(mask))]
         
-        return [hold_ok, long_ok, short_ok, move_sl_ok]
+        return mask
     
     def _can_tighten_sl(self) -> bool:
         """
-        PATCH #4: Check if SL can be tightened meaningfully.
-        Requires at least min_trail_buffer_pips of tightening room.
+        Check if stop-loss can be tightened meaningfully.
         """
         if self.position is None or self.position.get('sl') is None:
             return False
-        
-        # Get current price
         if self.current_step >= len(self.data):
             return False
-        current_price = float(self.data.iloc[self.current_step]['close'])
-        
-        # PATCH #4: Require at least min_trail_buffer_pips of meaningful tightening
-        min_buffer = getattr(self, 'min_trail_buffer_pips', 1.0)  # Default 1 pip
-        ps = pip_size(self.symbol)
-        min_step = ps * min_buffer
-        
-        if self.position['type'] == 'long':
-            # For long, new SL must be at least min_buffer pips closer than current SL
-            proposed_sl = current_price - 2 * ps  # Leave 2 pips breathing room
-            return (proposed_sl - self.position['sl']) > min_step
-        else:
-            # For short, new SL must be at least min_buffer pips closer than current SL
-            proposed_sl = current_price + 2 * ps  # Leave 2 pips breathing room
-            return (self.position['sl'] - proposed_sl) > min_step
+        recent_data = self.data.iloc[max(0, self.current_step - 40):self.current_step + 1]
+        return self._compute_sl_target(recent_data, aggressive=False) is not None
     
     def _tighten_sl(self):
         """
-        SURGICAL PATCH: Tighten SL by 33% of remaining distance toward price.
-        Always leaves 2 pips breathing room.
+        Legacy helper retained for compatibility.
         """
-        if not self._can_tighten_sl():
-            return
-        
         if self.current_step >= len(self.data):
             return
-            
-        current_price = float(self.data.iloc[self.current_step]['close'])
-        k = 0.33  # Tighten 33% of remaining distance toward price
-        ps = pip_size(self.symbol)
-        
-        if self.position['type'] == 'long':
-            target = current_price - 2 * ps  # Keep 2 pips breathing room
-            new_sl = max(self.position['sl'], self.position['sl'] + k * (target - self.position['sl']))
-        else:
-            target = current_price + 2 * ps
-            new_sl = min(self.position['sl'], self.position['sl'] + k * (target - self.position['sl']))
-        
-        self.position['sl'] = float(new_sl)
+        recent_data = self.data.iloc[max(0, self.current_step - 40):self.current_step + 1]
+        self._move_sl_closer(recent_data, aggressive=False)
     
     def _can_modify(self) -> bool:
         """Return True if we can close/flip the current position (cooldown)."""
@@ -1365,6 +1648,70 @@ class ForexTradingEnv:
         age = self.position.get('age', 0)
         required = max(getattr(self, 'cooldown_bars', 12), getattr(self, 'min_hold_bars', 6))
         return age >= required
+
+    def _regime_allows(self, action_dir: int, current_data: pd.Series | None) -> bool:
+        if not getattr(self, 'use_regime_filter', False):
+            return True
+        if current_data is None:
+            return True
+        if getattr(self, 'regime_require_trending', True):
+            try:
+                is_trending = float(current_data.get('is_trending', 0.0))
+            except Exception:
+                is_trending = 0.0
+            if is_trending < 0.5:
+                return False
+        try:
+            vol_z = float(current_data.get('realized_vol_24h_z', 0.0))
+        except Exception:
+            vol_z = 0.0
+        if vol_z < float(getattr(self, 'regime_min_vol_z', 0.0)):
+            return False
+        if getattr(self, 'regime_align_trend', True):
+            try:
+                trend = float(current_data.get('trend_96h', 0.0))
+            except Exception:
+                trend = 0.0
+            if action_dir > 0 and trend <= 0.0:
+                return False
+            if action_dir < 0 and trend >= 0.0:
+                return False
+        return True
+
+    def _atr_cost_ratio_ok(self, price: float, atr: float) -> bool:
+        """
+        Gate new trades unless ATR sufficiently exceeds expected costs.
+        """
+        min_ratio = getattr(self, 'min_atr_cost_ratio', 0.0)
+        if min_ratio <= 0:
+            return True
+        ps = pip_size(self.symbol)
+        if ps <= 0:
+            return True
+        atr_pips = atr / ps
+        if atr_pips <= 0:
+            return False
+
+        ts = self.data.index[self.current_step] if self.current_step < len(self.data) else None
+        try:
+            if self.fx_lookup and ts is not None:
+                pv_1lot = pip_value_usd_ts(self.symbol, price, 1.0, ts, self.fx_lookup)
+            else:
+                pv_1lot = pip_value_usd(self.symbol, price, 1.0)
+        except Exception:
+            pv_1lot = 0.0
+
+        if pv_1lot <= 0:
+            return True
+
+        commission_pips = (2.0 * self.commission) / pv_1lot
+        slippage_pips_base = float(getattr(self, 'slippage_pips', 0.8))
+        slippage_pips_eff = slippage_pips_base + 0.10 * np.sqrt(max(atr_pips, 0.0))
+        spread_pips = self.spread / ps
+        cost_pips = spread_pips + slippage_pips_eff + commission_pips
+        if cost_pips <= 0:
+            return True
+        return (atr_pips / cost_pips) >= min_ratio
     
     def _find_fractals(self, data: pd.DataFrame, window: int = 3) -> tuple:
         """
@@ -1409,93 +1756,9 @@ class ForexTradingEnv:
 
     def _enhanced_move_sl_closer(self, price_data: pd.DataFrame) -> bool:
         """
-        Enhanced MOVE_SL_CLOSER with CAUSAL (confirmed) fractals and ATR-based trailing stops.
-        
-        Args:
-            price_data: Recent price data DataFrame (must include *_confirmed fractal columns)
-            
-        Returns:
-            True if stop loss was moved, False otherwise
+        Backward-compatible alias for the aggressive SL tighten action.
         """
-        if not self.position:
-            return False
-            
-        current_price = price_data['close'].iloc[-1]
-        current_sl = self.position['sl']
-        position_type = self.position['type']
-        current_atr = price_data.get('atr', pd.Series([0.001])).iloc[-1]
-        current_atr = max(current_atr, 1e-6)
-        
-        # Get CAUSAL (confirmed) fractals from data
-        top_frac_confirmed = price_data.get('top_fractal_confirmed', pd.Series([np.nan]))
-        bottom_frac_confirmed = price_data.get('bottom_fractal_confirmed', pd.Series([np.nan]))
-        
-        new_sl = None
-        atr_padding = 0.5 * current_atr
-        
-        if position_type == 'long':
-            # For long positions, use bottom_fractal_confirmed - atr_padding as SL
-            recent_bottom = bottom_frac_confirmed.iloc[-1]
-            if not np.isnan(recent_bottom):
-                fractal_sl = recent_bottom - atr_padding
-                new_sl = fractal_sl
-            else:
-                # Fallback: simple ATR trailing
-                new_sl = current_price - 2.0 * current_atr
-            
-            # Only move SL up, never down
-            if new_sl > current_sl:
-                self.position['sl'] = new_sl
-                
-                # Log SL movement
-                if getattr(self, 'structured_logger', None) is not None:
-                    try:
-                        timestamp = datetime.now()
-                        self.structured_logger.log_trade_sl_move(
-                            timestamp=timestamp,
-                            old_sl=current_sl,
-                            new_sl=new_sl,
-                            current_price=current_price,
-                            step=self.current_step,
-                            method="confirmed_fractal_atr"
-                        )
-                    except Exception:
-                        pass
-                        
-                return True
-                
-        elif position_type == 'short':
-            # For short positions, use top_fractal_confirmed + atr_padding as SL
-            recent_top = top_frac_confirmed.iloc[-1]
-            if not np.isnan(recent_top):
-                fractal_sl = recent_top + atr_padding
-                new_sl = fractal_sl
-            else:
-                # Fallback: simple ATR trailing
-                new_sl = current_price - self.atr_mult_sl * current_atr
-        
-        # For SHORT: only move SL down, never up  
-        if new_sl < current_sl:
-            self.position['sl'] = float(new_sl)
-            
-            # Log SL movement
-            if getattr(self, 'structured_logger', None) is not None:
-                try:
-                    timestamp = datetime.now()
-                    self.structured_logger.log_trade_sl_move(
-                        timestamp=timestamp,
-                        old_sl=current_sl,
-                        new_sl=new_sl,
-                        current_price=current_price,
-                        step=self.current_step,
-                        method="confirmed_fractal_atr"
-                    )
-                except Exception:
-                    pass
-            
-            return True
-        
-        return False
+        return self._move_sl_closer(price_data, aggressive=True)
 
 
 if __name__ == "__main__":
@@ -1551,8 +1814,8 @@ if __name__ == "__main__":
         feature_columns=feature_columns,
         initial_balance=1000.0,
         risk_manager=rm,
-        spread=0.00015,
-        commission=7.0,
+        spread=0.00014,
+        commission=0.0,
         symbol='EURUSD'
     )
 
@@ -1567,7 +1830,7 @@ if __name__ == "__main__":
 
     total_reward = 0.0
     for i in range(300):
-        action = np.random.randint(0, 4)
+        action = np.random.randint(0, env.action_space_size)
         next_state, reward, done, info = env.step(action)
         total_reward += reward
         if done:

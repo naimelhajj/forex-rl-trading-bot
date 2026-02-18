@@ -2,10 +2,10 @@
 Quick test to verify telemetry collection is working
 """
 import numpy as np
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 
 # Create a simple agent
-agent = DQNAgent(state_size=100, action_size=4, use_dual_controller=True)
+agent = DQNAgent(state_size=100, action_size=ActionSpace.get_action_size(), use_dual_controller=True)
 
 # Simulate an episode
 print("Testing telemetry collection...")

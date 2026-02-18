@@ -131,7 +131,7 @@ def compute_currency_strengths(pair_dfs: Dict[str, pd.DataFrame],
     strengths = {}
     for curr in currencies:
         sr = signed_ret(curr)
-        if len(sr) > 0:
+        if len(sr) > 0 and not sr.isna().all():
             # Rolling mean to denoise (or EMA if enabled)
             if use_ema_strength:
                 m = sr.ewm(span=ema_span, adjust=False, min_periods=1).mean()

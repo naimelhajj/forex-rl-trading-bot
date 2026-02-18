@@ -297,7 +297,11 @@ class DQNAgent:
         0: HOLD
         1: LONG
         2: SHORT
-        3: MOVE_SL_CLOSER
+        3: CLOSE_POSITION
+        4: MOVE_SL_CLOSER
+        5: MOVE_SL_CLOSER_AGGRESSIVE
+        6: REVERSE_TO_LONG
+        7: REVERSE_TO_SHORT
     """
     
     def __init__(self, state_size: int, action_size: int, device: Optional[torch.device]=None, **kwargs):
@@ -308,8 +312,8 @@ class DQNAgent:
 
         # hyperparams with sensible defaults (can be overridden)
         self.gamma = kwargs.get('gamma', 0.99)
-        self.lr = kwargs.get('lr', 1e-4)
-        self.replay_batch_size = kwargs.get('replay_batch_size', 256)
+        self.lr = kwargs.get('learning_rate', kwargs.get('lr', 1e-4))
+        self.replay_batch_size = kwargs.get('replay_batch_size', kwargs.get('batch_size', 256))
         self.learning_starts = kwargs.get('learning_starts', 5000)  # gate backprop until buffer has enough data
         self.update_every = kwargs.get('update_every', 4)
         self.grad_steps = kwargs.get('grad_steps', 4)
@@ -320,8 +324,23 @@ class DQNAgent:
         # create networks (optionally use NoisyNet for exploration)
         use_noisy = kwargs.get('use_noisy', False)
         sigma_init = kwargs.get('noisy_sigma_init', 0.017)
-        self.policy_net = DuelingDQN(self.state_size, self.action_size, use_noisy=use_noisy, sigma_init=sigma_init).to(self.device)
-        self.target_net = DuelingDQN(self.state_size, self.action_size, use_noisy=use_noisy, sigma_init=sigma_init).to(self.device)
+        hidden_sizes = kwargs.get('hidden_sizes', (256, 256))
+        if hidden_sizes is None:
+            hidden_sizes = (256, 256)
+        self.policy_net = DuelingDQN(
+            self.state_size,
+            self.action_size,
+            hidden_sizes=tuple(hidden_sizes),
+            use_noisy=use_noisy,
+            sigma_init=sigma_init,
+        ).to(self.device)
+        self.target_net = DuelingDQN(
+            self.state_size,
+            self.action_size,
+            hidden_sizes=tuple(hidden_sizes),
+            use_noisy=use_noisy,
+            sigma_init=sigma_init,
+        ).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         
@@ -329,7 +348,13 @@ class DQNAgent:
         self.use_param_ema = kwargs.get('use_param_ema', False)
         self.ema_decay = kwargs.get('ema_decay', 0.999)
         if self.use_param_ema:
-            self.ema_net = DuelingDQN(self.state_size, self.action_size, use_noisy=use_noisy, sigma_init=sigma_init).to(self.device)
+            self.ema_net = DuelingDQN(
+                self.state_size,
+                self.action_size,
+                hidden_sizes=tuple(hidden_sizes),
+                use_noisy=use_noisy,
+                sigma_init=sigma_init,
+            ).to(self.device)
             self.ema_net.load_state_dict(self.policy_net.state_dict())
             self.ema_net.eval()
         else:
@@ -368,15 +393,21 @@ class DQNAgent:
         if self.use_noisy:
             # keep epsilon attributes but neutralize greedy ε-exploration
             self.epsilon = 0.0
-        self.batch_size = kwargs.get('batch_size', 64)
+        self.batch_size = self.replay_batch_size
         self.target_update_freq = kwargs.get('target_update_freq', 1000)
         
         # internal step counter
         self._train_step = 0
+
+        # Trade-quality gate (optional): require Q-gap over HOLD before opening trades
+        self.trade_gate_margin = kwargs.get('trade_gate_margin', 0.0)
+        self.trade_gate_z = kwargs.get('trade_gate_z', 0.0)
         
         # PHASE 2.8f: Per-step dual-variable controller with dead-zone hysteresis
-        # Action mapping: 0=HOLD, 1=LONG, 2=SHORT, 3=MOVE_SL_CLOSER
+        # Action mapping: 0=HOLD, 1=LONG, 2=SHORT, 3=CLOSE, 4=MOVE_SL, 5=MOVE_SL_AGGR, 6=REV_LONG, 7=REV_SHORT
         self.use_dual_controller = kwargs.get('use_dual_controller', True)
+        self.use_symmetry_loss = kwargs.get('use_symmetry_loss', True)
+        self.symmetry_loss_weight = kwargs.get('symmetry_loss_weight', 0.5)
         if self.use_dual_controller:
             # EWMA proportions
             self.p_long = 0.5
@@ -466,7 +497,8 @@ class DQNAgent:
         if self.action_history_episode:
             from collections import Counter
             counts = Counter(self.action_history_episode)
-            probs = [counts[i] / len(self.action_history_episode) for i in range(4)]
+            action_dim = int(getattr(self, "action_size", ActionSpace.get_action_size()))
+            probs = [counts[i] / len(self.action_history_episode) for i in range(action_dim)]
             H_bits = -sum(p * np.log2(p) if p > 0 else 0 for p in probs)
         else:
             H_bits = 1.0
@@ -490,7 +522,7 @@ class DQNAgent:
     
     # PHASE 2.8f: Dual-variable controller methods
     def _update_ewma(self, a_idx: int):
-        """Update EWMA proportions for controller. Action indices: 0=HOLD, 1=LONG, 2=SHORT, 3=MOVE_SL"""
+        """Update EWMA proportions for controller."""
         if not self.use_dual_controller:
             return
         self.p_long = (1 - self.ALPHA) * self.p_long + self.ALPHA * (1 if a_idx == 1 else 0)
@@ -573,6 +605,32 @@ class DQNAgent:
             q[opp] += 0.05
         
         return q
+
+    def _apply_trade_gate(self, q_values: np.ndarray) -> np.ndarray:
+        """Suppress LONG/SHORT when Q-gap vs HOLD is below the configured threshold."""
+        trade_gate_margin = getattr(self, 'trade_gate_margin', 0.0)
+        trade_gate_z = getattr(self, 'trade_gate_z', 0.0)
+        if trade_gate_margin <= 0.0 and trade_gate_z <= 0.0:
+            return q_values
+
+        required_gap = 0.0
+        if trade_gate_margin > 0.0:
+            required_gap = trade_gate_margin
+        if trade_gate_z > 0.0:
+            q_std = float(np.std(q_values))
+            if q_std < 1e-8:
+                q_std = 1e-8
+            required_gap = max(required_gap, trade_gate_z * q_std)
+        if required_gap <= 0.0:
+            return q_values
+
+        q = q_values
+        hold_q = q[0]
+        if q[1] - hold_q < required_gap:
+            q[1] = -1e9
+        if q[2] - hold_q < required_gap:
+            q[2] = -1e9
+        return q
     
     def _update_controller_state(self, action: int):
         """Update controller state after action selection."""
@@ -599,7 +657,7 @@ class DQNAgent:
         Args:
             state: Current state
             explore: Whether to use exploration (epsilon-greedy or noisy net)
-            mask: Optional boolean mask [HOLD, LONG, SHORT, MOVE_SL_CLOSER]
+            mask: Optional boolean mask aligned to environment action space
             eval_mode: If True, use deterministic policy (epsilon=0, freeze noise, use EMA model)
             env: Optional environment for soft bias computation (Phase 2.8e)
             
@@ -612,7 +670,7 @@ class DQNAgent:
             try:
                 self.action_size = self.q_net(torch.zeros(1, self.state_size, device=self.device)).shape[1]
             except Exception:
-                self.action_size = 4
+                self.action_size = ActionSpace.get_action_size()
         
         # PHASE-2: Select which network to use for action selection
         if eval_mode and self.use_param_ema and self.ema_net is not None:
@@ -646,9 +704,11 @@ class DQNAgent:
             
             # Apply mask if provided
             if mask is not None:
-                for i, ok in enumerate(mask):
+                for i, ok in enumerate(mask[:len(q)]):
                     if not ok:
                         q[i] = -1e9
+
+            q = self._apply_trade_gate(q)
             
             action = int(np.argmax(q))
             
@@ -688,9 +748,11 @@ class DQNAgent:
             
             # Apply mask if provided
             if mask is not None:
-                for i, ok in enumerate(mask):
+                for i, ok in enumerate(mask[:len(q)]):
                     if not ok:
                         q[i] = -1e9
+
+            q = self._apply_trade_gate(q)
             
             # Epsilon-greedy selection
             if explore and random.random() < eps:
@@ -758,7 +820,7 @@ class DQNAgent:
 
         # Import augmentation module (lazy import to avoid circular dependency)
         try:
-            from augmentation import flip_state, flip_action_batch, compute_symmetry_loss, SYMMETRY_LOSS_WEIGHT, get_direction_sensitive_mask
+            from augmentation import flip_state, flip_action_batch, compute_symmetry_loss, get_direction_sensitive_mask
             use_augmentation = True
         except ImportError:
             use_augmentation = False
@@ -808,7 +870,8 @@ class DQNAgent:
             
             # ANTI-BIAS B3: Add symmetry loss for direction-equivariance
             loss_sym = torch.tensor(0.0, device=self.device)
-            if use_augmentation and self.use_dual_controller:
+            use_symmetry_loss = self.use_symmetry_loss and (self.symmetry_loss_weight > 0.0)
+            if use_augmentation and self.use_dual_controller and use_symmetry_loss:
                 try:
                     # Create flipped states
                     state_size = states.shape[1]
@@ -824,7 +887,10 @@ class DQNAgent:
                     pass
             
             # Total loss: TD loss + weighted symmetry loss
-            loss = loss_td + SYMMETRY_LOSS_WEIGHT * loss_sym if use_augmentation else loss_td
+            if use_augmentation and use_symmetry_loss:
+                loss = loss_td + self.symmetry_loss_weight * loss_sym
+            else:
+                loss = loss_td
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -915,7 +981,11 @@ class ActionSpace:
     HOLD = 0
     LONG = 1
     SHORT = 2
-    MOVE_SL_CLOSER = 3
+    CLOSE_POSITION = 3
+    MOVE_SL_CLOSER = 4
+    MOVE_SL_CLOSER_AGGRESSIVE = 5
+    REVERSE_TO_LONG = 6
+    REVERSE_TO_SHORT = 7
     
     @staticmethod
     def get_action_name(action: int) -> str:
@@ -924,14 +994,18 @@ class ActionSpace:
             0: "HOLD",
             1: "LONG",
             2: "SHORT",
-            3: "MOVE_SL_CLOSER"
+            3: "CLOSE_POSITION",
+            4: "MOVE_SL_CLOSER",
+            5: "MOVE_SL_CLOSER_AGGRESSIVE",
+            6: "REVERSE_TO_LONG",
+            7: "REVERSE_TO_SHORT",
         }
         return names.get(action, "UNKNOWN")
     
     @staticmethod
     def get_action_size() -> int:
         """Get number of actions."""
-        return 4
+        return 8
 
 
 if __name__ == "__main__":
@@ -940,7 +1014,7 @@ if __name__ == "__main__":
     
     # Test agent initialization
     state_size = 30
-    action_size = 4
+    action_size = ActionSpace.get_action_size()
     
     agent = DQNAgent(state_size=state_size, action_size=action_size)
     

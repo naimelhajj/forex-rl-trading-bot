@@ -7,7 +7,7 @@ import pandas as pd
 from config import Config
 from data_loader import DataLoader
 from features import FeatureEngineer
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 from risk_manager import RiskManager
 from environment import ForexTradingEnv, pip_size, pip_value_usd
 from fitness import FitnessCalculator
@@ -20,26 +20,26 @@ def test_system():
     # 1. Test Configuration
     print("\n1. Testing Configuration...")
     config = Config()
-    print(f"   ✓ Config loaded: {config.data.pairs}")
+    print(f"   OK Config loaded: {config.data.pairs}")
     
     # 2. Test Data Loader
     print("\n2. Testing Data Loader...")
     loader = DataLoader()
     data = loader.generate_sample_data(n_bars=500)
-    print(f"   ✓ Generated {len(data)} bars of sample data")
+    print(f"   OK Generated {len(data)} bars of sample data")
     
     # 3. Test Feature Engineering
     print("\n3. Testing Feature Engineering...")
     fe = FeatureEngineer()
     features_df = fe.compute_all_features(data)
     feature_cols = [c for c in features_df.columns if c != 'time']
-    print(f"   ✓ Computed {len(feature_cols)} features")
+    print(f"   OK Computed {len(feature_cols)} features")
     
     # 4. Test Risk Manager
     print("\n4. Testing Risk Manager...")
     rm = RiskManager()
     sizing = rm.calculate_position_size(1000, 900, 1.1, 0.0015)
-    print(f"   ✓ Position size: {sizing['lots']:.2f} lots")
+    print(f"   OK Position size: {sizing['lots']:.2f} lots")
     
     # 5. Test Environment
     print("\n5. Testing Trading Environment...")
@@ -50,13 +50,13 @@ def test_system():
         risk_manager=rm
     )
     state = env.reset()
-    print(f"   ✓ Environment initialized, state size: {len(state)}")
+    print(f"   OK Environment initialized, state size: {len(state)}")
     
     # 6. Test Agent
     print("\n6. Testing DQN Agent...")
-    agent = DQNAgent(state_size=len(state), action_size=4)
+    agent = DQNAgent(state_size=len(state), action_size=ActionSpace.get_action_size())
     action = agent.select_action(state)
-    print(f"   ✓ Agent created, selected action: {action}")
+    print(f"   OK Agent created, selected action: {action}")
     
     # 7. Test Episode
     print("\n7. Testing Episode Execution...")
@@ -70,16 +70,16 @@ def test_system():
         total_reward += reward
         if done:
             break
-    print(f"   ✓ Executed {i+1} steps, total reward: {total_reward:.2f}")
-    print(f"   ✓ Final equity: ${info['equity']:.2f}")
+    print(f"   OK Executed {i+1} steps, total reward: {total_reward:.2f}")
+    print(f"   OK Final equity: ${info['equity']:.2f}")
     
     # 8. Test Training
     print("\n8. Testing Agent Training...")
     loss = agent.train_step()
     if loss:
-        print(f"   ✓ Training step completed, loss: {loss:.4f}")
+        print(f"   OK Training step completed, loss: {loss:.4f}")
     else:
-        print(f"   ✓ Collecting more data before training")
+        print(f"   OK Collecting more data before training")
     
     # 9. Test Fitness Calculation
     print("\n9. Testing Fitness Calculation...")
@@ -89,18 +89,18 @@ def test_system():
     )
     fc = FitnessCalculator()
     metrics = fc.calculate_all_metrics(equity_series)
-    print(f"   ✓ Fitness: {metrics['fitness']:.4f}")
-    print(f"   ✓ Sharpe: {metrics['sharpe']:.4f}")
-    print(f"   ✓ CAGR: {metrics['cagr']:.2%}")
+    print(f"   OK Fitness: {metrics['fitness']:.4f}")
+    print(f"   OK Sharpe: {metrics['sharpe']:.4f}")
+    print(f"   OK CAGR: {metrics['cagr']:.2%}")
     
     # 10. Test Trade Statistics
     print("\n10. Testing Trade Statistics...")
     stats = env.get_trade_statistics()
-    print(f"   ✓ Total trades: {stats['total_trades']}")
-    print(f"   ✓ Win rate: {stats['win_rate']:.2%}")
+    print(f"   OK Total trades: {stats['total_trades']}")
+    print(f"   OK Win rate: {stats['win_rate']:.2%}")
     
     print("\n" + "=" * 60)
-    print("ALL TESTS PASSED ✓")
+    print("ALL TESTS PASSED OK")
     print("=" * 60)
     print("\nSystem is ready for training!")
     print("Run: python main.py --mode train --episodes 50")

@@ -24,9 +24,11 @@ class DataLoader:
         self.data_dir = Path(data_dir)
         self.data_cache = {}
         
-    def load_csv(self, filepath: str, 
+    def load_csv(self, filepath: str,
                  time_col: str = 'time',
-                 parse_dates: bool = True) -> pd.DataFrame:
+                 parse_dates: bool = True,
+                 date_col: str = None,
+                 csv_sep: str = None) -> pd.DataFrame:
         """
         Load OHLC data from CSV file.
         
@@ -40,13 +42,26 @@ class DataLoader:
         Returns:
             DataFrame with OHLC data
         """
-        df = pd.read_csv(filepath)
+        read_kwargs = {}
+        if csv_sep:
+            read_kwargs["sep"] = csv_sep
+        else:
+            read_kwargs["sep"] = None
+            read_kwargs["engine"] = "python"
+        df = pd.read_csv(filepath, **read_kwargs)
         
         # Standardize column names to lowercase
-        df.columns = df.columns.str.lower()
+        df.columns = [str(c).strip().strip("<>").lower() for c in df.columns]
         
         if parse_dates and time_col in df.columns:
-            df[time_col] = pd.to_datetime(df[time_col])
+            if date_col and date_col in df.columns:
+                dt = df[date_col].astype(str) + " " + df[time_col].astype(str)
+                df[time_col] = pd.to_datetime(dt)
+            elif date_col is None and time_col == "time" and "date" in df.columns:
+                dt = df["date"].astype(str) + " " + df[time_col].astype(str)
+                df[time_col] = pd.to_datetime(dt)
+            else:
+                df[time_col] = pd.to_datetime(df[time_col])
             df = df.set_index(time_col)
         
         # Ensure required columns exist
@@ -57,12 +72,19 @@ class DataLoader:
         
         return df
     
-    def load_multiple_pairs(self, pair_files: Dict[str, str]) -> Dict[str, pd.DataFrame]:
+    def load_multiple_pairs(self,
+                           pair_files: Dict[str, str],
+                           time_col: str = 'time',
+                           parse_dates: bool = True,
+                           date_col: str = None,
+                           csv_sep: str = None) -> Dict[str, pd.DataFrame]:
         """
         Load multiple currency pairs and synchronize timestamps.
         
         Args:
             pair_files: Dict of {pair_name: filepath}
+            time_col: Name of time column
+            parse_dates: Whether to parse dates
             
         Returns:
             Dict of {pair_name: DataFrame} with synchronized timestamps
@@ -71,7 +93,13 @@ class DataLoader:
         
         # Load all pairs
         for pair, filepath in pair_files.items():
-            df = self.load_csv(filepath)
+            df = self.load_csv(
+                filepath,
+                time_col=time_col,
+                parse_dates=parse_dates,
+                date_col=date_col,
+                csv_sep=csv_sep
+            )
             data[pair] = df
             print(f"Loaded {pair}: {len(df)} rows")
         
@@ -98,7 +126,8 @@ class DataLoader:
                             start_date: str = "2023-01-01",
                             freq: str = "1H",
                             base_price: float = 1.1000,
-                            volatility: float = 0.0005) -> pd.DataFrame:
+                            volatility: float = 0.0005,
+                            drift: float = 0.0) -> pd.DataFrame:
         """
         Generate synthetic OHLC data for testing.
         
@@ -117,7 +146,7 @@ class DataLoader:
         dates = pd.date_range(start=start_date, periods=n_bars, freq='h')
         
         # Generate random walk for close prices
-        returns = np.random.normal(0, volatility, n_bars)
+        returns = np.random.normal(drift, volatility, n_bars)
         close_prices = base_price * np.exp(np.cumsum(returns))
         
         # Generate OHLC from close prices
@@ -146,7 +175,9 @@ class DataLoader:
                                pairs: List[str],
                                n_bars: int = 10000,
                                start_date: str = "2023-01-01",
-                               freq: str = "1H") -> Dict[str, pd.DataFrame]:
+                               freq: str = "1H",
+                               volatility: float = 0.0005,
+                               drift: float = 0.0) -> Dict[str, pd.DataFrame]:
         """
         Generate synthetic data for multiple pairs with correlated movements.
         
@@ -181,7 +212,9 @@ class DataLoader:
                 n_bars=n_bars,
                 start_date=start_date,
                 freq=freq,
-                base_price=base_price
+                base_price=base_price,
+                volatility=volatility,
+                drift=drift
             )
             data[pair] = df
         

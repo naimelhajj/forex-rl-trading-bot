@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from config import Config
 from environment import ForexTradingEnv
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 from fitness import stability_fitness, FitnessCalculator
 from trainer import baseline_policy, prefill_replay
 
@@ -102,7 +102,7 @@ def test_patch3_baseline_prefill():
     assert action in [0, 1, 2], f"Invalid action: {action}"
     
     # Test prefill
-    agent = DQNAgent(state_size=env.state_size, action_size=4)
+    agent = DQNAgent(state_size=env.state_size, action_size=ActionSpace.get_action_size())
     initial_buffer_size = agent.replay_size
     print(f"Initial buffer size: {initial_buffer_size}")
     
@@ -162,7 +162,7 @@ def test_patch5_eval_mode():
     print("\n=== Testing PATCH #5: Eval Mode ===")
     
     # Create agent
-    agent = DQNAgent(state_size=10, action_size=4, use_noisy=True)
+    agent = DQNAgent(state_size=10, action_size=ActionSpace.get_action_size(), use_noisy=True)
     state = np.random.randn(10).astype(np.float32)
     
     # Test eval_mode=True gives deterministic actions

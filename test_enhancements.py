@@ -8,7 +8,7 @@ import torch
 from config import Config
 from environment import ForexTradingEnv
 from features import FeatureEngineer
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 from trainer import Trainer
 
 
@@ -121,7 +121,7 @@ def test_learning_starts():
     # Create simple agent
     config = Config()
     state_size = 65  # 46 market + 19 portfolio (after cyclical time)
-    action_size = 4
+    action_size = ActionSpace.get_action_size()
     
     agent = DQNAgent(
         state_size=state_size,

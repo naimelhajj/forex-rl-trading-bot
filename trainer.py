@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 from pathlib import Path
 import json
 from datetime import datetime
+import time
 import torch
 from contextlib import nullcontext
 from torch.utils.tensorboard import SummaryWriter
@@ -24,7 +25,7 @@ from structured_logger import StructuredLogger
 from collections import Counter
 import math
 
-def compute_policy_metrics(action_seq, action_names=("HOLD","LONG","SHORT","FLAT")):
+def compute_policy_metrics(action_seq, action_names=("HOLD","LONG","SHORT","CLOSE_POSITION","MOVE_SL_CLOSER","MOVE_SL_CLOSER_AGGRESSIVE","REVERSE_TO_LONG","REVERSE_TO_SHORT")):
     """
     action_seq: list[int] of chosen action ids during validation (all windows)
     action_names: index-aligned names; default matches the env mapping in this repo.
@@ -45,7 +46,7 @@ def compute_policy_metrics(action_seq, action_names=("HOLD","LONG","SHORT","FLAT
     counts = Counter(action_seq)
     total = float(n)
 
-    # map by name (assumes env indices: 0:HOLD,1:LONG,2:SHORT,3:FLAT; adjust if your env differs)
+    # map by name (assumes env index alignment with action_names)
     name_by_idx = {i: (action_names[i] if i < len(action_names) else f"a{i}") for i in counts.keys()}
     counts_by_name = {name_by_idx[i]: int(c) for i, c in counts.items()}
 
@@ -122,7 +123,7 @@ def baseline_policy(obs: np.ndarray, feat_names: List[str], stack_n: int = 3, fe
         feature_dim: Number of features per frame (default 31)
         
     Returns:
-        Action (0=HOLD, 1=LONG, 2=SHORT, 3=MOVE_SL_CLOSER)
+        Action (0=HOLD, 1=LONG, 2=SHORT)
     """
     # Map feature names to indices
     fn = {n: i for i, n in enumerate(feat_names)}
@@ -149,7 +150,7 @@ def baseline_policy(obs: np.ndarray, feat_names: List[str], stack_n: int = 3, fe
     return 0  # HOLD
 
 
-def prefill_replay(env: ForexTradingEnv, agent: DQNAgent, steps: int = 5000):
+def prefill_replay(env: ForexTradingEnv, agent: DQNAgent, steps: int = 5000, policy: str = "baseline"):
     """
     PATCH #3: Pre-load replay buffer with heuristic baseline transitions.
     Helps DQN avoid starting from white noise.
@@ -159,13 +160,40 @@ def prefill_replay(env: ForexTradingEnv, agent: DQNAgent, steps: int = 5000):
         agent: DQN agent with replay buffer
         steps: Number of transitions to collect
     """
-    print(f"[PREFILL] Collecting {steps} baseline transitions...")
+    if policy in (None, "", "none"):
+        print("[PREFILL] Skipped (policy=none)")
+        return
+    policy = str(policy).lower()
+    print(f"[PREFILL] Collecting {steps} transitions (policy={policy})...")
     s = env.reset()
     collected = 0
     
     for _ in range(steps):
-        # Use baseline policy with frame stacking parameters
-        a = baseline_policy(s, env.feature_columns, stack_n=env.stack_n, feature_dim=env.feature_dim)
+        a = None
+        if policy == "baseline":
+            # Use baseline policy with frame stacking parameters
+            a = baseline_policy(s, env.feature_columns, stack_n=env.stack_n, feature_dim=env.feature_dim)
+            if getattr(env, "allowed_actions", None) is not None and a not in env.allowed_actions:
+                a = None
+        elif policy == "random":
+            a = None
+        else:
+            raise ValueError(f"Unknown prefill policy: {policy}")
+
+        if a is None:
+            mask = getattr(env, "legal_action_mask", lambda: None)()
+            if mask is not None:
+                valid_actions = [i for i, ok in enumerate(mask) if ok]
+            else:
+                valid_actions = list(range(getattr(env, "action_space_size", ActionSpace.get_action_size())))
+            if not valid_actions:
+                a = 0
+            else:
+                non_hold = [i for i in valid_actions if i != 0]
+                if non_hold and np.random.rand() < 0.7:
+                    a = int(np.random.choice(non_hold))
+                else:
+                    a = int(np.random.choice(valid_actions))
         s2, r, d, _ = env.step(a)
         
         # Store transition
@@ -311,17 +339,32 @@ class Trainer:
         episode_reward = 0
         episode_loss = []
         steps = 0
+        info = {'equity': getattr(self.train_env, 'equity', 0.0)}
         update_every = getattr(self.agent, 'update_every', 4)
         grad_steps = getattr(self.agent, 'grad_steps', 2)
+        timeout_min = getattr(getattr(self, 'config', None), 'training', None)
+        timeout_min = getattr(timeout_min, 'episode_timeout_min', None)
+        timeout_seconds = None if timeout_min is None else max(0.0, float(timeout_min) * 60.0)
+        episode_start = time.monotonic()
+        heartbeat_secs = float(getattr(self.config.training, 'heartbeat_secs', 60.0) or 0.0)
+        heartbeat_steps = int(getattr(self.config.training, 'heartbeat_steps', 200) or 0)
+        next_heartbeat = (episode_start + heartbeat_secs) if heartbeat_secs > 0 else None
         
         # DIVERSITY: Track HOLD streaks during training to enable probe learning
         hold_streak = 0
         HOLD_ACTION = 0
         hold_tie_tau = getattr(self.config.agent, 'hold_tie_tau', 0.06)
         hold_break_after = getattr(self.config.agent, 'hold_break_after', 6)
+        trade_gate_margin = getattr(self.config.agent, 'trade_gate_margin', 0.0)
+        trade_gate_z = getattr(self.config.agent, 'trade_gate_z', 0.0)
         
         done = False
         while not done:
+            if timeout_seconds is not None and (time.monotonic() - episode_start) > timeout_seconds:
+                print(f"[TIMEOUT] Episode aborted after {timeout_min:.2f} minutes at step {steps}")
+                done = True
+                break
+
             # SURGICAL PATCH: Get legal action mask and select action
             mask = getattr(self.train_env, 'legal_action_mask', lambda: None)()
             action = self.agent.select_action(state, explore=True, mask=mask, env=self.train_env)
@@ -333,7 +376,8 @@ class Trainer:
                 if hold_streak >= hold_break_after:
                     try:
                         q_values = self.agent.get_q_values(state)
-                        non_hold_actions = [1, 2, 3]  # LONG, SHORT, FLAT
+                        action_dim = int(getattr(self.train_env, "action_space_size", len(q_values)))
+                        non_hold_actions = [a for a in range(action_dim) if a != HOLD_ACTION]
                         if mask is not None:
                             non_hold_actions = [a for a in non_hold_actions if mask[a]]
                         
@@ -342,8 +386,18 @@ class Trainer:
                             best_non_hold_idx = [a for a in non_hold_actions if q_values[a] == best_non_hold_q][0]
                             hold_q = q_values[HOLD_ACTION]
                             
-                            # If near-tie, take best non-HOLD action
-                            if best_non_hold_q - hold_q >= -hold_tie_tau:
+                            # If near-tie, take best non-HOLD action (or require trade gate threshold)
+                            required_gap = 0.0
+                            if trade_gate_margin > 0.0:
+                                required_gap = trade_gate_margin
+                            if trade_gate_z > 0.0:
+                                q_std = float(np.std(q_values))
+                                if q_std < 1e-8:
+                                    q_std = 1e-8
+                                required_gap = max(required_gap, trade_gate_z * q_std)
+                            if required_gap <= 0.0:
+                                required_gap = -hold_tie_tau
+                            if best_non_hold_q - hold_q >= required_gap:
                                 action = best_non_hold_idx
                                 hold_streak = 0
                     except Exception:
@@ -377,6 +431,24 @@ class Trainer:
             state = next_state
             episode_reward += reward
             steps += 1
+
+            # Progress heartbeat so long episodes do not look hung.
+            now = time.monotonic()
+            heartbeat_due = False
+            if heartbeat_steps > 0 and steps > 0 and (steps % heartbeat_steps == 0):
+                heartbeat_due = True
+            if next_heartbeat is not None and now >= next_heartbeat:
+                heartbeat_due = True
+            if heartbeat_due:
+                print(
+                    f"[HB] step={steps} env_bar={getattr(self.train_env, 'current_step', -1)} "
+                    f"trades={getattr(self.train_env, 'trades_this_ep', 0)} "
+                    f"equity={info.get('equity', 0.0):.2f} eps={getattr(self.agent, 'epsilon', 0.0):.4f} "
+                    f"replay={getattr(self.agent, 'replay_size', 0)} elapsed={(now - episode_start):.1f}s"
+                )
+                if next_heartbeat is not None:
+                    while next_heartbeat <= now:
+                        next_heartbeat += heartbeat_secs
         
         # Calculate episode statistics
         final_equity = info['equity']
@@ -480,38 +552,31 @@ class Trainer:
         Returns:
             Dict with fitness, trades, and other stats for this slice
         """
-        # Apply random jitter using config ranges
-        self.val_env.spread = base_spread * np.random.uniform(*self.val_spread_jitter)
-        self.val_env.commission = base_commission * np.random.uniform(*self.val_commission_jitter)
+        # Apply exact frictions provided by caller.
+        # Validation jitter/freeze policy is handled in validate().
+        self.val_env.spread = float(base_spread)
+        self.val_env.commission = float(base_commission)
         
-        # --- NEW: fast-forward to start_idx and clear stats at window start ---
-        state = self.val_env.reset()
-        # advance to the start of the slice using HOLD actions
-        if start_idx > 0:
-            steps_to_skip = int(start_idx)
-            for _ in range(steps_to_skip):
-                state, _, done, _ = self.val_env.step(0)  # 0=HOLD, capture state
-                if done:
-                    state = self.val_env.reset()
+        # Start directly at the target bar (avoids expensive HOLD fast-forward).
+        state = self.val_env.reset(start_idx=int(start_idx))
         
         # now zero out histories so metrics cover ONLY this slice
         if hasattr(self.val_env, 'equity_history'):
             self.val_env.equity_history = [getattr(self.val_env, 'equity', 1000.0)]
-        if hasattr(self.val_env, 'trades'):
+        if hasattr(self.val_env, 'trade_history'):
             try:
-                self.val_env.trades.clear()
+                self.val_env.trade_history.clear()
             except Exception:
-                self.val_env.trades = []
+                self.val_env.trade_history = []
         
         # State is now at start_idx position from fast-forward loop above
         episode_reward = 0
         steps = 0
         
-        # PATCH A+: Track action counts and hold streak for validation diagnostics
-        action_counts = np.zeros(4, dtype=int)  # [HOLD, LONG, SHORT, FLAT]
+        # PATCH A+: Track action counts for validation diagnostics
+        action_dim = int(getattr(self.val_env, "action_space_size", ActionSpace.get_action_size()))
+        action_counts = np.zeros(action_dim, dtype=int)
         action_sequence = []  # PATCH D: Track action sequence for metrics
-        hold_streak = 0
-        HOLD_ACTION = 0  # HOLD is action index 0
         
         # SPR: Track data for SPR fitness computation
         window_timestamps = []  # Bar timestamps
@@ -522,84 +587,13 @@ class Trainer:
         from datetime import timedelta
         base_timestamp = datetime(2024, 1, 1)
         
-        # BUGFIX: Get configuration for eval exploration and hold-streak breaker from AGENT config
-        # (not training config) to use the tuned values in AgentConfig
-        agent_cfg = getattr(self.config, 'agent', None)
-        eval_epsilon = getattr(agent_cfg, 'eval_epsilon', 0.05)
-        eval_tie_only = getattr(agent_cfg, 'eval_tie_only', True)
-        eval_tie_tau = getattr(agent_cfg, 'eval_tie_tau', 0.05)
-        hold_tie_tau = getattr(agent_cfg, 'hold_tie_tau', 0.032)
-        hold_break_after = getattr(agent_cfg, 'hold_break_after', 7)
-        
         done = False
         while not done and steps < (end_idx - start_idx):
             # Get legal action mask
             mask = getattr(self.val_env, 'legal_action_mask', lambda: None)()
-            
-            # QUALITY: Conditional eval epsilon - only on Q-value ties
-            apply_epsilon = False
-            if eval_epsilon > 0:
-                if eval_tie_only:
-                    # Get Q-values to check for ties
-                    try:
-                        q_values = self.agent.get_q_values(state)
-                        # Calculate gap between top two Q-values
-                        sorted_q = np.partition(q_values, -2)
-                        q_gap = sorted_q[-1] - sorted_q[-2]  # top1 - top2
-                        
-                        # Only apply epsilon if it's a near-tie
-                        if q_gap < eval_tie_tau and np.random.rand() < eval_epsilon:
-                            apply_epsilon = True
-                    except Exception:
-                        pass  # Fall back to greedy on error
-                else:
-                    # Original behavior: unconditional epsilon
-                    if np.random.rand() < eval_epsilon:
-                        apply_epsilon = True
-            
-            if apply_epsilon:
-                # Epsilon-greedy: random non-HOLD action to break flatlines
-                non_hold_actions = [1, 2, 3]  # LONG, SHORT, FLAT
-                if mask is not None:
-                    non_hold_actions = [a for a in non_hold_actions if mask[a]]
-                
-                if non_hold_actions:
-                    action = np.random.choice(non_hold_actions)
-                else:
-                    action = HOLD_ACTION  # Fall back to HOLD if no legal non-HOLD
-            else:
-                # Normal greedy action with eval_mode=True
-                action = self.agent.select_action(state, explore=False, mask=mask, eval_mode=True, env=self.val_env)
-                
-                # PATCH: Hold-streak breaker (only when not using epsilon)
-                if action == HOLD_ACTION:
-                    hold_streak += 1
-                    # Check if we should probe the market
-                    if hold_streak >= hold_break_after:
-                        try:
-                            # Get Q-values to check if near-tie
-                            q_values = self.agent.get_q_values(state)
-                            
-                            # Find best non-HOLD Q-value
-                            non_hold_actions = [1, 2, 3]  # LONG, SHORT, FLAT
-                            if mask is not None:
-                                # Filter to legal non-HOLD actions
-                                non_hold_actions = [a for a in non_hold_actions if mask[a]]
-                            
-                            if non_hold_actions:
-                                non_hold_q_values = [q_values[a] for a in non_hold_actions]
-                                best_non_hold_idx = non_hold_actions[np.argmax(non_hold_q_values)]
-                                best_non_hold_q = q_values[best_non_hold_idx]
-                                hold_q = q_values[HOLD_ACTION]
-                                
-                                # If near-tie (within tau), take best non-HOLD action
-                                if best_non_hold_q - hold_q >= -hold_tie_tau:
-                                    action = best_non_hold_idx
-                                    hold_streak = 0  # Reset streak
-                        except Exception:
-                            pass  # Fall back to HOLD on any error
-                else:
-                    hold_streak = 0
+            # Keep validation action policy identical to test evaluation policy:
+            # deterministic greedy in eval mode with legal-action masking.
+            action = self.agent.select_action(state, explore=False, mask=mask, eval_mode=True, env=self.val_env)
             
             # Track action
             action_counts[action] += 1
@@ -615,9 +609,9 @@ class Trainer:
             window_equity.append(current_equity)
             
             # SPR: Track trade P&L if a trade was closed this step
-            if hasattr(self.val_env, 'trades') and len(self.val_env.trades) > len(window_trade_pnls):
+            if hasattr(self.val_env, 'trade_history') and len(self.val_env.trade_history) > len(window_trade_pnls):
                 # New trade closed - get its P&L
-                latest_trade = self.val_env.trades[-1]
+                latest_trade = self.val_env.trade_history[-1]
                 trade_pnl = latest_trade.get('pnl', 0.0)
                 window_trade_pnls.append(trade_pnl)
             
@@ -724,6 +718,7 @@ class Trainer:
         # Don't restore to a "base" - use whatever was set before this validation!
         current_spread = self.val_env.spread
         current_commission = self.val_env.commission
+        current_slippage = float(getattr(self.val_env, "slippage_pips", 0.0))
         
         # PHASE-2.8c: Get jitter-averaging configuration
         jitter_draws = getattr(self.config, "VAL_JITTER_DRAWS", 1)  # Default: no averaging
@@ -807,7 +802,8 @@ class Trainer:
         # Run validation on each disjoint window with jitter averaging
         fits, trade_counts = [], []
         all_results = []
-        total_action_counts = np.zeros(4, dtype=int)  # PATCH C: Aggregate action histograms
+        action_dim = int(getattr(self.val_env, "action_space_size", ActionSpace.get_action_size()))
+        total_action_counts = np.zeros(action_dim, dtype=int)
         all_actions = []  # PATCH D: Collect all action sequences
         
         # SPR: Store last SPR info for logging
@@ -820,7 +816,7 @@ class Trainer:
                 jitter_fits = []
                 jitter_trades = []
                 jitter_results = []
-                jitter_action_counts = np.zeros(4, dtype=int)
+                jitter_action_counts = np.zeros(action_dim, dtype=int)
                 jitter_actions = []
                 
                 for draw_i in range(jitter_draws):
@@ -898,6 +894,9 @@ class Trainer:
         # PHASE-2.8c: Restore to current values (which may be randomized)
         self.val_env.spread = current_spread
         self.val_env.commission = current_commission
+        self.val_env.slippage_pips = current_slippage
+        if hasattr(self.val_env, "risk_manager"):
+            self.val_env.risk_manager.slippage_pips = current_slippage
         
         # --- PHASE-2: Robust trimmed aggregation with IQR cap ---
         fits_array = np.asarray(fits)
@@ -953,6 +952,8 @@ class Trainer:
         min_full = max(min_full_floor, int(round(expected_trades)))
         min_half = max(min_half_floor, int(round(expected_trades * 0.6)))
         
+        disable_trade_gating = getattr(self.config, "VAL_DISABLE_TRADE_GATING", False)
+
         # Apply multiplier based on median trades
         if median_trades >= min_full:
             mult = 1.00
@@ -966,13 +967,18 @@ class Trainer:
         undertrade_penalty = 0.0
         is_low_trade = median_trades < min_half
         
-        if is_low_trade:
-            if self.last_val_was_low_trade:
-                # Second consecutive low-trade episode - apply penalty
-                shortfall = (min_half - median_trades) / max(1, min_half)  # 0..1
-                penalty_max = getattr(self.config, "VAL_PENALTY_MAX", 0.10)
-                undertrade_penalty = min(penalty_max, round(0.5 * shortfall, 3))
-            # else: First offense - grace period, pen=0.00
+        if not disable_trade_gating:
+            if is_low_trade:
+                if self.last_val_was_low_trade:
+                    # Second consecutive low-trade episode - apply penalty
+                    shortfall = (min_half - median_trades) / max(1, min_half)  # 0..1
+                    penalty_max = getattr(self.config, "VAL_PENALTY_MAX", 0.10)
+                    undertrade_penalty = min(penalty_max, round(0.5 * shortfall, 3))
+                # else: First offense - grace period, pen=0.00
+        else:
+            mult = 1.00
+            undertrade_penalty = 0.0
+            is_low_trade = False
         
         # Update grace tracker for next validation
         self.last_val_was_low_trade = is_low_trade
@@ -1001,6 +1007,13 @@ class Trainer:
         # CRITICAL: Wire the computed stability-adjusted score into val_stats
         val_stats['val_fitness'] = val_score
         val_stats['val_trades'] = median_trades
+        # Expose robust-validation internals to callers (training loop/post-restore ALT).
+        val_stats['val_k'] = int(len(windows))
+        val_stats['val_median_fitness'] = float(median)
+        val_stats['val_iqr'] = float(iqr)
+        val_stats['val_stability_adj'] = float(stability_adj)
+        val_stats['val_mult'] = float(mult)
+        val_stats['val_undertrade_penalty'] = float(undertrade_penalty)
         
         # Quality-of-life print - enhanced for SPR mode
         fitness_mode = getattr(self.config.fitness, 'mode', 'legacy')
@@ -1039,7 +1052,10 @@ class Trainer:
         
         # PATCH D: Compute policy metrics from action sequence
         # FIX: Compute per-window max streaks to avoid artificially long sequences from concatenation
-        ACTION_NAMES = ("HOLD", "LONG", "SHORT", "FLAT")
+        ACTION_NAMES = tuple(
+            ActionSpace.get_action_name(i)
+            for i in range(int(getattr(self.val_env, "action_space_size", ActionSpace.get_action_size())))
+        )
         
         # First, compute metrics on concatenated sequence (for entropy, switch rate)
         policy_metrics = compute_policy_metrics(all_actions, ACTION_NAMES)
@@ -1074,7 +1090,7 @@ class Trainer:
             "seed": int(getattr(self.config, "random_seed", -1)),
             # PHASE-2.8b: Track friction parameters for robustness verification
             "spread": float(getattr(self.val_env, 'spread', 0)),
-            "slippage_pips": float(getattr(self.val_env.risk_manager, 'slippage_pips', 0) if hasattr(self.val_env, 'risk_manager') else 0),
+            "slippage_pips": float(getattr(self.val_env, "slippage_pips", 0.0)),
             # PATCH D: Enhanced action metrics (replaces/extends PATCH C)
             "actions": policy_metrics["actions"],
             "hold_rate": policy_metrics["hold_rate"],
@@ -1101,13 +1117,15 @@ class Trainer:
                 "significance": float(self._last_spr_info.get('significance', 0)),
                 "stagnation_penalty": float(self._last_spr_info.get('stagnation_penalty', 1)),
             }
+            # Mirror SPR components in returned stats for post-restore/ALT logging.
+            val_stats["spr_components"] = dict(summary["spr_components"])
         
-        out_dir = os.path.join("logs", "validation_summaries")
-        os.makedirs(out_dir, exist_ok=True)
+        out_dir = self.log_dir / "validation_summaries"
+        out_dir.mkdir(parents=True, exist_ok=True)
         
         # File per episode keeps things simple for the checker
         if summary['episode'] is not None:
-            fname = os.path.join(out_dir, f"val_ep{summary['episode']:03d}.json")
+            fname = out_dir / f"val_ep{summary['episode']:03d}.json"
             with open(fname, "w", encoding="utf-8") as f:
                 # ensure_ascii avoids Windows codepage headaches
                 json.dump(summary, f, ensure_ascii=True, indent=2)
@@ -1172,7 +1190,8 @@ class Trainer:
             prefill_steps = 1000  # Shorter for smoke runs
         
         if prefill_steps > 0 and self.agent.replay_size == 0:
-            prefill_replay(self.train_env, self.agent, steps=prefill_steps)
+            prefill_policy = getattr(self.config.training, "prefill_policy", "baseline")
+            prefill_replay(self.train_env, self.agent, steps=prefill_steps, policy=prefill_policy)
         
         # PATCH #6: Configure agent training parameters
         try:
@@ -1220,7 +1239,8 @@ class Trainer:
                     s = float(np.random.uniform(0.00013, 0.00020))  # was 0.00012-0.00025
                     sp = float(np.random.uniform(0.6, 1.0))         # was 0.5-1.2
                     self.val_env.spread = s
-                    if hasattr(self.val_env.risk_manager, 'slippage_pips'):
+                    self.val_env.slippage_pips = sp
+                    if hasattr(self.val_env, "risk_manager"):
                         self.val_env.risk_manager.slippage_pips = sp
                 except Exception:
                     pass
@@ -1410,7 +1430,7 @@ class Trainer:
             # Tag the final summary so comparison tools can recognize it
             import os
             import json
-            out_dir = Path("logs") / "validation_summaries"
+            out_dir = self.log_dir / "validation_summaries"
             out_dir.mkdir(parents=True, exist_ok=True)
             
             # Load the most recent validation summary to get episode number
@@ -1418,7 +1438,8 @@ class Trainer:
             last_episode = 0
             if recent_files:
                 try:
-                    last_file = json.load(open(recent_files[-1], "r"))
+                    with open(recent_files[-1], "r", encoding="utf-8") as f:
+                        last_file = json.load(f)
                     last_episode = last_file.get("episode", 0)
                 except:
                     pass

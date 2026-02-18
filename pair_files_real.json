@@ -1,0 +1,6 @@
+{
+  "EURUSD": "data/EURUSD_H1.csv",
+  "GBPUSD": "data/GBPUSD_H1.csv",
+  "USDCHF": "data/USDCHF_H1.csv",
+  "USDJPY": "data/USDJPY_H1.csv"
+}

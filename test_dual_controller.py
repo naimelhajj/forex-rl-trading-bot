@@ -1,7 +1,7 @@
 """Test Phase 2.8f dual-variable controller logic"""
 import numpy as np
 import torch
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 
 print("=" * 80)
 print("PHASE 2.8f DUAL-VARIABLE CONTROLLER TEST")
@@ -10,7 +10,7 @@ print("=" * 80)
 # Create agent with controller enabled
 agent = DQNAgent(
     state_size=176,
-    action_size=4,
+    action_size=ActionSpace.get_action_size(),
     device=torch.device('cpu'),
     use_dual_controller=True,
     use_noisy=False  # Use epsilon-greedy for clearer testing

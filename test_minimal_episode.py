@@ -2,7 +2,7 @@
 import sys
 import numpy as np
 from config import Config
-from agent import DQNAgent
+from agent import DQNAgent, ActionSpace
 from environment import ForexTradingEnv
 import pandas as pd
 
@@ -40,7 +40,7 @@ print(f"State size: {env.state_size}")
 print("Creating agent...")
 agent = DQNAgent(
     state_size=env.state_size,
-    action_size=4,
+    action_size=ActionSpace.get_action_size(),
     use_noisy=True,
     noisy_sigma_init=0.4,
     buffer_type='simple',
@@ -76,4 +76,4 @@ while not done and step < 20:
 
 print(f"\nCompleted {step} steps!")
 print(f"Final buffer size: {len(agent.replay_buffer)}")
-print("✅ Test passed - no hang!")
+print("TEST PASSED - no hang!")
