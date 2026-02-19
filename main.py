@@ -1132,6 +1132,21 @@ def main():
     parser.add_argument('--prefill-policy', type=str, default=None,
                         choices=['baseline', 'random', 'none'],
                         help='Replay prefill policy: baseline, random, or none')
+    parser.add_argument('--anti-regression-checkpoint', dest='anti_regression_checkpoint_selection', action='store_true',
+                        help='Enable anti-regression checkpoint tournament at end of training')
+    parser.add_argument('--no-anti-regression-checkpoint', dest='anti_regression_checkpoint_selection', action='store_false',
+                        help='Disable anti-regression checkpoint tournament')
+    parser.set_defaults(anti_regression_checkpoint_selection=None)
+    parser.add_argument('--anti-regression-top-k', type=int, default=None,
+                        help='Top-K checkpoints to evaluate in anti-regression tournament')
+    parser.add_argument('--anti-regression-candidate-keep', type=int, default=None,
+                        help='How many candidate checkpoints to retain during training')
+    parser.add_argument('--anti-regression-min-validations', type=int, default=None,
+                        help='Minimum validations required before anti-regression tournament')
+    parser.add_argument('--anti-regression-alt-stride-frac', type=float, default=None,
+                        help='Stride fraction for anti-regression secondary hold-out validation')
+    parser.add_argument('--anti-regression-alt-window-bars', type=int, default=None,
+                        help='Window bars for anti-regression secondary hold-out validation')
     
     args = parser.parse_args()
     
@@ -1257,6 +1272,18 @@ def main():
         config.risk.tp_multiplier = args.tp_mult
     if args.prefill_policy is not None:
         config.training.prefill_policy = args.prefill_policy
+    if args.anti_regression_checkpoint_selection is not None:
+        config.training.anti_regression_checkpoint_selection = args.anti_regression_checkpoint_selection
+    if args.anti_regression_top_k is not None:
+        config.training.anti_regression_eval_top_k = max(1, int(args.anti_regression_top_k))
+    if args.anti_regression_candidate_keep is not None:
+        config.training.anti_regression_candidate_keep = max(1, int(args.anti_regression_candidate_keep))
+    if args.anti_regression_min_validations is not None:
+        config.training.anti_regression_min_validations = max(1, int(args.anti_regression_min_validations))
+    if args.anti_regression_alt_stride_frac is not None:
+        config.training.anti_regression_alt_stride_frac = max(0.01, float(args.anti_regression_alt_stride_frac))
+    if args.anti_regression_alt_window_bars is not None:
+        config.training.anti_regression_alt_window_bars = max(100, int(args.anti_regression_alt_window_bars))
     
     # Override episodes if specified
     if args.episodes is not None:

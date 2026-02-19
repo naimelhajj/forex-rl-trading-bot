@@ -6,6 +6,331 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-19 (Seed-2027 robustness micro-sweep + profitpick v2 tri-seed)
+
+Focus: directly address the unstable seed by targeted fast sweeps, then retest all blind seeds with the same settings.
+
+### Seed-2027 micro-sweep (10ep, WF2400)
+
+Prefix:
+- `seed2027_robust_micro4_10ep_20260218_225107`
+
+Configs tested:
+- A_base: `flip=0.00045`, `min_atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`
+- B_flip040: `flip=0.00040`, `min_atr_cost_ratio=0.15`
+- C_atr018: `flip=0.00045`, `min_atr_cost_ratio=0.18`
+- D_flip050_atr018: `flip=0.00050`, `min_atr_cost_ratio=0.18`
+
+WF2400 results (seed 2027):
+- A_base: return `+2.85%`, PF `3.29`, trades `23`, walk-forward `True`  **(best)**
+- B_flip040: return `+1.86%`, PF `1.78`, trades `24`, walk-forward `False`
+- C_atr018: return `+1.10%`, PF `1.48`, trades `22`, walk-forward `True`
+- D_flip050_atr018: return `-1.29%`, PF `0.54`, trades `24`, walk-forward `False`
+
+Decision:
+- Keep A_base settings as the best local fix candidate.
+
+### Profitpick v2 blind tri-seed retest (same A_base settings)
+
+Prefix:
+- `fric_guardB_profitpick_v2_blind10ep_20260219_000343`
+
+Artifacts:
+- Real-cost aggregate:
+  - `seed_sweep_results/realdata/fric_guardB_profitpick_v2_blind10ep_20260219_000343_eval_wf2400_tri_aggregate_20260219.json`
+- Zero-cost aggregate:
+  - `seed_sweep_results/realdata/fric_guardB_profitpick_v2_blind10ep_20260219_000343_eval_wf2400_zero_cost_tri_aggregate_20260219.json`
+
+WF2400 real-cost:
+- Seed 1011: return `-0.07%`, PF `0.99`, trades `26`, walk-forward `False`
+- Seed 2027: return `+0.77%`, PF `1.30`, trades `23`, walk-forward `True`
+- Seed 3039: return `+2.57%`, PF `2.24`, trades `25`, walk-forward `True`
+- Mean: return `+1.09%`, PF `1.51`, trades `24.7`, walk-forward pass `2/3`
+
+Comparison:
+- Prior Guard B baseline (`fric_guardB_blind10ep_20260218_134723`): return `+1.54%`, PF `1.91`, pass `1/3`
+- Profitpick v2 improves walk-forward pass count but degrades profitability quality materially (PF and return mean drop).
+
+Interpretation:
+- Seed-specific tuning helped seed 2027 locally but did not improve blind tri-seed profitability.
+- Keep Guard B baseline as the current best profitability branch; treat profitpick v2 as a rejected pivot.
+
+## 2026-02-18 (OOS stress test on Guard B baseline: WF4800 and full horizon)
+
+Focus: no-retrain out-of-sample stress test of the current best fast branch before further tuning.
+
+Base checkpoints:
+- `fric_guardB_blind10ep_20260218_134723` (seeds `1011, 2027, 3039`)
+
+Stress tag:
+- `oos_stress_guardB10_20260218_221913`
+
+What was run:
+- Evaluate-only on each seed checkpoint at:
+  - `--max-steps-per-episode 4800`
+  - `--max-steps-per-episode 20000` (effectively full test split)
+
+Aggregates:
+- WF4800:
+  - `seed_sweep_results/realdata/oos_stress_guardB10_20260218_221913_wf4800_tri_aggregate_20260218.json`
+  - Mean return `+1.54%`, mean PF `1.91`, mean trades `23.0`, walk-forward pass `0/3`
+- Full horizon:
+  - `seed_sweep_results/realdata/oos_stress_guardB10_20260218_221913_wffull_tri_aggregate_20260218.json`
+  - Mean return `+1.54%`, mean PF `1.91`, mean trades `23.0`, walk-forward pass `0/3`
+
+Important observation:
+- Core PnL metrics are unchanged from prior WF2400 aggregate.
+- Reason: policy often reaches its trade cap (`max_trades_per_episode=28`) early, then additional bars add little or no new realized edge.
+- This means horizon extension alone is not currently a discriminative robustness test for this branch.
+
+Interpretation:
+- Branch remains modestly profitable on average but not robust under current walk-forward criteria.
+- Next high-value work should target trade-cap saturation and cross-seed robustness (especially avoiding seed-specific collapse), not further horizon scaling.
+
+Add-on test (same date, same base checkpoints):
+- Increased evaluation trade cap only: `--max-trades-per-episode 60` on full horizon.
+- Aggregate:
+  - `seed_sweep_results/realdata/oos_stress_guardB10_cap60_20260218_223626_wffull_cap60_tri_aggregate_20260218.json`
+  - Mean return `+1.40%`, mean PF `1.45`, mean trades `49.0`, walk-forward pass `2/3`
+- Compared to cap 28:
+  - cap 28: return `+1.54%`, PF `1.91`, trades `23.0`, pass `0/3`
+  - cap 60: return `+1.40%`, PF `1.45`, trades `49.0`, pass `2/3`
+
+Reading:
+- Raising cap increases activity and walk-forward pass count but degrades quality (PF drops sharply).
+- This supports keeping tighter cadence controls and focusing on seed-2027 robustness rather than loosening trade cap.
+
+## 2026-02-18 (Validation-calibration test rejected: no-jitter + 1200-bar windows)
+
+Focus: test whether making validation closer to evaluation (`no jitter`, larger windows) improves blind-seed profitability.
+
+Calibration hypothesis:
+- Validation friction jitter and short windows may be weakening checkpoint selection quality.
+- Try:
+  - `--val-jitter-draws 1`
+  - `--val-window-bars 1200`
+  - keep profit-first anti-regression tournament enabled.
+
+Quick single-seed probe:
+- Prefix: `calib_profitpick_seed2027_njitter_vw1200_10ep_20260218_202058`
+- Seed `2027` result:
+  - 600-step: return `+2.84%`, PF `2.37`, trades `26`
+  - WF2400: return `+2.84%`, PF `2.37`, walk-forward `False`
+- This looked promising in isolation.
+
+Blind tri-seed confirmation:
+- Prefix: `calib_profitpick_njitter_vw1200_blind10ep_20260218_202646`
+- Real-cost WF2400 aggregate:
+  - `seed_sweep_results/realdata/calib_profitpick_njitter_vw1200_blind10ep_20260218_202646_eval_wf2400_tri_aggregate_20260218.json`
+  - Mean return `+0.36%`, mean PF `1.20`, trades `23.3`, walk-forward pass `0/3`
+- Zero-cost WF2400 aggregate:
+  - `seed_sweep_results/realdata/calib_profitpick_njitter_vw1200_blind10ep_20260218_202646_eval_wf2400_zero_cost_tri_aggregate_20260218.json`
+  - Mean return `+1.30%`, mean PF `1.75`, walk-forward pass `1/3`
+
+Comparison vs prior best fast-screen branch:
+- Prior Guard B 10ep (`fric_guardB_blind10ep_20260218_134723`): mean return `+1.54%`, PF `1.91`, pass `1/3`.
+- Calibrated branch is materially worse on both return and PF.
+
+Interpretation:
+- The single-seed uplift was not robust.
+- Reject this calibration pivot; keep prior Guard B 10ep branch as better fast-screen baseline.
+
+## 2026-02-18 (Profitability-first checkpoint selection + blind 10ep recheck)
+
+Focus: make checkpoint selection explicitly profit-first (median return and PF) rather than SPR-only, then run a fast blind validation.
+
+Code changes:
+- `trainer.py`
+  - Validation now records profitability diagnostics:
+    - `val_return_pct`
+    - `val_median_return_pct`
+    - `val_median_pf`
+  - Validation summaries now include `return_pct_mean`, `return_pct_median`, and `pf_median`.
+  - Anti-regression tournament ranking changed to profitability-first:
+    - primary: robust median return across base+alt validation (`min(base, alt)`),
+    - secondary: robust PF and SPR,
+    - penalties for negative robust return, PF<1, dispersion, and low trades,
+    - feasible pool filter prefers candidates with `base/alt return > 0` and `base/alt PF >= 1`.
+- Existing anti-regression candidate/tournament machinery remains enabled.
+
+Blind fast recheck run:
+- Prefix: `fric_guardB_profitpick_blind10ep_20260218_184002`
+- Seeds: `1011, 2027, 3039`
+- Episodes: `10`, Guard B settings unchanged.
+
+Artifacts:
+- Real-cost WF2400 aggregate:
+  - `seed_sweep_results/realdata/fric_guardB_profitpick_blind10ep_20260218_184002_eval_wf2400_tri_aggregate_20260218.json`
+- Zero-cost WF2400 aggregate:
+  - `seed_sweep_results/realdata/fric_guardB_profitpick_blind10ep_20260218_184002_eval_wf2400_zero_cost_tri_aggregate_20260218.json`
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/fric_guardB_profitpick_blind10ep_20260218_184002_tri_aggregate_20260218.json`
+
+WF2400 (real costs):
+- Seed 1011: return `+3.53%`, PF `3.57`, trades `18`, walk-forward `False`
+- Seed 2027: return `-1.65%`, PF `0.55`, trades `26`, walk-forward `False`
+- Seed 3039: return `+1.94%`, PF `1.61`, trades `24`, walk-forward `True`
+- Mean: return `+1.27%`, PF `1.91`, trades `22.7`, walk-forward pass `1/3`
+
+WF2400 (zero-cost diagnostic):
+- Mean return `+2.34%`, mean PF `2.52`, walk-forward pass `2/3`
+
+Interpretation:
+- Profitability-first checkpoint selection is functioning (all seeds selected from profit-feasible candidate pools).
+- However, blind-seed robustness remains mixed (still one materially negative seed), so this is not yet a promotion-grade branch.
+- Compared with prior Guard B 10ep, PF/trade profile is similar; return mean is slightly lower, so no clear net gain.
+
+## 2026-02-18 (Anti-regression checkpoint tournament: blind 20ep tri-seed result)
+
+Focus: reduce late-run/selection regression by replacing single-path best-checkpoint restore with a robust checkpoint tournament.
+
+Code changes (selection logic):
+- `trainer.py`
+  - Added per-validation candidate checkpoint tracking (`candidate_epXXX.pt`).
+  - Added end-of-run anti-regression tournament:
+    - Evaluates shortlisted checkpoints on base validation and alternate hold-out validation (`stride=0.20`).
+    - Uses composite robust score (`min(base, alt)` with dispersion and low-trade penalties).
+    - Writes `logs/checkpoint_tournament.json` and restores tournament winner.
+  - Added optional quiet/non-persist validation mode for internal checkpoint scoring.
+- `config.py`
+  - Added training knobs:
+    - `anti_regression_checkpoint_selection`
+    - `anti_regression_candidate_keep`
+    - `anti_regression_eval_top_k`
+    - `anti_regression_min_validations`
+    - `anti_regression_alt_stride_frac`
+    - `anti_regression_alt_window_bars`
+- `main.py`
+  - Added CLI overrides for anti-regression options.
+
+Run setup:
+- Prefix: `fric_guardB_antireg_blind20ep_20260218_161533`
+- Seeds: `1011, 2027, 3039` (blind set)
+- Episodes: `20`, train/test `600`, re-eval `WF2400`
+- Guard B frictions/cadence kept constant (`flip=0.00045`, `atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`, no prefill, no symmetry, no dual).
+
+Artifacts:
+- Real-cost aggregate: `seed_sweep_results/realdata/fric_guardB_antireg_blind20ep_20260218_161533_eval_wf2400_tri_aggregate_20260218.json`
+- Zero-cost aggregate: `seed_sweep_results/realdata/fric_guardB_antireg_blind20ep_20260218_161533_eval_wf2400_zero_cost_tri_aggregate_20260218.json`
+- Train/test aggregate: `seed_sweep_results/realdata/fric_guardB_antireg_blind20ep_20260218_161533_tri_aggregate_20260218.json`
+
+WF2400 (real costs):
+- Seed 1011: return `+1.13%`, PF `1.55`, trades `28`, walk-forward `True`
+- Seed 2027: return `-1.68%`, PF `0.50`, trades `20`, walk-forward `True`
+- Seed 3039: return `-2.05%`, PF `0.51`, trades `25`, walk-forward `True`
+- Mean: return `-0.87%`, PF `0.86`, trades `24.3`, walk-forward pass `3/3`
+
+WF2400 (zero-cost diagnostic):
+- Mean return `-0.02%`, mean PF `1.25`, walk-forward pass `3/3`
+
+Tournament winners by seed:
+- Seed 1011: `candidate_ep017.pt`
+- Seed 2027: `candidate_ep003.pt`
+- Seed 3039: `candidate_ep005.pt`
+
+Interpretation:
+- Anti-regression tournament did not recover profitability on blind 20ep runs.
+- `walk-forward pass` became less informative here (3/3 pass despite negative mean return/PF<1), so profitability criteria must remain primary.
+- Conclusion: checkpoint-selection hardening alone is insufficient; current validation objective/regime still does not select profitable checkpoints under real costs.
+
+## 2026-02-18 (Guard B escalation: 20ep blind tri-seed regression)
+
+Focus: confirm whether the promising Guard B fast-screen (`10ep`) holds when training horizon is extended.
+
+Run setup:
+- Prefix: `fric_guardB_blind20ep_20260218_142820`
+- Seeds: `1011, 2027, 3039` (same blind set)
+- Same hyperparameters as Guard B fast-screen:
+  - `trade_penalty=0`
+  - `flip_penalty=0.00045`
+  - `min_atr_cost_ratio=0.15`
+  - `cooldown=8`
+  - `min_hold=4`
+  - `max_trades=28`
+  - no symmetry loss, no dual controller, prefill `none`
+- Episodes: `20`, train/test `600`, plus `WF2400` re-eval.
+
+Artifacts:
+- Aggregates:
+  - `seed_sweep_results/realdata/fric_guardB_blind20ep_20260218_142820_tri_aggregate_20260218.json`
+  - `seed_sweep_results/realdata/fric_guardB_blind20ep_20260218_142820_eval_wf2400_tri_aggregate_20260218.json`
+  - `seed_sweep_results/realdata/fric_guardB_blind20ep_20260218_142820_eval_wf2400_zero_cost_tri_aggregate_20260218.json`
+
+WF2400 (real costs):
+- Seed 1011: return `-1.71%`, PF `0.41`, trades `26`, walk-forward `False`
+- Seed 2027: return `-1.30%`, PF `0.62`, trades `24`, walk-forward `False`
+- Seed 3039: return `+0.62%`, PF `1.35`, trades `25`, walk-forward `False`
+- Mean: return `-0.79%`, PF `0.79`, trades `25.0`, walk-forward pass `0/3`
+
+WF2400 (zero-cost diagnostic on same checkpoints):
+- Mean return `+0.35%`, mean PF `1.29`, walk-forward pass `3/3`
+
+Interpretation:
+- Guard B looked promising at `10ep`, but regressed materially at `20ep` on the same blind seeds.
+- This indicates horizon instability / over-training sensitivity, not solved friction robustness.
+- Keep this branch as a negative confirmation for `20ep` under current checkpoint-selection regime.
+
+## 2026-02-18 (Friction-robustness Guard B blind check: 10ep tri-seed + WF2400)
+
+Focus: fast-screen a cost-aware training setup on unseen seeds without multi-hour runs.
+
+Run setup:
+- Prefix: `fric_guardB_blind10ep_20260218_134723`
+- Seeds: `1011, 2027, 3039` (blind to prior tuning)
+- Broker profile: `hfm-premium`
+- Episodes: `10` (fast screen), train/test horizon `600`, then re-eval at `WF2400`
+- Key knobs: `trade_penalty=0`, `flip_penalty=0.00045`, `min_atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`, no symmetry loss, no dual controller, prefill `none`.
+
+Artifacts:
+- Per-seed logs:
+  - `logs/fric_guardB_blind10ep_20260218_134723_seed1011.log`
+  - `logs/fric_guardB_blind10ep_20260218_134723_seed2027.log`
+  - `logs/fric_guardB_blind10ep_20260218_134723_seed3039.log`
+- Aggregates:
+  - `seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_tri_aggregate_20260218.json`
+  - `seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_eval_wf2400_tri_aggregate_20260218.json`
+  - `seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_eval_wf2400_zero_cost_tri_aggregate_20260218.json`
+
+WF2400 (real costs):
+- Seed 1011: return `+3.21%`, PF `3.14`, trades `22`, walk-forward `True`
+- Seed 2027: return `+0.79%`, PF `1.25`, trades `22`, walk-forward `False`
+- Seed 3039: return `+0.62%`, PF `1.35`, trades `25`, walk-forward `False`
+- Mean: return `+1.54%`, PF `1.91`, trades `23.0`, walk-forward pass `1/3`
+
+WF2400 (zero-cost diagnostic on same checkpoints):
+- Mean return `+2.38%`, mean PF `3.01`, walk-forward pass `3/3`
+
+Interpretation:
+- Fast-screen result is materially better than the prior blind baseline (`+0.39%`, PF `1.23`, `0/3` pass), while also reducing trade count (friction load).
+- Signal remains present and stronger without costs, so edge is still friction-sensitive but now closer to viable under real costs.
+- Next step: run the same Guard B config at `20` episodes on the same blind seeds for confirmation-quality evidence.
+
+## 2026-02-18 (Blind-seed confirmation: 20ep tri-seed, real-cost failure vs zero-cost pass)
+
+Focus: validate generalization on unseen seeds before further tuning.
+
+Blind sweep setup:
+- Prefix: `blind_hfm_parity_20ep_20260218_110154`
+- Seeds: `1011, 2027, 3039` (not the previously tuned seeds)
+- Config held constant: HFM profile, no prefill, no symmetry loss, no dual controller, 20 episodes, 600-step training/test horizon, heartbeat enabled.
+
+Per-seed WF2400 (real costs):
+- Seed 1011: return `+1.52%`, PF `1.70`, walk-forward `False`
+- Seed 2027: return `+0.22%`, PF `1.10`, walk-forward `False`
+- Seed 3039: return `-0.57%`, PF `0.91`, walk-forward `False`
+
+Aggregate (real costs):
+- `seed_sweep_results/realdata/blind_hfm_parity_20ep_20260218_110154_eval_wf2400_tri_aggregate_20260218.json`
+- Mean return `+0.39%`, mean PF `1.23`, walk-forward pass `0/3`
+
+Diagnostic (same checkpoints, WF2400 zero-cost eval):
+- `seed_sweep_results/realdata/blind_hfm_parity_20ep_20260218_110154_eval_wf2400_zero_cost_tri_aggregate_20260218.json`
+- Mean return `+1.73%`, mean PF `1.78`, walk-forward pass `3/3`
+
+Interpretation:
+- Policy signal exists, but it is not robust once realistic frictions are applied.
+- This is now a friction-robustness problem, not a learnability/architecture problem.
+
 ## 2026-02-18 (20ep robustness extension + seed789 recovery + 3/3 WF pass)
 
 Focus: resolve seed fragility (seed 789) and verify whether longer training horizon stabilizes the parity+HFM branch.

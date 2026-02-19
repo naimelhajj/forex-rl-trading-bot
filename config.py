@@ -177,6 +177,12 @@ class TrainingConfig:
     prefill_steps: int = 3000  # PATCH #3: Heuristic baseline pre-fill (1000 for smoke, 3000+ for full)
     prefill_policy: str = "baseline"  # baseline | random | none
     disable_early_stop: bool = True  # Set to True for seed sweeps to ensure fixed episode count
+    anti_regression_checkpoint_selection: bool = True  # Evaluate top checkpoints at end and pick most robust
+    anti_regression_candidate_keep: int = 24  # Keep up to N candidate checkpoints during training
+    anti_regression_eval_top_k: int = 6  # Evaluate top-K candidates in end-of-run tournament
+    anti_regression_min_validations: int = 4  # Require at least N validations before tournament
+    anti_regression_alt_stride_frac: float = 0.20  # Secondary hold-out stride for robustness scoring
+    anti_regression_alt_window_bars: Optional[int] = None  # Secondary hold-out window (None uses default)
 
 
 @dataclass

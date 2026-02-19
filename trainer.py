@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 import time
 import torch
+import shutil
 from contextlib import nullcontext
 from torch.utils.tensorboard import SummaryWriter
 
@@ -271,6 +272,8 @@ class Trainer:
         
         # Grace counter for low-trade penalty (soften first offense)
         self.last_val_was_low_trade = False
+        # Candidate checkpoints used for anti-regression end-of-run selection.
+        self.checkpoint_candidates = []
 
         # auto-detect device and configure autocast
         self.device = 'cpu'
@@ -689,11 +692,16 @@ class Trainer:
         fitness_raw = float(metrics["fitness"])
         trades = slice_trades
         
+        final_equity = float(info.get('equity', self.val_env.equity))
+        init_balance = float(getattr(self.config.environment, "initial_balance", 1000.0))
+        return_pct = ((final_equity - init_balance) / max(1e-9, init_balance)) * 100.0
+
         return {
             'fitness': fitness_raw,
             'trades': trades,
             'reward': episode_reward,
-            'equity': info.get('equity', self.val_env.equity),
+            'equity': final_equity,
+            'return_pct': float(return_pct),
             'steps': steps,
             'metrics': metrics,
             'trade_stats': trade_stats,
@@ -701,7 +709,11 @@ class Trainer:
             'action_sequence': action_sequence  # PATCH D: Return for metrics computation
         }
     
-    def validate(self) -> Dict:
+    def validate(self,
+                 stride_frac_override: Optional[float] = None,
+                 window_bars_override: Optional[int] = None,
+                 persist_summary: bool = True,
+                 quiet: bool = False) -> Dict:
         """
         Validate agent on validation environment with DISJOINT windows and dispersion penalty.
         SURGICAL PATCH: Runs K disjoint passes (no overlap) with IQR penalty to reduce spiky runs.
@@ -740,7 +752,7 @@ class Trainer:
             val_idx = range(val_length)
         
         # GATING-FIX: Use fixed window size if specified
-        window_bars = getattr(self.config, "VAL_WINDOW_BARS", None)
+        window_bars = window_bars_override if window_bars_override is not None else getattr(self.config, "VAL_WINDOW_BARS", None)
         if window_bars is not None:
             window_len = min(window_bars, val_length)
         else:
@@ -753,7 +765,7 @@ class Trainer:
             window_len = min(window_len, max_steps)
         
         # Compute stride and K
-        stride_frac = getattr(self.config, "VAL_STRIDE_FRAC", 0.15)
+        stride_frac = stride_frac_override if stride_frac_override is not None else getattr(self.config, "VAL_STRIDE_FRAC", 0.15)
         stride = max(1, int(window_len * stride_frac))
         
         min_k = getattr(self.config, "VAL_MIN_K", 6)
@@ -784,23 +796,26 @@ class Trainer:
         
         # Log validation setup
         jitter_msg = f" | jitter-avg K={jitter_draws}" if jitter_draws > 1 and not freeze_frictions else ""
-        print(f"[VAL] {len(windows)} passes | window={window_len} | stride~{int(window_len*stride_frac)} | "
-              f"coverage~{coverage:.2f}x{jitter_msg}")
+        if not quiet:
+            print(f"[VAL] {len(windows)} passes | window={window_len} | stride~{int(window_len*stride_frac)} | "
+                  f"coverage~{coverage:.2f}x{jitter_msg}")
         
         # Log window ranges (first 3 for brevity)
-        for i, (lo, hi) in enumerate(windows[:3]):
-            if hasattr(val_idx, '__getitem__'):
-                try:
-                    start_time = val_idx[lo]
-                    end_time = val_idx[hi - 1]
-                    print(f"[VAL] window {i+1}: {start_time} to {end_time}  ({hi-lo} bars)")
-                except:
+        if not quiet:
+            for i, (lo, hi) in enumerate(windows[:3]):
+                if hasattr(val_idx, '__getitem__'):
+                    try:
+                        start_time = val_idx[lo]
+                        end_time = val_idx[hi - 1]
+                        print(f"[VAL] window {i+1}: {start_time} to {end_time}  ({hi-lo} bars)")
+                    except Exception:
+                        print(f"[VAL] window {i+1}: idx {lo} to {hi}  ({hi-lo} bars)")
+                else:
                     print(f"[VAL] window {i+1}: idx {lo} to {hi}  ({hi-lo} bars)")
-            else:
-                print(f"[VAL] window {i+1}: idx {lo} to {hi}  ({hi-lo} bars)")
         
         # Run validation on each disjoint window with jitter averaging
         fits, trade_counts = [], []
+        window_return_pcts, window_pfs = [], []
         all_results = []
         action_dim = int(getattr(self.val_env, "action_space_size", ActionSpace.get_action_size()))
         total_action_counts = np.zeros(action_dim, dtype=int)
@@ -815,6 +830,8 @@ class Trainer:
                 # Run K draws with different friction values, average the results
                 jitter_fits = []
                 jitter_trades = []
+                jitter_returns = []
+                jitter_pfs = []
                 jitter_results = []
                 jitter_action_counts = np.zeros(action_dim, dtype=int)
                 jitter_actions = []
@@ -828,6 +845,7 @@ class Trainer:
                     stats = self._run_validation_slice(lo, hi, jitter_spread, jitter_commission)
                     jitter_fits.append(stats['fitness'])
                     jitter_trades.append(stats['trades'])
+                    jitter_returns.append(float(stats.get('return_pct', 0.0)))
                     jitter_results.append({
                         'val_reward': stats['reward'],
                         'val_final_equity': stats['equity'],
@@ -845,12 +863,18 @@ class Trainer:
                     # Capture SPR info from last draw
                     if 'metrics' in stats and 'spr_info' in stats['metrics']:
                         self._last_spr_info = stats['metrics']['spr_info']
+                        jitter_pfs.append(float(stats['metrics']['spr_info'].get('pf', 0.0)))
+                    elif 'metrics' in stats and 'profit_factor' in stats['metrics']:
+                        jitter_pfs.append(float(stats['metrics'].get('profit_factor', 0.0)))
                 
                 # Average over jitter draws
                 window_fit = float(np.mean(jitter_fits))
                 window_trades = int(np.mean(jitter_trades))
                 fits.append(window_fit)
                 trade_counts.append(window_trades)
+                window_return_pcts.append(float(np.mean(jitter_returns)) if jitter_returns else 0.0)
+                if jitter_pfs:
+                    window_pfs.append(float(np.mean(jitter_pfs)))
                 
                 # Average numeric results
                 avg_result = {}
@@ -868,10 +892,14 @@ class Trainer:
                 stats = self._run_validation_slice(lo, hi, current_spread, current_commission)
                 fits.append(stats['fitness'])
                 trade_counts.append(stats['trades'])
+                window_return_pcts.append(float(stats.get('return_pct', 0.0)))
                 
                 # SPR: Capture SPR info from any window (use last for display)
                 if 'metrics' in stats and 'spr_info' in stats['metrics']:
                     self._last_spr_info = stats['metrics']['spr_info']
+                    window_pfs.append(float(stats['metrics']['spr_info'].get('pf', 0.0)))
+                elif 'metrics' in stats and 'profit_factor' in stats['metrics']:
+                    window_pfs.append(float(stats['metrics'].get('profit_factor', 0.0)))
                 
                 # PATCH C: Accumulate action counts
                 if 'action_counts' in stats:
@@ -984,9 +1012,10 @@ class Trainer:
         self.last_val_was_low_trade = is_low_trade
         
         # DEBUG: Print gating thresholds (can remove after verification)
-        print(f"[GATING] bars={bars_per_pass} eff={eff} raw_exp={raw_expected:.1f} "
-              f"scaled_exp={expected_trades:.1f} min_half={min_half} min_full={min_full} "
-              f"median_trades={median_trades:.1f} mult={mult:.2f} pen={undertrade_penalty:.3f}")
+        if not quiet:
+            print(f"[GATING] bars={bars_per_pass} eff={eff} raw_exp={raw_expected:.1f} "
+                  f"scaled_exp={expected_trades:.1f} min_half={min_half} min_full={min_full} "
+                  f"median_trades={median_trades:.1f} mult={mult:.2f} pen={undertrade_penalty:.3f}")
         
         val_score = stability_adj * mult - undertrade_penalty
         
@@ -1014,6 +1043,9 @@ class Trainer:
         val_stats['val_stability_adj'] = float(stability_adj)
         val_stats['val_mult'] = float(mult)
         val_stats['val_undertrade_penalty'] = float(undertrade_penalty)
+        val_stats['val_return_pct'] = float(np.mean(window_return_pcts)) if window_return_pcts else 0.0
+        val_stats['val_median_return_pct'] = float(np.median(window_return_pcts)) if window_return_pcts else 0.0
+        val_stats['val_median_pf'] = float(np.median(window_pfs)) if window_pfs else 0.0
         
         # Quality-of-life print - enhanced for SPR mode
         fitness_mode = getattr(self.config.fitness, 'mode', 'legacy')
@@ -1023,22 +1055,27 @@ class Trainer:
             # We'll collect it during the window loop and store for display
             spr_components = getattr(self, '_last_spr_info', None)
             
-            if spr_components:
-                print(f"[VAL] K={len(windows)} overlapping | SPR={val_score:.3f} | "
-                      f"PF={spr_components.get('pf', 0):.2f} | "
-                      f"MDD={spr_components.get('mdd_pct', 0):.2f}% | "
-                      f"MMR={spr_components.get('mmr_pct_mean', 0):.2f}% | "
-                      f"TPY={spr_components.get('trades_per_year', 0):.1f} | "
-                      f"SIG={spr_components.get('significance', 0):.2f} | "
-                      f"trades={median_trades:.1f} | mult={mult:.2f} | pen={undertrade_penalty:.3f}")
-            else:
-                print(f"[VAL] K={len(windows)} overlapping | SPR={val_score:.3f} | "
-                      f"trades={median_trades:.1f} | mult={mult:.2f} | pen={undertrade_penalty:.3f}")
+            if not quiet:
+                if spr_components:
+                    print(f"[VAL] K={len(windows)} overlapping | SPR={val_score:.3f} | "
+                          f"PF={spr_components.get('pf', 0):.2f} | "
+                          f"MDD={spr_components.get('mdd_pct', 0):.2f}% | "
+                          f"MMR={spr_components.get('mmr_pct_mean', 0):.2f}% | "
+                          f"TPY={spr_components.get('trades_per_year', 0):.1f} | "
+                          f"SIG={spr_components.get('significance', 0):.2f} | "
+                          f"ret_med={val_stats['val_median_return_pct']:.2f}% | "
+                          f"trades={median_trades:.1f} | mult={mult:.2f} | pen={undertrade_penalty:.3f}")
+                else:
+                    print(f"[VAL] K={len(windows)} overlapping | SPR={val_score:.3f} | "
+                          f"ret_med={val_stats['val_median_return_pct']:.2f}% | "
+                          f"trades={median_trades:.1f} | mult={mult:.2f} | pen={undertrade_penalty:.3f}")
         else:
             # Legacy Sharpe/CAGR display
-            print(f"[VAL] K={len(windows)} overlapping | median={median:.3f} (trimmed) | "
-                  f"IQR={iqr:.3f} | iqr_pen={iqr_penalty:.3f} | adj={stability_adj:.3f} | "
-                  f"trades={median_trades:.1f} | mult={mult:.2f} | pen={undertrade_penalty:.3f} | score={val_score:.3f}")
+            if not quiet:
+                print(f"[VAL] K={len(windows)} overlapping | median={median:.3f} (trimmed) | "
+                      f"IQR={iqr:.3f} | iqr_pen={iqr_penalty:.3f} | adj={stability_adj:.3f} | "
+                      f"ret_med={val_stats['val_median_return_pct']:.2f}% | "
+                      f"trades={median_trades:.1f} | mult={mult:.2f} | pen={undertrade_penalty:.3f} | score={val_score:.3f}")
         
         # --- Write compact JSON summary for analysis tools ---
         import os
@@ -1105,6 +1142,9 @@ class Trainer:
             "entropy": policy_metrics["action_entropy_bits"],  # Alias for entropy
             "hold_frac": policy_metrics["hold_rate"],  # Alias for hold fraction
             "long_ratio": policy_metrics["long_short"]["long_ratio"],  # Long/(Long+Short) - already computed
+            "return_pct_mean": val_stats["val_return_pct"],
+            "return_pct_median": val_stats["val_median_return_pct"],
+            "pf_median": val_stats["val_median_pf"],
         }
         
         # SPR: Add SPR components to summary if available
@@ -1120,17 +1160,273 @@ class Trainer:
             # Mirror SPR components in returned stats for post-restore/ALT logging.
             val_stats["spr_components"] = dict(summary["spr_components"])
         
-        out_dir = self.log_dir / "validation_summaries"
-        out_dir.mkdir(parents=True, exist_ok=True)
-        
-        # File per episode keeps things simple for the checker
-        if summary['episode'] is not None:
-            fname = out_dir / f"val_ep{summary['episode']:03d}.json"
-            with open(fname, "w", encoding="utf-8") as f:
-                # ensure_ascii avoids Windows codepage headaches
-                json.dump(summary, f, ensure_ascii=True, indent=2)
+        if persist_summary:
+            out_dir = self.log_dir / "validation_summaries"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            
+            # File per episode keeps things simple for the checker
+            if summary['episode'] is not None:
+                fname = out_dir / f"val_ep{summary['episode']:03d}.json"
+                with open(fname, "w", encoding="utf-8") as f:
+                    # ensure_ascii avoids Windows codepage headaches
+                    json.dump(summary, f, ensure_ascii=True, indent=2)
         
         return val_stats
+
+    def _register_checkpoint_candidate(self, episode: int, val_stats: Dict, ema_score: float) -> None:
+        """Persist a validation-time candidate checkpoint for end-of-run tournament."""
+        keep_limit = int(getattr(self.config.training, "anti_regression_candidate_keep", 24))
+        filename = f"candidate_ep{int(episode):03d}.pt"
+        self.save_checkpoint(filename)
+
+        entry = {
+            "episode": int(episode),
+            "filename": filename,
+            "val_fitness": float(val_stats.get("val_fitness", 0.0)),
+            "val_median_fitness": float(val_stats.get("val_median_fitness", 0.0)),
+            "val_iqr": float(val_stats.get("val_iqr", 0.0)),
+            "val_trades": float(val_stats.get("val_trades", 0.0)),
+            "ema_fitness": float(ema_score),
+            "saved_at": datetime.now().isoformat(timespec="seconds"),
+        }
+        self.checkpoint_candidates.append(entry)
+
+        # Keep top-N by EMA (plus newest), remove pruned files to avoid checkpoint bloat.
+        if len(self.checkpoint_candidates) > keep_limit:
+            newest = max(self.checkpoint_candidates, key=lambda x: x.get("episode", -1))
+            ranked = sorted(
+                self.checkpoint_candidates,
+                key=lambda x: (x.get("ema_fitness", -1e9), x.get("val_fitness", -1e9)),
+                reverse=True,
+            )
+            survivors = ranked[:keep_limit]
+            if newest not in survivors:
+                survivors.append(newest)
+
+            survivor_names = {item["filename"] for item in survivors}
+            for candidate in self.checkpoint_candidates:
+                name = candidate.get("filename")
+                if name and name not in survivor_names:
+                    path = self.checkpoint_dir / name
+                    scaler_path = self.checkpoint_dir / f"{Path(name).stem}_scaler.json"
+                    try:
+                        if path.exists():
+                            path.unlink()
+                    except OSError:
+                        pass
+                    try:
+                        if scaler_path.exists():
+                            scaler_path.unlink()
+                    except OSError:
+                        pass
+            self.checkpoint_candidates = survivors
+
+    def _run_anti_regression_tournament(self, verbose: bool = True) -> Optional[str]:
+        """
+        Evaluate shortlisted checkpoints on base + alternate validation regimes and
+        return the best robust candidate filename.
+        """
+        training_cfg = getattr(self.config, "training", None)
+        if training_cfg is None or not getattr(training_cfg, "anti_regression_checkpoint_selection", True):
+            return None
+        if self.val_env is None:
+            return None
+
+        min_validations = int(getattr(training_cfg, "anti_regression_min_validations", 4))
+        if len(self.validation_history) < min_validations:
+            return None
+
+        # Build shortlist from tracked candidates and current best model.
+        ranked = sorted(
+            self.checkpoint_candidates,
+            key=lambda x: (x.get("ema_fitness", -1e9), x.get("val_fitness", -1e9)),
+            reverse=True,
+        )
+        top_k = max(1, int(getattr(training_cfg, "anti_regression_eval_top_k", 6)))
+        shortlist = ranked[:top_k]
+        if ranked:
+            newest = max(ranked, key=lambda x: x.get("episode", -1))
+            if newest not in shortlist:
+                shortlist.append(newest)
+
+        best_model_name = "best_model.pt"
+        best_model_path = self.checkpoint_dir / best_model_name
+        if best_model_path.exists() and not any(c.get("filename") == best_model_name for c in shortlist):
+            shortlist.append(
+                {
+                    "episode": -1,
+                    "filename": best_model_name,
+                    "val_fitness": -1e9,
+                    "val_median_fitness": -1e9,
+                    "val_iqr": 0.0,
+                    "val_trades": 0.0,
+                    "ema_fitness": -1e9,
+                    "saved_at": "best_model_fallback",
+                }
+            )
+
+        # De-duplicate while preserving order.
+        dedup = []
+        seen = set()
+        for item in shortlist:
+            name = item.get("filename")
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            dedup.append(item)
+        shortlist = dedup
+
+        if not shortlist:
+            return None
+
+        alt_stride = float(getattr(training_cfg, "anti_regression_alt_stride_frac", 0.20))
+        alt_window = getattr(training_cfg, "anti_regression_alt_window_bars", None)
+        if alt_window is not None:
+            alt_window = int(alt_window)
+        trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
+
+        rng_state = np.random.get_state()
+        base_seed = int(getattr(self.config, "random_seed", 777))
+        tournament = []
+        for item in shortlist:
+            filename = item["filename"]
+            ckpt_path = self.checkpoint_dir / filename
+            if not ckpt_path.exists():
+                continue
+
+            try:
+                self.load_checkpoint(filename)
+            except Exception:
+                continue
+
+            # Use deterministic seeds so candidates are compared on identical jitter draws.
+            np.random.seed(base_seed + 17)
+            base_stats = self.validate(persist_summary=False, quiet=True)
+            np.random.seed(base_seed + 101)
+            alt_stats = self.validate(
+                stride_frac_override=alt_stride,
+                window_bars_override=alt_window,
+                persist_summary=False,
+                quiet=True,
+            )
+
+            base_score = float(base_stats.get("val_fitness", 0.0))
+            alt_score = float(alt_stats.get("val_fitness", 0.0))
+            base_return = float(base_stats.get("val_median_return_pct", base_stats.get("val_return_pct", 0.0)))
+            alt_return = float(alt_stats.get("val_median_return_pct", alt_stats.get("val_return_pct", 0.0)))
+            base_pf = float(base_stats.get("val_median_pf", 0.0))
+            alt_pf = float(alt_stats.get("val_median_pf", 0.0))
+            base_iqr = float(base_stats.get("val_iqr", 0.0))
+            alt_iqr = float(alt_stats.get("val_iqr", 0.0))
+            base_trades = float(base_stats.get("val_trades", 0.0))
+            alt_trades = float(alt_stats.get("val_trades", 0.0))
+
+            robust_score = min(base_score, alt_score)
+            robust_return = min(base_return, alt_return)
+            robust_pf = min(base_pf, alt_pf)
+            dispersion_penalty = 0.10 * max(base_iqr, alt_iqr)
+            low_trade_penalty = 0.0
+            if trade_floor > 0:
+                trade_min = min(base_trades, alt_trades)
+                if trade_min < trade_floor:
+                    low_trade_penalty = 0.02 * ((trade_floor - trade_min) / max(1.0, trade_floor))
+
+            # Profitability-first ranking:
+            # prioritize robust median return under base+alt regimes; SPR/PF are secondary tie-breakers.
+            pf_bonus = 0.30 * max(0.0, robust_pf - 1.0)
+            spr_bonus = 0.15 * max(0.0, robust_score)
+            pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
+            negative_return_penalty = 0.0
+            if robust_return <= 0.0:
+                negative_return_penalty = 1.0 + 0.25 * abs(robust_return)
+
+            composite = (
+                robust_return
+                + pf_bonus
+                + spr_bonus
+                - dispersion_penalty
+                - low_trade_penalty
+                - pf_shortfall_penalty
+                - negative_return_penalty
+            )
+            profit_feasible = bool(
+                base_return > 0.0 and alt_return > 0.0 and base_pf >= 1.0 and alt_pf >= 1.0
+            )
+
+            tournament.append(
+                {
+                    "episode": int(item.get("episode", -1)),
+                    "filename": filename,
+                    "base_score": base_score,
+                    "alt_score": alt_score,
+                    "robust_score": robust_score,
+                    "base_return_pct": base_return,
+                    "alt_return_pct": alt_return,
+                    "robust_return_pct": robust_return,
+                    "base_pf": base_pf,
+                    "alt_pf": alt_pf,
+                    "robust_pf": robust_pf,
+                    "base_iqr": base_iqr,
+                    "alt_iqr": alt_iqr,
+                    "base_trades": base_trades,
+                    "alt_trades": alt_trades,
+                    "dispersion_penalty": dispersion_penalty,
+                    "low_trade_penalty": low_trade_penalty,
+                    "pf_shortfall_penalty": pf_shortfall_penalty,
+                    "negative_return_penalty": negative_return_penalty,
+                    "profit_feasible": profit_feasible,
+                    "composite_score": composite,
+                }
+            )
+
+        np.random.set_state(rng_state)
+
+        if not tournament:
+            return None
+
+        ranking_pool = [x for x in tournament if x.get("profit_feasible")]
+        if not ranking_pool:
+            ranking_pool = list(tournament)
+
+        ranking_pool.sort(
+            key=lambda x: (
+                x["composite_score"],
+                x.get("robust_return_pct", -1e9),
+                x.get("robust_pf", -1e9),
+                x["robust_score"],
+            ),
+            reverse=True,
+        )
+        winner = ranking_pool[0]
+        chosen = winner["filename"]
+
+        summary_payload = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "alt_stride_frac": alt_stride,
+            "alt_window_bars": alt_window,
+            "trade_floor": trade_floor,
+            "winner": winner,
+            "selection_pool_size": len(ranking_pool),
+            "selection_pool_profit_only": bool(any(x.get("profit_feasible") for x in tournament)),
+            "selection_pool_filenames": [x.get("filename") for x in ranking_pool],
+            "candidates": tournament,
+        }
+        tournament_path = self.log_dir / "checkpoint_tournament.json"
+        try:
+            with open(tournament_path, "w", encoding="utf-8") as f:
+                json.dump(summary_payload, f, indent=2)
+        except OSError:
+            pass
+
+        if verbose:
+            print(
+                f"[ANTI-REG] winner={chosen} | composite={winner['composite_score']:.4f} | "
+                f"ret={winner.get('robust_return_pct', 0.0):.2f}% | "
+                f"pf={winner.get('robust_pf', 0.0):.2f} | "
+                f"spr_base={winner['base_score']:.4f} | spr_alt={winner['alt_score']:.4f}"
+            )
+
+        return chosen
     
     def train(self,
              num_episodes: int,
@@ -1300,6 +1596,9 @@ class Trainer:
                 alpha = 0.2  # STABILITY: Reduced from 0.3 to 0.2 for less sensitivity to outliers
                 self.best_fitness_ema = alpha * current_fitness + (1 - alpha) * self.best_fitness_ema
                 metric_for_early_stop = self.best_fitness_ema
+
+                if getattr(self.config.training, "anti_regression_checkpoint_selection", True):
+                    self._register_checkpoint_candidate(episode, val_stats, metric_for_early_stop)
                 
                 # Early stop with min_validations patience floor
                 min_validations = 6
@@ -1405,9 +1704,22 @@ class Trainer:
             if episode % save_every == 0:
                 self.save_checkpoint(f"checkpoint_ep{episode}.pt")
         
-        # BEST-MODEL-RESTORE: Load best model weights before final save
-        # This ensures "Score Final" aligns with "Score Best" from training
+        # BEST-MODEL-RESTORE: Optionally run anti-regression checkpoint tournament,
+        # then load selected best model before final save.
+        selected_best = self._run_anti_regression_tournament(verbose=verbose)
         best_model_path = Path(self.checkpoint_dir) / "best_model.pt"
+        if selected_best and selected_best != "best_model.pt":
+            selected_path = Path(self.checkpoint_dir) / selected_best
+            if selected_path.exists():
+                try:
+                    shutil.copy2(selected_path, best_model_path)
+                    selected_scaler = selected_path.parent / f"{selected_path.stem}_scaler.json"
+                    best_scaler = best_model_path.parent / "best_model_scaler.json"
+                    if selected_scaler.exists():
+                        shutil.copy2(selected_scaler, best_scaler)
+                except OSError:
+                    pass
+
         restored_best_checkpoint = False
         if best_model_path.exists():
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
