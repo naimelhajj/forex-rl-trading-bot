@@ -6,6 +6,50 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-21 (Future-first checkpoint selector + seed10007 recovery)
+
+Focus: fix anti-regression checkpoint mis-selection where base-window negatives blocked candidates that were stronger on forward-style regimes.
+
+Code changes:
+- `trainer.py`:
+  - Validation now temporarily raises `val_env.max_steps` to match selected validation window length (so anti-regression `alt_window_bars` can exceed train episode length).
+  - Anti-regression tournament scoring now uses `alt+tail` as primary robust signal (future-first), with base regime as a soft penalty.
+  - Added base penalty terms in tournament payload (`base_return_penalty`) and summary metadata (`base_return_floor`, `base_penalty_weight`).
+- `config.py`:
+  - Added:
+    - `anti_regression_base_return_floor` (default `0.0`)
+    - `anti_regression_base_penalty_weight` (default `0.15`)
+- `main.py`:
+  - Added CLI overrides:
+    - `--anti-regression-base-return-floor`
+    - `--anti-regression-base-penalty-weight`
+
+Verification:
+- System smoke still passes: `python test_system.py`.
+- Seed `10007` rerun switched winner from `candidate_ep006` to `candidate_ep002`:
+  - old: `seed_sweep_results/realdata/selector_calib_tailstrict_k10_tri10ep_20260221_123238_seed10007/eval_wf2400/results/test_results.json`
+  - new: `seed_sweep_results/realdata/selector_futurepool_valhfix_10ep_20260221_195922_seed10007/eval_wf2400/results/test_results.json`
+  - change: return `-1.22% -> +0.65%`, PF `0.58 -> 1.26`.
+
+Tri-seed follow-up (future selector profile, 10ep):
+- Runs:
+  - `seed_sweep_results/realdata/selector_futurepool_valhfix_10ep_20260221_195922_seed10007`
+  - `seed_sweep_results/realdata/selector_futurepool_valhfix_tri10ep_20260221_220213_seed4049`
+  - `seed_sweep_results/realdata/selector_futurepool_valhfix_tri10ep_20260221_220213_seed3039`
+- Aggregates:
+  - `seed_sweep_results/realdata/selector_futurepool_valhfix_tri10ep_mixed_aggregate_20260221.json`
+  - `seed_sweep_results/realdata/selector_futurepool_valhfix_tri10ep_mixed_eval_wf2400_aggregate_20260221.json`
+
+Outcome vs previous strict-tail tri reference (`selector_calib_tailstrict_k10_tri10ep_20260221_123238`):
+- WF2400 mean return: `+0.57% -> +1.04%`
+- WF2400 mean PF: `1.39 -> 1.38` (roughly flat)
+- Positive+PF>1: `2/3 -> 3/3`
+- WF pass count: unchanged (`0/3`)
+
+Decision:
+- Keep future-first selector and validation-window horizon fix.
+- Next step: improve walk-forward pass rate (currently profitability improved, but regime consistency threshold still failing).
+
 ## 2026-02-20 (Tail hold-out in checkpoint tournament + blind10 retest)
 
 Focus: reduce end-of-run checkpoint mis-selection by adding a separate tail-only validation segment into anti-regression checkpoint ranking.
