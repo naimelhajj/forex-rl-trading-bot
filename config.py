@@ -183,6 +183,9 @@ class TrainingConfig:
     anti_regression_min_validations: int = 4  # Require at least N validations before tournament
     anti_regression_alt_stride_frac: float = 0.20  # Secondary hold-out stride for robustness scoring
     anti_regression_alt_window_bars: Optional[int] = None  # Secondary hold-out window (None uses default)
+    anti_regression_tail_start_frac: float = 0.50  # Tail-only validation segment start (fraction of val span)
+    anti_regression_tail_end_frac: float = 1.00  # Tail-only validation segment end (fraction of val span)
+    anti_regression_tail_weight: float = 0.75  # Extra penalty weight when tail slice return is negative
 
 
 @dataclass

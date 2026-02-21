@@ -4,6 +4,8 @@ Entry point for training and evaluating the Forex RL trading bot.
 """
 
 import sys
+import os
+import random
 import numpy as np
 import pandas as pd
 import torch
@@ -33,10 +35,13 @@ from trainer import Trainer
 
 def set_random_seeds(seed: int):
     """Set random seeds for reproducibility."""
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
 
 
 def _read_git_commit(repo_root: Path) -> str:
@@ -564,7 +569,8 @@ def create_agent(state_size: int, config: Config, train_env=None):
         use_symmetry_loss=config.agent.use_symmetry_loss,
         symmetry_loss_weight=config.agent.symmetry_loss_weight,
         trade_gate_margin=config.agent.trade_gate_margin,
-        trade_gate_z=config.agent.trade_gate_z
+        trade_gate_z=config.agent.trade_gate_z,
+        disable_trade_gate_in_eval=getattr(config, "VAL_DISABLE_TRADE_GATING", False),
     )
     
     # Sync learning_starts with SMOKE mode (keeps header and agent consistent)
@@ -581,6 +587,7 @@ def create_agent(state_size: int, config: Config, train_env=None):
     print(f"  Grad steps: {grad_steps}")
     print(f"  Hidden layers: {config.agent.hidden_sizes}")
     print(f"  NoisyNet: {use_noisy}")
+    print(f"  Eval trade gate disabled: {getattr(config, 'VAL_DISABLE_TRADE_GATING', False)}")
     print(f"  Buffer type: prioritized")
     print(f"  Weight decay: 1e-6")
     
@@ -1147,6 +1154,12 @@ def main():
                         help='Stride fraction for anti-regression secondary hold-out validation')
     parser.add_argument('--anti-regression-alt-window-bars', type=int, default=None,
                         help='Window bars for anti-regression secondary hold-out validation')
+    parser.add_argument('--anti-regression-tail-start-frac', type=float, default=None,
+                        help='Tail-segment start fraction for anti-regression checkpoint tournament')
+    parser.add_argument('--anti-regression-tail-end-frac', type=float, default=None,
+                        help='Tail-segment end fraction for anti-regression checkpoint tournament')
+    parser.add_argument('--anti-regression-tail-weight', type=float, default=None,
+                        help='Penalty weight for negative tail-segment returns in anti-regression tournament')
     
     args = parser.parse_args()
     
@@ -1284,6 +1297,12 @@ def main():
         config.training.anti_regression_alt_stride_frac = max(0.01, float(args.anti_regression_alt_stride_frac))
     if args.anti_regression_alt_window_bars is not None:
         config.training.anti_regression_alt_window_bars = max(100, int(args.anti_regression_alt_window_bars))
+    if args.anti_regression_tail_start_frac is not None:
+        config.training.anti_regression_tail_start_frac = max(0.0, min(0.95, float(args.anti_regression_tail_start_frac)))
+    if args.anti_regression_tail_end_frac is not None:
+        config.training.anti_regression_tail_end_frac = max(0.05, min(1.0, float(args.anti_regression_tail_end_frac)))
+    if args.anti_regression_tail_weight is not None:
+        config.training.anti_regression_tail_weight = max(0.0, float(args.anti_regression_tail_weight))
     
     # Override episodes if specified
     if args.episodes is not None:
@@ -1335,6 +1354,8 @@ def main():
             config.environment.swap_type = 'usd'
             config.environment.swap_long_usd_per_lot_night = 0.0
             config.environment.swap_short_usd_per_lot_night = 0.0
+            # Ensure per-symbol swap overrides do not reintroduce costs.
+            config.environment.swap_by_symbol = {}
     
     # Apply smoke profile for short runs
     if config.SMOKE_LEARN and args.episodes is not None and args.episodes <= 5:

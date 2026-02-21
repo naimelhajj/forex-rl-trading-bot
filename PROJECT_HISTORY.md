@@ -6,6 +6,458 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-20 (Tail hold-out in checkpoint tournament + blind10 retest)
+
+Focus: reduce end-of-run checkpoint mis-selection by adding a separate tail-only validation segment into anti-regression checkpoint ranking.
+
+Code changes:
+- `trainer.py`:
+  - `validate()` now supports segment overrides via `start_frac_override` / `end_frac_override`.
+  - Added validation quantiles to stats/export (`val_return_q25_pct`, `val_return_q10_pct`, `val_pf_q25`, `val_pf_q10`).
+  - Anti-regression tournament now evaluates each candidate on three regimes:
+    - base validation
+    - alt stride validation
+    - tail segment validation (`anti_regression_tail_start_frac` -> `anti_regression_tail_end_frac`)
+  - Composite now includes a tail-negative penalty (`anti_regression_tail_weight`) and tracks tail metrics in `checkpoint_tournament.json`.
+- `config.py`:
+  - Added training knobs:
+    - `anti_regression_tail_start_frac` (default `0.50`)
+    - `anti_regression_tail_end_frac` (default `1.00`)
+    - `anti_regression_tail_weight` (default `0.75`)
+- `main.py`:
+  - Added CLI overrides:
+    - `--anti-regression-tail-start-frac`
+    - `--anti-regression-tail-end-frac`
+    - `--anti-regression-tail-weight`
+
+Key diagnostics before fix:
+- Full candidate probe on previous blind10 run:
+  - `seed_sweep_results/realdata/post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_all_candidates_oracle_eval_wf2400_aggregate_20260220.json`
+- Selected checkpoint aggregate (pre-fix): mean return `+1.05%`, PF `1.54`, positive+PF>1 `8/10`.
+- Oracle best-candidate aggregate (same trained candidates): mean return `+2.07%`, PF `2.59`, positive+PF>1 `10/10`.
+
+Blind10 retest with tail hold-out tournament:
+- Prefix: `tailholdout_fix_blind10_fast10ep_20260220_231427`
+- Aggregate (mode=both):
+  - `seed_sweep_results/realdata/tailholdout_fix_blind10_fast10ep_20260220_231427_aggregate_20260220.json`
+- WF2400 aggregate:
+  - `seed_sweep_results/realdata/tailholdout_fix_blind10_fast10ep_20260220_231427_eval_wf2400_aggregate_20260220.json`
+- Outcome vs pre-fix selected-checkpoint baseline:
+  - mean return: `+1.05%` -> `+1.41%`
+  - mean PF: `1.54` -> `1.72`
+  - positive+PF>1: `8/10` -> `9/10`
+  - WF pass count: unchanged (`2/10`)
+
+Decision:
+- Keep tail hold-out tournament changes (measurable improvement, especially seed `4049` recovered from negative to positive).
+- Remaining blocker: seed `10007` still mis-selected by validation despite being recoverable via alternate candidate.
+- Next step should target stronger checkpoint-selection robustness (or explicit calibration split) before large-scale promotion runs.
+
+## 2026-02-20 (Validation window spread fix + tri-seed recovery)
+
+Focus: reduce checkpoint selection overfitting caused by validation windows being concentrated at the start of the validation period.
+
+Code changes:
+- `trainer.py`:
+  - Validation windows now spread evenly across the full validation range (instead of first-`K` contiguous starts).
+  - Added `val_positive_frac` and `val_pf_ge_1_frac` to validation stats.
+  - Anti-regression checkpoint selection now supports `consistency_feasible` pooling (positive-return consistency and PF consistency across base/alt validation).
+
+Validation behavior check:
+- Probe run confirmed full-span windows:
+  - `test_output/window_spread_check_seed8087/logs/validation_summaries/val_final.json`
+  - Console showed `coverage~1.00x` and windows spread across 2021 -> 2022.
+
+Tri-seed retest (same fast profile, `trade_gate_z=0.3`, eval gate disabled):
+- Prefix: `post_seedfix_gz03_spreadval_fast10ep_20260220_200539`
+- Aggregate:
+  - `seed_sweep_results/realdata/post_seedfix_gz03_spreadval_fast10ep_tri_aggregate_20260220.json`
+- Result:
+  - mean return `+0.61%` (was `-0.50%` before spread fix)
+  - mean PF `1.48` (was `1.15`)
+  - positive+PF>1 `2/3` (was `1/3`)
+  - seed `8087` flipped from `-2.59% / PF 0.36` to `+0.75% / PF 1.35`
+
+Decision:
+- Keep spread-window validation and consistency-aware checkpoint tournament.
+- This is a meaningful robustness improvement, but not yet enough for promotion (`4049` still negative, WF pass remains `0/3`).
+
+## 2026-02-20 (Eval trade-gate fix + fast tri-seed retest)
+
+Focus: resolve HOLD-collapse caused by applying trade gate during evaluation/validation, then retest fast 10ep screen.
+
+Code changes:
+- `agent.py`:
+  - Added `disable_trade_gate_in_eval` flag.
+  - `select_action()` now skips `_apply_trade_gate()` when `eval_mode=True` and this flag is enabled.
+- `main.py`:
+  - `create_agent()` now passes `disable_trade_gate_in_eval=config.VAL_DISABLE_TRADE_GATING`.
+  - Agent creation printout includes whether eval trade gate is disabled.
+
+Verification:
+- Probe run with `trade_gate_z=0.3` no longer collapses to 0 trades in eval:
+  - `test_output/gate_eval_disable_probe_seed1011/results/test_results.json`
+  - Result: return `+0.25%`, PF `1.10`, trades `18`.
+
+Fast tri-seed retest (10ep, seeds `1011/4049/8087`, `trade_gate_z=0.3`):
+- Aggregate:
+  - `seed_sweep_results/realdata/post_seedfix_gz03_evaloff_fast10ep_tri_aggregate_20260220.json`
+- Outcome:
+  - mean return `-0.50%`
+  - mean PF `1.15`
+  - mean trades `20.3`
+  - positive+PF>1 `1/3`
+  - walk-forward pass `0/3`
+
+Comparison references:
+- Gate on (pre-fix behavior, eval gated -> HOLD collapse):
+  - `seed_sweep_results/realdata/post_seedfix_baseline_fast10ep_tri_aggregate_20260220.json`
+- Gate off baseline:
+  - `seed_sweep_results/realdata/post_seedfix_nogate_fast10ep_tri_aggregate_20260220.json`
+
+Decision:
+- Keep the eval-trade-gate fix (required; prevents artificial no-trade evaluation artifacts).
+- Current `trade_gate_z=0.3` branch is still not robust across tail seeds after the fix.
+- Reject strict-flow pivot early (first seed negative) to avoid spending more runtime:
+  - `seed_sweep_results/realdata/post_seedfix_strictflow_gz03_evaloff_fast10ep_20260220_191919_seed1011/results/test_results.json`
+
+## 2026-02-20 (Reproducibility fix + trade-gate sanity check)
+
+Focus: eliminate seed drift between reruns, then verify whether current low-flip setup is blocked by trade gating.
+
+Code fixes:
+- `main.py`:
+  - `set_random_seeds()` now seeds Python RNG in addition to NumPy/Torch.
+  - Added `PYTHONHASHSEED` assignment and `torch.cuda.manual_seed_all`.
+- `trainer.py`:
+  - Anti-regression checkpoint tournament now seeds/restores Python RNG alongside NumPy RNG before base/alt validations.
+
+Reproducibility probes:
+- Synthetic duplicate runs (same seed/config) produced identical outputs:
+  - `test_output/repro_seed8087_run1/results/test_results.json`
+  - `test_output/repro_seed8087_run2/results/test_results.json`
+- Real-data duplicate mini-runs (same seed/config) also matched exactly:
+  - `test_output/repro_real_seed8087_run1/results/test_results.json`
+  - `test_output/repro_real_seed8087_run2/results/test_results.json`
+
+Trade-gate sanity runs (10ep fast profile, seeds `1011/4049/8087`):
+- With `--trade-gate-z 0.3`:
+  - All three seeds converged to zero trades in test.
+  - Aggregate: `seed_sweep_results/realdata/post_seedfix_baseline_fast10ep_tri_aggregate_20260220.json`
+  - Mean return `0.00%`, PF `0.00`, trades `0.0`, WF pass `0/3`.
+- With `--trade-gate-z 0.0`:
+  - Trading activity returned (mean ~20.7 trades), but robustness remained weak.
+  - Aggregate: `seed_sweep_results/realdata/post_seedfix_nogate_fast10ep_tri_aggregate_20260220.json`
+  - Mean return `-0.02%`, PF `1.07`, positive+PF>1 `1/3`, WF pass `0/3`.
+
+Decision:
+- Keep reproducibility fix (required for trustworthy comparisons).
+- Do not promote either gate profile as-is.
+- Next step should tune a moderate gate policy (between `0.0` and `0.3`) and/or delayed gate schedule to avoid HOLD collapse while retaining cost discipline.
+
+## 2026-02-20 (Fast-run acceleration test + tail-seed rescue screen)
+
+Focus: shorten experiment cycle time and test whether higher exploration rescues persistent tail seeds without retraining for hours.
+
+Fast-screen profile used (10ep):
+- `--max-steps-per-episode 600`
+- `--validate-every 2`
+- `--val-jitter-draws 1`
+- `--val-min-k 3 --val-max-k 4`
+- `--episode-timeout-min 25`
+
+Run family:
+- Base tag: `tailrescue3_fastscreen_20260220_164326`
+- Tail seeds: `6067, 9091, 10007`
+- Config A (`exp18`): `epsilon_start=0.18`, `epsilon_end=0.08`, `epsilon_decay=0.996`, `min_atr_cost_ratio=0.15`, `max_trades=28`
+- Config B (`exp18_atr012_mt32`): same exploration + `min_atr_cost_ratio=0.12`, `max_trades=32`
+
+Tail-only results:
+- Config A aggregate:
+  - `seed_sweep_results/realdata/tailrescue3_fastscreen_20260220_164326_exp18_eval_wf2400_aggregate_20260220.json`
+  - mean return `+1.29%`, PF `1.63`, walk-forward `2/3`, positive+PF>1 `3/3`
+- Config B aggregate:
+  - `seed_sweep_results/realdata/tailrescue3_fastscreen_20260220_164326_exp18_atr012_mt32_eval_wf2400_aggregate_20260220.json`
+  - mean return `+1.90%`, PF `1.76`, walk-forward `0/3`, positive+PF>1 `3/3`
+
+Center spot-check (Config B):
+- Seeds `1011, 4049`:
+  - `seed_sweep_results/realdata/tailrescue3_fastscreen_20260220_164326_exp18_atr012_mt32_eval_wf2400_spot5_aggregate_20260220.json`
+  - 5-seed mean return `+1.75%`, PF `1.77`, positive+PF>1 `5/5`, walk-forward `1/5`
+
+Blind 10-seed fast-screen confirmation (Config A):
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/tailrescue3_fastscreen_20260220_164326_exp18_ten_fastscreen_aggregate_20260220.json`
+- WF2400 aggregate:
+  - `seed_sweep_results/realdata/tailrescue3_fastscreen_20260220_164326_exp18_eval_wf2400_ten_fastscreen_aggregate_20260220.json`
+- WF2400: mean return `+0.62%`, PF `1.49`, positive+PF>1 `7/10`, walk-forward `3/10`
+
+Comparison to current lead (`guardB10_tailfix_lowflip35_10ep_20260219_211955_eval_wf2400_ten_aggregate_20260220.json`):
+- Lead branch: mean return `+1.22%`, PF `1.84`, positive+PF>1 `9/10`, walk-forward `4/10`
+- Fast-screen Config A is a regression on aggregate profitability and robustness.
+
+Decision:
+- Do **not** promote the exploration-only fast-screen variants as new main branch.
+- Keep `guardB10_tailfix_lowflip35_10ep_20260219_211955` as the current best branch.
+- Retain fast-screen profile as a runtime acceleration tool for early rejection/selection only.
+
+## 2026-02-20 (20ep confirmation + true zero-cost diagnostic)
+
+Focus: test whether the accepted tail-fix branch (`flip_penalty=0.00035`) scales from 10 episodes to 20, then isolate cost impact.
+
+### Step 1: blind 10-seed 20ep confirmation (real costs, WF2400)
+
+Prefix:
+- `guardB10_tailfix_lowflip35_20ep_20260219_232731`
+
+Artifacts:
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/guardB10_tailfix_lowflip35_20ep_20260219_232731_ten_aggregate_20260220.json`
+- WF2400 aggregate:
+  - `seed_sweep_results/realdata/guardB10_tailfix_lowflip35_20ep_20260219_232731_eval_wf2400_ten_aggregate_20260220.json`
+
+WF2400 (real costs):
+- Mean return `+0.61%`
+- Mean PF `1.44`
+- Mean trades `23.0`
+- Walk-forward pass `5/10`
+- Negative-return seeds: `6067`, `8087`, `9091`, `10007`
+
+Read:
+- 20ep remains positive on average but degrades profitability vs the 10ep tail-fix confirmation (`+1.22%`, PF `1.84`).
+
+### Step 2: zero-cost diagnostic + bug fix
+
+Issue found:
+- `--eval-zero-costs` was not fully zero-cost under broker profile because `swap_by_symbol` overrides still applied symbol swap values.
+
+Fix:
+- `main.py`: in the `args.eval_zero_costs` block, clear per-symbol swap overrides with:
+  - `config.environment.swap_by_symbol = {}`
+
+Verification:
+- Re-ran eval and confirmed env prints:
+  - `Swap type: USD/lot/night`
+  - `Swap long/short: $0.00 / $0.00`
+
+True zero-cost WF2400 artifacts (post-fix):
+- Per-seed eval dirs:
+  - `..._seed*/eval_wf2400_zero_cost_v2/results/test_results.json`
+- Aggregate:
+  - `seed_sweep_results/realdata/guardB10_tailfix_lowflip35_20ep_20260219_232731_eval_wf2400_zero_cost_v2_ten_aggregate_20260220.json`
+
+WF2400 (zero-cost v2):
+- Mean return `+1.77%` (vs `+0.61%` real-cost)
+- Mean PF `2.22` (vs `1.44` real-cost)
+- Walk-forward pass `7/10` (vs `5/10`)
+- Negative-return seeds: `6067`, `9091`, `10007` (seed `8087` flips positive)
+
+Interpretation:
+- Frictions are a major drag (material return/PF uplift when removed), but not the only issue because `3/10` seeds stay negative even at zero cost.
+- Keep 10ep tail-fix branch as current lead; next work should target persistent tail seeds without sacrificing center-seed profitability.
+
+## 2026-02-20 (Tail-risk fix accepted: low flip penalty improves 10-seed robustness)
+
+Focus: reduce tail-seed failures (`6067`, `8087`) without sacrificing aggregate profitability.
+
+### Step 1: targeted tail-risk micro-sweep (2 failing seeds)
+
+Prefix:
+- `tailrisk_micro2seeds_10ep_20260219_173036`
+
+Seeds:
+- `6067`, `8087`
+
+Configs tested:
+- `A_base`: flip `0.00045`, atr ratio `0.15`, cooldown `8`, min hold `4`, max trades `28`
+- `B_strict_atr018`: flip `0.00045`, atr ratio `0.18`, cooldown `8`, min hold `4`, max trades `24`
+- `C_loose_atr012`: flip `0.00045`, atr ratio `0.12`, cooldown `8`, min hold `4`, max trades `32`
+- `D_high_flip055`: flip `0.00055`, atr ratio `0.15`, cooldown `8`, min hold `4`, max trades `28`
+- `E_low_flip035`: flip `0.00035`, atr ratio `0.15`, cooldown `8`, min hold `4`, max trades `28`
+- `F_strict_cadence`: flip `0.00045`, atr ratio `0.15`, cooldown `10`, min hold `5`, max trades `24`
+
+Tail-risk reading:
+- `C_loose_atr012` fixed seed `6067` but worsened seed `8087`.
+- `E_low_flip035` substantially improved seed `6067` while not worsening `8087`.
+- Chosen candidate for full confirmation: `E_low_flip035`.
+
+### Step 2: full blind 10-seed confirmation with chosen variant
+
+Prefix:
+- `guardB10_tailfix_lowflip35_10ep_20260219_211955`
+
+Config:
+- Same Guard B baseline except `flip_penalty=0.00035` (was `0.00045`).
+
+Artifacts:
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/guardB10_tailfix_lowflip35_10ep_20260219_211955_ten_aggregate_20260220.json`
+- WF2400 aggregate:
+  - `seed_sweep_results/realdata/guardB10_tailfix_lowflip35_10ep_20260219_211955_eval_wf2400_ten_aggregate_20260220.json`
+
+WF2400 (real costs):
+- Mean return `+1.22%`
+- Mean PF `1.84`
+- Mean trades `22.3`
+- Walk-forward pass `4/10`
+- Positive return + PF>1 seeds: `9/10`
+- Worst seed: return `-0.41%`, PF `0.84`
+
+Comparison vs previous 10-seed baseline (`guardB10_confirm_blind10ep_20260219_143734`):
+- Mean return: `+1.05%` -> `+1.22%`
+- Mean PF: `1.59` -> `1.84`
+- Walk-forward pass: `3/10` -> `4/10`
+- Positive+PF>1 seeds: `8/10` -> `9/10`
+- Worst return: `-1.67%` -> `-0.41%`
+- Worst PF: `0.53` -> `0.84`
+
+Decision:
+- Accept `flip_penalty=0.00035` as the new leading variant for the 10ep branch.
+- This is the first clear tail-risk reduction that also improves aggregate quality.
+
+## 2026-02-19 (Guard B blind 10-seed confirmation, 10ep)
+
+Focus: expand robustness breadth from 5 seeds to 10 blind seeds using the same best-known 10ep Guard B setup.
+
+Run setup:
+- Prefix: `guardB10_confirm_blind10ep_20260219_143734`
+- Seeds: `1011, 2027, 3039, 4049, 5051, 6067, 7079, 8087, 9091, 10007`
+- Episodes: `10`
+- Config: Guard B baseline (`flip=0.00045`, `min_atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`, no symmetry loss, no dual controller, prefill `none`)
+- Anti-regression checkpoint tournament disabled (`--no-anti-regression-checkpoint`) for direct branch comparability.
+
+Artifacts:
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/guardB10_confirm_blind10ep_20260219_143734_ten_aggregate_20260219.json`
+- WF2400 eval aggregate:
+  - `seed_sweep_results/realdata/guardB10_confirm_blind10ep_20260219_143734_eval_wf2400_ten_aggregate_20260219.json`
+
+WF2400 (real costs):
+- Mean return `+1.05%`
+- Mean PF `1.59`
+- Mean trades `22.7`
+- Walk-forward pass `3/10`
+
+Robustness counts:
+- Positive return seeds: `8/10`
+- PF > 1 seeds: `8/10`
+- Positive return + PF > 1: `8/10`
+- Worst seed: return `-1.67%`, PF `0.53` (seed `6067`)
+
+Interpretation:
+- The branch keeps a positive aggregate over a wider blind seed set, but tail-risk remains (2 clear failing seeds).
+- This is promising but not yet production-grade robustness.
+- Next step should target tail-seed failure reduction while preserving the profitable center (8/10).
+
+## 2026-02-19 (OOS stress on 5-seed 10ep baseline checkpoints)
+
+Focus: no-retrain stress test of the strongest branch (`guardB5_confirm_blind10ep_20260219_094605`) on longer evaluation horizons.
+
+Stress tag:
+- `oos_stress_guardB5_10ep_20260219_132726`
+
+What was run (evaluate only, same costs/cadence constraints):
+- `--max-steps-per-episode 4800`
+- `--max-steps-per-episode 20000` (full split)
+
+Aggregates:
+- WF4800:
+  - `seed_sweep_results/realdata/oos_stress_guardB5_10ep_20260219_132726_wf4800_five_aggregate_20260219.json`
+  - Mean return `+1.67%`, mean PF `1.95`, mean trades `22.8`, walk-forward pass `0/5`
+- Full horizon:
+  - `seed_sweep_results/realdata/oos_stress_guardB5_10ep_20260219_132726_wffull_five_aggregate_20260219.json`
+  - Mean return `+1.67%`, mean PF `1.95`, mean trades `22.8`, walk-forward pass `0/5`
+
+Observation:
+- Core profitability metrics are unchanged from WF2400 confirmation.
+- As with earlier stress checks, policies often finish activity early (trade cap/cadence constraints), so extending bars mostly increases window count without changing realized PnL profile.
+
+Interpretation:
+- Profitability signal is stable across longer eval horizons for this branch.
+- Current walk-forward pass criterion remains stricter than profitability outcomes and is not the primary selection signal for this phase.
+
+## 2026-02-19 (Guard B blind 5-seed confirmation, 20ep)
+
+Focus: validate whether the strongest 10-episode branch remains profitable when training horizon is doubled.
+
+Run setup:
+- Prefix: `guardB5_confirm_blind20ep_20260219_105737`
+- Seeds: `1011, 2027, 3039, 4049, 5051`
+- Episodes: `20`
+- Config unchanged from Guard B baseline:
+  - `flip=0.00045`
+  - `min_atr_cost_ratio=0.15`
+  - `cooldown=8`
+  - `min_hold=4`
+  - `max_trades=28`
+  - no symmetry loss, no dual controller, prefill `none`
+- Anti-regression checkpoint tournament disabled to match baseline comparison (`--no-anti-regression-checkpoint`).
+
+Artifacts:
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_five_aggregate_20260219.json`
+- WF2400 eval aggregate:
+  - `seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_eval_wf2400_five_aggregate_20260219.json`
+
+WF2400 (real costs):
+- Mean return `+0.76%`
+- Mean PF `1.56`
+- Mean trades `21.4`
+- Walk-forward pass `2/5`
+
+Per-seed WF2400:
+- Seed 1011: return `+3.21%`, PF `3.14`, trades `22`, pass `True`
+- Seed 2027: return `-1.37%`, PF `0.56`, trades `21`, pass `False`
+- Seed 3039: return `+0.62%`, PF `1.35`, trades `25`, pass `False`
+- Seed 4049: return `+0.78%`, PF `1.44`, trades `21`, pass `True`
+- Seed 5051: return `+0.55%`, PF `1.32`, trades `18`, pass `False`
+
+Comparison vs 10ep five-seed:
+- 10ep (`guardB5_confirm_blind10ep_20260219_094605`):
+  - return `+1.67%`, PF `1.95`, pass `1/5`
+- 20ep:
+  - return `+0.76%`, PF `1.56`, pass `2/5`
+
+Interpretation:
+- Longer training horizon reduced profitability quality (mean return and PF dropped materially).
+- Slightly higher walk-forward pass count does not compensate for the profitability degradation.
+- Keep the 10ep Guard B branch as the current best profitability candidate.
+
+## 2026-02-19 (Guard B blind 5-seed confirmation, 10ep)
+
+Focus: run a broader blind-seed confirmation on the current best profitability branch before further tuning.
+
+Run setup:
+- Prefix: `guardB5_confirm_blind10ep_20260219_094605`
+- Seeds: `1011, 2027, 3039, 4049, 5051`
+- Episodes: `10` per seed
+- Config: Guard B baseline (`flip=0.00045`, `min_atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`, no symmetry loss, no dual controller, prefill `none`)
+- Anti-regression tournament disabled for this confirmation (`--no-anti-regression-checkpoint`) to match baseline branch behavior.
+
+Artifacts:
+- Train/test aggregate:
+  - `seed_sweep_results/realdata/guardB5_confirm_blind10ep_20260219_094605_five_aggregate_20260219.json`
+- WF2400 eval aggregate:
+  - `seed_sweep_results/realdata/guardB5_confirm_blind10ep_20260219_094605_eval_wf2400_five_aggregate_20260219.json`
+
+WF2400 (real costs):
+- Mean return `+1.67%`
+- Mean PF `1.95`
+- Mean trades `22.8`
+- Walk-forward pass `1/5`
+
+Per-seed WF2400:
+- Seed 1011: return `+3.21%`, PF `3.14`, trades `22`, pass `True`
+- Seed 2027: return `+2.14%`, PF `2.09`, trades `26`, pass `False`
+- Seed 3039: return `+0.62%`, PF `1.35`, trades `25`, pass `False`
+- Seed 4049: return `+1.80%`, PF `1.86`, trades `23`, pass `False`
+- Seed 5051: return `+0.55%`, PF `1.32`, trades `18`, pass `False`
+
+Interpretation:
+- Profitability-first evidence improved: all 5 blind seeds are positive with PF > 1.
+- Walk-forward pass remains conservative under current criteria and is not aligned with profitability outcomes.
+- This branch is currently the strongest candidate for escalation to a longer-horizon confirmation run.
+
 ## 2026-02-19 (Seed-2027 robustness micro-sweep + profitpick v2 tri-seed)
 
 Focus: directly address the unstable seed by targeted fast sweeps, then retest all blind seeds with the same settings.

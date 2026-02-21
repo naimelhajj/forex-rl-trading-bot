@@ -402,6 +402,8 @@ class DQNAgent:
         # Trade-quality gate (optional): require Q-gap over HOLD before opening trades
         self.trade_gate_margin = kwargs.get('trade_gate_margin', 0.0)
         self.trade_gate_z = kwargs.get('trade_gate_z', 0.0)
+        # Keep training-time gating available while allowing eval/validation to run ungated.
+        self.disable_trade_gate_in_eval = kwargs.get('disable_trade_gate_in_eval', False)
         
         # PHASE 2.8f: Per-step dual-variable controller with dead-zone hysteresis
         # Action mapping: 0=HOLD, 1=LONG, 2=SHORT, 3=CLOSE, 4=MOVE_SL, 5=MOVE_SL_AGGR, 6=REV_LONG, 7=REV_SHORT
@@ -708,7 +710,8 @@ class DQNAgent:
                     if not ok:
                         q[i] = -1e9
 
-            q = self._apply_trade_gate(q)
+            if not (eval_mode and self.disable_trade_gate_in_eval):
+                q = self._apply_trade_gate(q)
             
             action = int(np.argmax(q))
             
@@ -752,7 +755,8 @@ class DQNAgent:
                     if not ok:
                         q[i] = -1e9
 
-            q = self._apply_trade_gate(q)
+            if not (eval_mode and self.disable_trade_gate_in_eval):
+                q = self._apply_trade_gate(q)
             
             # Epsilon-greedy selection
             if explore and random.random() < eps:

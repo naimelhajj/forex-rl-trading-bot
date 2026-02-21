@@ -8,6 +8,7 @@ import pandas as pd
 from typing import Dict, List, Optional
 from pathlib import Path
 import json
+import random
 from datetime import datetime
 import time
 import torch
@@ -712,6 +713,8 @@ class Trainer:
     def validate(self,
                  stride_frac_override: Optional[float] = None,
                  window_bars_override: Optional[int] = None,
+                 start_frac_override: Optional[float] = None,
+                 end_frac_override: Optional[float] = None,
                  persist_summary: bool = True,
                  quiet: bool = False) -> Dict:
         """
@@ -751,13 +754,28 @@ class Trainer:
             val_length = 10000  # Default fallback
             val_idx = range(val_length)
         
+        if val_length <= 0:
+            return {}
+
+        # Optional validation segment (used by anti-regression tournament to
+        # score a tail hold-out slice separately from the full validation span).
+        start_frac = 0.0 if start_frac_override is None else float(start_frac_override)
+        end_frac = 1.0 if end_frac_override is None else float(end_frac_override)
+        start_frac = max(0.0, min(1.0, start_frac))
+        end_frac = max(start_frac + 1e-6, min(1.0, end_frac))
+        seg_lo = int(round(val_length * start_frac))
+        seg_hi = int(round(val_length * end_frac))
+        seg_lo = max(0, min(seg_lo, val_length - 1))
+        seg_hi = max(seg_lo + 1, min(seg_hi, val_length))
+        segment_length = max(1, seg_hi - seg_lo)
+
         # GATING-FIX: Use fixed window size if specified
         window_bars = window_bars_override if window_bars_override is not None else getattr(self.config, "VAL_WINDOW_BARS", None)
         if window_bars is not None:
-            window_len = min(window_bars, val_length)
+            window_len = min(window_bars, segment_length)
         else:
             window_frac = getattr(self.config, "VAL_WINDOW_FRAC", 0.40)
-            window_len = max(100, int(val_length * window_frac))
+            window_len = max(100, int(segment_length * window_frac))
         
         # Cap by env horizon if present
         max_steps = getattr(self.train_env, "max_steps", None)
@@ -770,35 +788,68 @@ class Trainer:
         
         min_k = getattr(self.config, "VAL_MIN_K", 6)
         max_k = getattr(self.config, "VAL_MAX_K", 7)
-        
-        # Generate window starts
-        starts = []
-        pos = 0
-        while pos + window_len <= val_length and len(starts) < max_k:
-            starts.append(pos)
-            pos += stride
-        
-        # Ensure minimum K
-        if len(starts) < min_k and val_length >= window_len:
-            # Adjust stride to fit min_k windows
-            stride = max(1, (val_length - window_len) // (min_k - 1))
-            starts = [i * stride for i in range(min_k) if i * stride + window_len <= val_length]
+
+        def _pick_even_spread(candidates, k):
+            if not candidates:
+                return []
+            if k >= len(candidates):
+                return list(candidates)
+            idx = np.linspace(0, len(candidates) - 1, num=k, dtype=int)
+            out = []
+            seen = set()
+            for i in idx:
+                s = int(candidates[int(i)])
+                if s not in seen:
+                    seen.add(s)
+                    out.append(s)
+            return out
+
+        # Generate candidate starts over the entire validation span, then pick evenly.
+        max_start = max(0, segment_length - window_len)
+        if max_start == 0:
+            candidate_starts = [0]
+        else:
+            candidate_starts = list(range(0, max_start + 1, stride))
+            if candidate_starts[-1] != max_start:
+                candidate_starts.append(max_start)
+
+        starts = _pick_even_spread(candidate_starts, min(max_k, len(candidate_starts)))
+
+        # Ensure minimum K windows by reducing stride if needed.
+        if len(starts) < min_k and segment_length >= window_len:
+            stride_min = max(1, (segment_length - window_len) // max(1, (min_k - 1)))
+            if max_start == 0:
+                dense_candidates = [0]
+            else:
+                dense_candidates = list(range(0, max_start + 1, stride_min))
+                if dense_candidates[-1] != max_start:
+                    dense_candidates.append(max_start)
+            starts = _pick_even_spread(dense_candidates, min(min_k, len(dense_candidates)))
+        starts = sorted(starts)
         
         # Build window tuples (start, end)
-        windows = [(start, min(start + window_len, val_length)) for start in starts]
+        windows = [
+            (seg_lo + start, min(seg_lo + start + window_len, seg_hi))
+            for start in starts
+        ]
         
         # Calculate coverage (how much of val data is seen across all windows)
         if len(windows) > 1:
             stride_actual = starts[1] - starts[0] if len(starts) > 1 else window_len
-            coverage = (window_len + (len(windows)-1) * stride_actual) / max(1, val_length)
+            coverage = (window_len + (len(windows)-1) * stride_actual) / max(1, segment_length)
         else:
-            coverage = window_len / max(1, val_length)
+            coverage = window_len / max(1, segment_length)
         
         # Log validation setup
         jitter_msg = f" | jitter-avg K={jitter_draws}" if jitter_draws > 1 and not freeze_frictions else ""
         if not quiet:
             print(f"[VAL] {len(windows)} passes | window={window_len} | stride~{int(window_len*stride_frac)} | "
                   f"coverage~{coverage:.2f}x{jitter_msg}")
+            if start_frac_override is not None or end_frac_override is not None:
+                print(
+                    f"[VAL] segment={start_frac:.2f}-{end_frac:.2f} "
+                    f"(idx {seg_lo}:{seg_hi}, bars={segment_length})"
+                )
         
         # Log window ranges (first 3 for brevity)
         if not quiet:
@@ -1045,7 +1096,21 @@ class Trainer:
         val_stats['val_undertrade_penalty'] = float(undertrade_penalty)
         val_stats['val_return_pct'] = float(np.mean(window_return_pcts)) if window_return_pcts else 0.0
         val_stats['val_median_return_pct'] = float(np.median(window_return_pcts)) if window_return_pcts else 0.0
+        val_stats['val_return_q25_pct'] = float(np.percentile(window_return_pcts, 25)) if window_return_pcts else 0.0
+        val_stats['val_return_q10_pct'] = float(np.percentile(window_return_pcts, 10)) if window_return_pcts else 0.0
         val_stats['val_median_pf'] = float(np.median(window_pfs)) if window_pfs else 0.0
+        val_stats['val_pf_q25'] = float(np.percentile(window_pfs, 25)) if window_pfs else 0.0
+        val_stats['val_pf_q10'] = float(np.percentile(window_pfs, 10)) if window_pfs else 0.0
+        if window_return_pcts:
+            return_arr = np.asarray(window_return_pcts, dtype=float)
+            val_stats['val_positive_frac'] = float(np.mean(return_arr > 0.0))
+        else:
+            val_stats['val_positive_frac'] = 0.0
+        if window_pfs:
+            pf_arr = np.asarray(window_pfs, dtype=float)
+            val_stats['val_pf_ge_1_frac'] = float(np.mean(pf_arr >= 1.0))
+        else:
+            val_stats['val_pf_ge_1_frac'] = 0.0
         
         # Quality-of-life print - enhanced for SPR mode
         fitness_mode = getattr(self.config.fitness, 'mode', 'legacy')
@@ -1144,7 +1209,11 @@ class Trainer:
             "long_ratio": policy_metrics["long_short"]["long_ratio"],  # Long/(Long+Short) - already computed
             "return_pct_mean": val_stats["val_return_pct"],
             "return_pct_median": val_stats["val_median_return_pct"],
+            "return_pct_q25": val_stats["val_return_q25_pct"],
+            "return_pct_q10": val_stats["val_return_q10_pct"],
             "pf_median": val_stats["val_median_pf"],
+            "pf_q25": val_stats["val_pf_q25"],
+            "pf_q10": val_stats["val_pf_q10"],
         }
         
         # SPR: Add SPR components to summary if available
@@ -1283,9 +1352,16 @@ class Trainer:
         alt_window = getattr(training_cfg, "anti_regression_alt_window_bars", None)
         if alt_window is not None:
             alt_window = int(alt_window)
+        tail_start_frac = float(getattr(training_cfg, "anti_regression_tail_start_frac", 0.50))
+        tail_end_frac = float(getattr(training_cfg, "anti_regression_tail_end_frac", 1.0))
+        tail_weight = float(getattr(training_cfg, "anti_regression_tail_weight", 0.75))
+        tail_start_frac = max(0.0, min(0.95, tail_start_frac))
+        tail_end_frac = max(tail_start_frac + 0.05, min(1.0, tail_end_frac))
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
+        min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
 
         rng_state = np.random.get_state()
+        py_rng_state = random.getstate()
         base_seed = int(getattr(self.config, "random_seed", 777))
         tournament = []
         for item in shortlist:
@@ -1300,8 +1376,10 @@ class Trainer:
                 continue
 
             # Use deterministic seeds so candidates are compared on identical jitter draws.
+            random.seed(base_seed + 17)
             np.random.seed(base_seed + 17)
             base_stats = self.validate(persist_summary=False, quiet=True)
+            random.seed(base_seed + 101)
             np.random.seed(base_seed + 101)
             alt_stats = self.validate(
                 stride_frac_override=alt_stride,
@@ -1309,25 +1387,54 @@ class Trainer:
                 persist_summary=False,
                 quiet=True,
             )
+            random.seed(base_seed + 149)
+            np.random.seed(base_seed + 149)
+            tail_stats = self.validate(
+                stride_frac_override=alt_stride,
+                window_bars_override=alt_window,
+                start_frac_override=tail_start_frac,
+                end_frac_override=tail_end_frac,
+                persist_summary=False,
+                quiet=True,
+            )
 
             base_score = float(base_stats.get("val_fitness", 0.0))
             alt_score = float(alt_stats.get("val_fitness", 0.0))
-            base_return = float(base_stats.get("val_median_return_pct", base_stats.get("val_return_pct", 0.0)))
-            alt_return = float(alt_stats.get("val_median_return_pct", alt_stats.get("val_return_pct", 0.0)))
-            base_pf = float(base_stats.get("val_median_pf", 0.0))
-            alt_pf = float(alt_stats.get("val_median_pf", 0.0))
+            tail_score = float(tail_stats.get("val_fitness", 0.0))
+            base_return_median = float(base_stats.get("val_median_return_pct", base_stats.get("val_return_pct", 0.0)))
+            alt_return_median = float(alt_stats.get("val_median_return_pct", alt_stats.get("val_return_pct", 0.0)))
+            tail_return_median = float(tail_stats.get("val_median_return_pct", tail_stats.get("val_return_pct", 0.0)))
+            base_pf_median = float(base_stats.get("val_median_pf", 0.0))
+            alt_pf_median = float(alt_stats.get("val_median_pf", 0.0))
+            tail_pf_median = float(tail_stats.get("val_median_pf", 0.0))
+            base_return = base_return_median
+            alt_return = alt_return_median
+            tail_return = tail_return_median
+            base_pf = base_pf_median
+            alt_pf = alt_pf_median
+            tail_pf = tail_pf_median
+            base_pos_frac = float(base_stats.get("val_positive_frac", 0.0))
+            alt_pos_frac = float(alt_stats.get("val_positive_frac", 0.0))
+            tail_pos_frac = float(tail_stats.get("val_positive_frac", 0.0))
+            base_pf_ge_1_frac = float(base_stats.get("val_pf_ge_1_frac", 0.0))
+            alt_pf_ge_1_frac = float(alt_stats.get("val_pf_ge_1_frac", 0.0))
+            tail_pf_ge_1_frac = float(tail_stats.get("val_pf_ge_1_frac", 0.0))
             base_iqr = float(base_stats.get("val_iqr", 0.0))
             alt_iqr = float(alt_stats.get("val_iqr", 0.0))
+            tail_iqr = float(tail_stats.get("val_iqr", 0.0))
             base_trades = float(base_stats.get("val_trades", 0.0))
             alt_trades = float(alt_stats.get("val_trades", 0.0))
+            tail_trades = float(tail_stats.get("val_trades", 0.0))
 
-            robust_score = min(base_score, alt_score)
-            robust_return = min(base_return, alt_return)
-            robust_pf = min(base_pf, alt_pf)
-            dispersion_penalty = 0.10 * max(base_iqr, alt_iqr)
+            robust_score = min(base_score, alt_score, tail_score)
+            robust_return = min(base_return, alt_return, tail_return)
+            robust_pf = min(base_pf, alt_pf, tail_pf)
+            robust_pos_frac = min(base_pos_frac, alt_pos_frac, tail_pos_frac)
+            robust_pf_ge_1_frac = min(base_pf_ge_1_frac, alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+            dispersion_penalty = 0.10 * max(base_iqr, alt_iqr, tail_iqr)
             low_trade_penalty = 0.0
             if trade_floor > 0:
-                trade_min = min(base_trades, alt_trades)
+                trade_min = min(base_trades, alt_trades, tail_trades)
                 if trade_min < trade_floor:
                     low_trade_penalty = 0.02 * ((trade_floor - trade_min) / max(1.0, trade_floor))
 
@@ -1336,6 +1443,9 @@ class Trainer:
             pf_bonus = 0.30 * max(0.0, robust_pf - 1.0)
             spr_bonus = 0.15 * max(0.0, robust_score)
             pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
+            consistency_bonus = 0.25 * max(0.0, robust_pos_frac - min_positive_frac)
+            consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
+            tail_penalty = tail_weight * max(0.0, -tail_return)
             negative_return_penalty = 0.0
             if robust_return <= 0.0:
                 negative_return_penalty = 1.0 + 0.25 * abs(robust_return)
@@ -1344,13 +1454,30 @@ class Trainer:
                 robust_return
                 + pf_bonus
                 + spr_bonus
+                + consistency_bonus
                 - dispersion_penalty
                 - low_trade_penalty
                 - pf_shortfall_penalty
+                - consistency_penalty
+                - tail_penalty
                 - negative_return_penalty
             )
             profit_feasible = bool(
-                base_return > 0.0 and alt_return > 0.0 and base_pf >= 1.0 and alt_pf >= 1.0
+                base_return > 0.0
+                and alt_return > 0.0
+                and tail_return > 0.0
+                and base_pf >= 1.0
+                and alt_pf >= 1.0
+                and tail_pf >= 1.0
+            )
+            consistency_feasible = bool(
+                profit_feasible
+                and base_pos_frac >= min_positive_frac
+                and alt_pos_frac >= min_positive_frac
+                and tail_pos_frac >= min_positive_frac
+                and base_pf_ge_1_frac >= min_positive_frac
+                and alt_pf_ge_1_frac >= min_positive_frac
+                and tail_pf_ge_1_frac >= min_positive_frac
             )
 
             tournament.append(
@@ -1359,38 +1486,68 @@ class Trainer:
                     "filename": filename,
                     "base_score": base_score,
                     "alt_score": alt_score,
+                    "tail_score": tail_score,
                     "robust_score": robust_score,
                     "base_return_pct": base_return,
                     "alt_return_pct": alt_return,
+                    "tail_return_pct": tail_return,
+                    "base_return_median_pct": base_return_median,
+                    "alt_return_median_pct": alt_return_median,
+                    "tail_return_median_pct": tail_return_median,
                     "robust_return_pct": robust_return,
                     "base_pf": base_pf,
                     "alt_pf": alt_pf,
+                    "tail_pf": tail_pf,
+                    "base_pf_median": base_pf_median,
+                    "alt_pf_median": alt_pf_median,
+                    "tail_pf_median": tail_pf_median,
                     "robust_pf": robust_pf,
+                    "base_pos_frac": base_pos_frac,
+                    "alt_pos_frac": alt_pos_frac,
+                    "tail_pos_frac": tail_pos_frac,
+                    "robust_pos_frac": robust_pos_frac,
+                    "base_pf_ge_1_frac": base_pf_ge_1_frac,
+                    "alt_pf_ge_1_frac": alt_pf_ge_1_frac,
+                    "tail_pf_ge_1_frac": tail_pf_ge_1_frac,
+                    "robust_pf_ge_1_frac": robust_pf_ge_1_frac,
                     "base_iqr": base_iqr,
                     "alt_iqr": alt_iqr,
+                    "tail_iqr": tail_iqr,
                     "base_trades": base_trades,
                     "alt_trades": alt_trades,
+                    "tail_trades": tail_trades,
                     "dispersion_penalty": dispersion_penalty,
                     "low_trade_penalty": low_trade_penalty,
                     "pf_shortfall_penalty": pf_shortfall_penalty,
+                    "consistency_bonus": consistency_bonus,
+                    "consistency_penalty": consistency_penalty,
+                    "tail_penalty": tail_penalty,
                     "negative_return_penalty": negative_return_penalty,
                     "profit_feasible": profit_feasible,
+                    "consistency_feasible": consistency_feasible,
                     "composite_score": composite,
                 }
             )
 
         np.random.set_state(rng_state)
+        random.setstate(py_rng_state)
 
         if not tournament:
             return None
 
-        ranking_pool = [x for x in tournament if x.get("profit_feasible")]
+        pool_mode = "consistency_feasible"
+        ranking_pool = [x for x in tournament if x.get("consistency_feasible")]
         if not ranking_pool:
+            pool_mode = "profit_feasible"
+            ranking_pool = [x for x in tournament if x.get("profit_feasible")]
+        if not ranking_pool:
+            pool_mode = "all"
             ranking_pool = list(tournament)
 
         ranking_pool.sort(
             key=lambda x: (
                 x["composite_score"],
+                x.get("robust_pos_frac", -1e9),
                 x.get("robust_return_pct", -1e9),
                 x.get("robust_pf", -1e9),
                 x["robust_score"],
@@ -1404,9 +1561,13 @@ class Trainer:
             "timestamp": datetime.now().isoformat(timespec="seconds"),
             "alt_stride_frac": alt_stride,
             "alt_window_bars": alt_window,
+            "tail_start_frac": tail_start_frac,
+            "tail_end_frac": tail_end_frac,
+            "tail_weight": tail_weight,
             "trade_floor": trade_floor,
             "winner": winner,
             "selection_pool_size": len(ranking_pool),
+            "selection_pool_mode": pool_mode,
             "selection_pool_profit_only": bool(any(x.get("profit_feasible") for x in tournament)),
             "selection_pool_filenames": [x.get("filename") for x in ranking_pool],
             "candidates": tournament,
