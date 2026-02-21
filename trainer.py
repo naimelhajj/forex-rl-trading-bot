@@ -777,11 +777,6 @@ class Trainer:
             window_frac = getattr(self.config, "VAL_WINDOW_FRAC", 0.40)
             window_len = max(100, int(segment_length * window_frac))
         
-        # Cap by env horizon if present
-        max_steps = getattr(self.train_env, "max_steps", None)
-        if max_steps is not None:
-            window_len = min(window_len, max_steps)
-        
         # Compute stride and K
         stride_frac = stride_frac_override if stride_frac_override is not None else getattr(self.config, "VAL_STRIDE_FRAC", 0.15)
         stride = max(1, int(window_len * stride_frac))
@@ -832,6 +827,12 @@ class Trainer:
             (seg_lo + start, min(seg_lo + start + window_len, seg_hi))
             for start in starts
         ]
+
+        # Validation may need a longer horizon than training episodes (e.g., tournament alt windows).
+        # Temporarily raise val_env.max_steps so each slice can run for the full selected window length.
+        orig_val_max_steps = getattr(self.val_env, "max_steps", None)
+        if orig_val_max_steps is not None and int(orig_val_max_steps) < int(window_len):
+            self.val_env.max_steps = int(window_len)
         
         # Calculate coverage (how much of val data is seen across all windows)
         if len(windows) > 1:
@@ -974,6 +975,7 @@ class Trainer:
         self.val_env.spread = current_spread
         self.val_env.commission = current_commission
         self.val_env.slippage_pips = current_slippage
+        self.val_env.max_steps = orig_val_max_steps
         if hasattr(self.val_env, "risk_manager"):
             self.val_env.risk_manager.slippage_pips = current_slippage
         
@@ -1359,6 +1361,8 @@ class Trainer:
         tail_end_frac = max(tail_start_frac + 0.05, min(1.0, tail_end_frac))
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
         min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
+        base_return_floor = float(getattr(training_cfg, "anti_regression_base_return_floor", 0.0))
+        base_penalty_weight = float(getattr(training_cfg, "anti_regression_base_penalty_weight", 0.15))
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
         tournament_jitter_draws = getattr(training_cfg, "anti_regression_eval_jitter_draws", None)
@@ -1447,26 +1451,29 @@ class Trainer:
                 alt_trades = float(alt_stats.get("val_trades", 0.0))
                 tail_trades = float(tail_stats.get("val_trades", 0.0))
 
-                robust_score = min(base_score, alt_score, tail_score)
-                robust_return = min(base_return, alt_return, tail_return)
-                robust_pf = min(base_pf, alt_pf, tail_pf)
-                robust_pos_frac = min(base_pos_frac, alt_pos_frac, tail_pos_frac)
-                robust_pf_ge_1_frac = min(base_pf_ge_1_frac, alt_pf_ge_1_frac, tail_pf_ge_1_frac)
-                dispersion_penalty = 0.10 * max(base_iqr, alt_iqr, tail_iqr)
+                # Future-first robustness: use alt+tail slices as the primary signal and
+                # keep the base slice as a soft penalty (to avoid overfitting one late window).
+                robust_score = min(alt_score, tail_score)
+                robust_return = min(alt_return, tail_return)
+                robust_pf = min(alt_pf, tail_pf)
+                robust_pos_frac = min(alt_pos_frac, tail_pos_frac)
+                robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
                 low_trade_penalty = 0.0
                 if trade_floor > 0:
-                    trade_min = min(base_trades, alt_trades, tail_trades)
+                    trade_min = min(alt_trades, tail_trades)
                     if trade_min < trade_floor:
                         low_trade_penalty = 0.02 * ((trade_floor - trade_min) / max(1.0, trade_floor))
 
                 # Profitability-first ranking:
-                # prioritize robust median return under base+alt regimes; SPR/PF are secondary tie-breakers.
+                # prioritize robust median return under future-focused alt+tail regimes.
                 pf_bonus = 0.30 * max(0.0, robust_pf - 1.0)
                 spr_bonus = 0.15 * max(0.0, robust_score)
                 pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
                 consistency_bonus = 0.25 * max(0.0, robust_pos_frac - min_positive_frac)
                 consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
                 tail_penalty = tail_weight * max(0.0, -tail_return)
+                base_return_penalty = base_penalty_weight * max(0.0, base_return_floor - base_return)
                 negative_return_penalty = 0.0
                 if robust_return <= 0.0:
                     negative_return_penalty = 1.0 + 0.25 * abs(robust_return)
@@ -1481,22 +1488,19 @@ class Trainer:
                     - pf_shortfall_penalty
                     - consistency_penalty
                     - tail_penalty
+                    - base_return_penalty
                     - negative_return_penalty
                 )
                 profit_feasible = bool(
-                    base_return > 0.0
-                    and alt_return > 0.0
+                    alt_return > 0.0
                     and tail_return > 0.0
-                    and base_pf >= 1.0
                     and alt_pf >= 1.0
                     and tail_pf >= 1.0
                 )
                 consistency_feasible = bool(
                     profit_feasible
-                    and base_pos_frac >= min_positive_frac
                     and alt_pos_frac >= min_positive_frac
                     and tail_pos_frac >= min_positive_frac
-                    and base_pf_ge_1_frac >= min_positive_frac
                     and alt_pf_ge_1_frac >= min_positive_frac
                     and tail_pf_ge_1_frac >= min_positive_frac
                 )
@@ -1543,6 +1547,7 @@ class Trainer:
                         "consistency_bonus": consistency_bonus,
                         "consistency_penalty": consistency_penalty,
                         "tail_penalty": tail_penalty,
+                        "base_return_penalty": base_return_penalty,
                         "negative_return_penalty": negative_return_penalty,
                         "profit_feasible": profit_feasible,
                         "consistency_feasible": consistency_feasible,
@@ -1588,6 +1593,8 @@ class Trainer:
             "tail_start_frac": tail_start_frac,
             "tail_end_frac": tail_end_frac,
             "tail_weight": tail_weight,
+            "base_return_floor": base_return_floor,
+            "base_penalty_weight": base_penalty_weight,
             "trade_floor": trade_floor,
             "winner": winner,
             "selection_pool_size": len(ranking_pool),

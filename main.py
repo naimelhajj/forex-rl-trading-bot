@@ -1166,6 +1166,10 @@ def main():
                         help='Tail-segment end fraction for anti-regression checkpoint tournament')
     parser.add_argument('--anti-regression-tail-weight', type=float, default=None,
                         help='Penalty weight for negative tail-segment returns in anti-regression tournament')
+    parser.add_argument('--anti-regression-base-return-floor', type=float, default=None,
+                        help='Soft floor for base-return in anti-regression checkpoint tournament')
+    parser.add_argument('--anti-regression-base-penalty-weight', type=float, default=None,
+                        help='Penalty weight when base-return falls below the configured floor')
     
     args = parser.parse_args()
     
@@ -1315,6 +1319,10 @@ def main():
         config.training.anti_regression_tail_end_frac = max(0.05, min(1.0, float(args.anti_regression_tail_end_frac)))
     if args.anti_regression_tail_weight is not None:
         config.training.anti_regression_tail_weight = max(0.0, float(args.anti_regression_tail_weight))
+    if args.anti_regression_base_return_floor is not None:
+        config.training.anti_regression_base_return_floor = float(args.anti_regression_base_return_floor)
+    if args.anti_regression_base_penalty_weight is not None:
+        config.training.anti_regression_base_penalty_weight = max(0.0, float(args.anti_regression_base_penalty_weight))
     
     # Override episodes if specified
     if args.episodes is not None:

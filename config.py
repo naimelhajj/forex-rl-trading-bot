@@ -189,6 +189,8 @@ class TrainingConfig:
     anti_regression_tail_start_frac: float = 0.50  # Tail-only validation segment start (fraction of val span)
     anti_regression_tail_end_frac: float = 1.00  # Tail-only validation segment end (fraction of val span)
     anti_regression_tail_weight: float = 0.75  # Extra penalty weight when tail slice return is negative
+    anti_regression_base_return_floor: float = 0.0  # Soft floor for base return in tournament scoring
+    anti_regression_base_penalty_weight: float = 0.15  # Penalty weight when base return falls below floor
 
 
 @dataclass
