@@ -1359,178 +1359,202 @@ class Trainer:
         tail_end_frac = max(tail_start_frac + 0.05, min(1.0, tail_end_frac))
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
         min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
+        tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
+        tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
+        tournament_jitter_draws = getattr(training_cfg, "anti_regression_eval_jitter_draws", None)
+        if tournament_min_k is not None:
+            tournament_min_k = max(1, int(tournament_min_k))
+        if tournament_max_k is not None:
+            tournament_max_k = max(1, int(tournament_max_k))
+        if tournament_min_k is not None and tournament_max_k is not None and tournament_max_k < tournament_min_k:
+            tournament_max_k = tournament_min_k
+        if tournament_jitter_draws is not None:
+            tournament_jitter_draws = max(1, int(tournament_jitter_draws))
 
         rng_state = np.random.get_state()
         py_rng_state = random.getstate()
+        orig_val_min_k = getattr(self.config, "VAL_MIN_K", None)
+        orig_val_max_k = getattr(self.config, "VAL_MAX_K", None)
+        orig_val_jitter_draws = getattr(self.config, "VAL_JITTER_DRAWS", None)
+        if tournament_min_k is not None:
+            setattr(self.config, "VAL_MIN_K", tournament_min_k)
+        if tournament_max_k is not None:
+            setattr(self.config, "VAL_MAX_K", tournament_max_k)
+        if tournament_jitter_draws is not None:
+            setattr(self.config, "VAL_JITTER_DRAWS", tournament_jitter_draws)
         base_seed = int(getattr(self.config, "random_seed", 777))
         tournament = []
-        for item in shortlist:
-            filename = item["filename"]
-            ckpt_path = self.checkpoint_dir / filename
-            if not ckpt_path.exists():
-                continue
+        try:
+            for item in shortlist:
+                filename = item["filename"]
+                ckpt_path = self.checkpoint_dir / filename
+                if not ckpt_path.exists():
+                    continue
 
-            try:
-                self.load_checkpoint(filename)
-            except Exception:
-                continue
+                try:
+                    self.load_checkpoint(filename)
+                except Exception:
+                    continue
 
-            # Use deterministic seeds so candidates are compared on identical jitter draws.
-            random.seed(base_seed + 17)
-            np.random.seed(base_seed + 17)
-            base_stats = self.validate(persist_summary=False, quiet=True)
-            random.seed(base_seed + 101)
-            np.random.seed(base_seed + 101)
-            alt_stats = self.validate(
-                stride_frac_override=alt_stride,
-                window_bars_override=alt_window,
-                persist_summary=False,
-                quiet=True,
-            )
-            random.seed(base_seed + 149)
-            np.random.seed(base_seed + 149)
-            tail_stats = self.validate(
-                stride_frac_override=alt_stride,
-                window_bars_override=alt_window,
-                start_frac_override=tail_start_frac,
-                end_frac_override=tail_end_frac,
-                persist_summary=False,
-                quiet=True,
-            )
+                # Use deterministic seeds so candidates are compared on identical jitter draws.
+                random.seed(base_seed + 17)
+                np.random.seed(base_seed + 17)
+                base_stats = self.validate(persist_summary=False, quiet=True)
+                random.seed(base_seed + 101)
+                np.random.seed(base_seed + 101)
+                alt_stats = self.validate(
+                    stride_frac_override=alt_stride,
+                    window_bars_override=alt_window,
+                    persist_summary=False,
+                    quiet=True,
+                )
+                random.seed(base_seed + 149)
+                np.random.seed(base_seed + 149)
+                tail_stats = self.validate(
+                    stride_frac_override=alt_stride,
+                    window_bars_override=alt_window,
+                    start_frac_override=tail_start_frac,
+                    end_frac_override=tail_end_frac,
+                    persist_summary=False,
+                    quiet=True,
+                )
 
-            base_score = float(base_stats.get("val_fitness", 0.0))
-            alt_score = float(alt_stats.get("val_fitness", 0.0))
-            tail_score = float(tail_stats.get("val_fitness", 0.0))
-            base_return_median = float(base_stats.get("val_median_return_pct", base_stats.get("val_return_pct", 0.0)))
-            alt_return_median = float(alt_stats.get("val_median_return_pct", alt_stats.get("val_return_pct", 0.0)))
-            tail_return_median = float(tail_stats.get("val_median_return_pct", tail_stats.get("val_return_pct", 0.0)))
-            base_pf_median = float(base_stats.get("val_median_pf", 0.0))
-            alt_pf_median = float(alt_stats.get("val_median_pf", 0.0))
-            tail_pf_median = float(tail_stats.get("val_median_pf", 0.0))
-            base_return = base_return_median
-            alt_return = alt_return_median
-            tail_return = tail_return_median
-            base_pf = base_pf_median
-            alt_pf = alt_pf_median
-            tail_pf = tail_pf_median
-            base_pos_frac = float(base_stats.get("val_positive_frac", 0.0))
-            alt_pos_frac = float(alt_stats.get("val_positive_frac", 0.0))
-            tail_pos_frac = float(tail_stats.get("val_positive_frac", 0.0))
-            base_pf_ge_1_frac = float(base_stats.get("val_pf_ge_1_frac", 0.0))
-            alt_pf_ge_1_frac = float(alt_stats.get("val_pf_ge_1_frac", 0.0))
-            tail_pf_ge_1_frac = float(tail_stats.get("val_pf_ge_1_frac", 0.0))
-            base_iqr = float(base_stats.get("val_iqr", 0.0))
-            alt_iqr = float(alt_stats.get("val_iqr", 0.0))
-            tail_iqr = float(tail_stats.get("val_iqr", 0.0))
-            base_trades = float(base_stats.get("val_trades", 0.0))
-            alt_trades = float(alt_stats.get("val_trades", 0.0))
-            tail_trades = float(tail_stats.get("val_trades", 0.0))
+                base_score = float(base_stats.get("val_fitness", 0.0))
+                alt_score = float(alt_stats.get("val_fitness", 0.0))
+                tail_score = float(tail_stats.get("val_fitness", 0.0))
+                base_return_median = float(base_stats.get("val_median_return_pct", base_stats.get("val_return_pct", 0.0)))
+                alt_return_median = float(alt_stats.get("val_median_return_pct", alt_stats.get("val_return_pct", 0.0)))
+                tail_return_median = float(tail_stats.get("val_median_return_pct", tail_stats.get("val_return_pct", 0.0)))
+                base_pf_median = float(base_stats.get("val_median_pf", 0.0))
+                alt_pf_median = float(alt_stats.get("val_median_pf", 0.0))
+                tail_pf_median = float(tail_stats.get("val_median_pf", 0.0))
+                base_return = base_return_median
+                alt_return = alt_return_median
+                tail_return = tail_return_median
+                base_pf = base_pf_median
+                alt_pf = alt_pf_median
+                tail_pf = tail_pf_median
+                base_pos_frac = float(base_stats.get("val_positive_frac", 0.0))
+                alt_pos_frac = float(alt_stats.get("val_positive_frac", 0.0))
+                tail_pos_frac = float(tail_stats.get("val_positive_frac", 0.0))
+                base_pf_ge_1_frac = float(base_stats.get("val_pf_ge_1_frac", 0.0))
+                alt_pf_ge_1_frac = float(alt_stats.get("val_pf_ge_1_frac", 0.0))
+                tail_pf_ge_1_frac = float(tail_stats.get("val_pf_ge_1_frac", 0.0))
+                base_iqr = float(base_stats.get("val_iqr", 0.0))
+                alt_iqr = float(alt_stats.get("val_iqr", 0.0))
+                tail_iqr = float(tail_stats.get("val_iqr", 0.0))
+                base_trades = float(base_stats.get("val_trades", 0.0))
+                alt_trades = float(alt_stats.get("val_trades", 0.0))
+                tail_trades = float(tail_stats.get("val_trades", 0.0))
 
-            robust_score = min(base_score, alt_score, tail_score)
-            robust_return = min(base_return, alt_return, tail_return)
-            robust_pf = min(base_pf, alt_pf, tail_pf)
-            robust_pos_frac = min(base_pos_frac, alt_pos_frac, tail_pos_frac)
-            robust_pf_ge_1_frac = min(base_pf_ge_1_frac, alt_pf_ge_1_frac, tail_pf_ge_1_frac)
-            dispersion_penalty = 0.10 * max(base_iqr, alt_iqr, tail_iqr)
-            low_trade_penalty = 0.0
-            if trade_floor > 0:
-                trade_min = min(base_trades, alt_trades, tail_trades)
-                if trade_min < trade_floor:
-                    low_trade_penalty = 0.02 * ((trade_floor - trade_min) / max(1.0, trade_floor))
+                robust_score = min(base_score, alt_score, tail_score)
+                robust_return = min(base_return, alt_return, tail_return)
+                robust_pf = min(base_pf, alt_pf, tail_pf)
+                robust_pos_frac = min(base_pos_frac, alt_pos_frac, tail_pos_frac)
+                robust_pf_ge_1_frac = min(base_pf_ge_1_frac, alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                dispersion_penalty = 0.10 * max(base_iqr, alt_iqr, tail_iqr)
+                low_trade_penalty = 0.0
+                if trade_floor > 0:
+                    trade_min = min(base_trades, alt_trades, tail_trades)
+                    if trade_min < trade_floor:
+                        low_trade_penalty = 0.02 * ((trade_floor - trade_min) / max(1.0, trade_floor))
 
-            # Profitability-first ranking:
-            # prioritize robust median return under base+alt regimes; SPR/PF are secondary tie-breakers.
-            pf_bonus = 0.30 * max(0.0, robust_pf - 1.0)
-            spr_bonus = 0.15 * max(0.0, robust_score)
-            pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
-            consistency_bonus = 0.25 * max(0.0, robust_pos_frac - min_positive_frac)
-            consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
-            tail_penalty = tail_weight * max(0.0, -tail_return)
-            negative_return_penalty = 0.0
-            if robust_return <= 0.0:
-                negative_return_penalty = 1.0 + 0.25 * abs(robust_return)
+                # Profitability-first ranking:
+                # prioritize robust median return under base+alt regimes; SPR/PF are secondary tie-breakers.
+                pf_bonus = 0.30 * max(0.0, robust_pf - 1.0)
+                spr_bonus = 0.15 * max(0.0, robust_score)
+                pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
+                consistency_bonus = 0.25 * max(0.0, robust_pos_frac - min_positive_frac)
+                consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
+                tail_penalty = tail_weight * max(0.0, -tail_return)
+                negative_return_penalty = 0.0
+                if robust_return <= 0.0:
+                    negative_return_penalty = 1.0 + 0.25 * abs(robust_return)
 
-            composite = (
-                robust_return
-                + pf_bonus
-                + spr_bonus
-                + consistency_bonus
-                - dispersion_penalty
-                - low_trade_penalty
-                - pf_shortfall_penalty
-                - consistency_penalty
-                - tail_penalty
-                - negative_return_penalty
-            )
-            profit_feasible = bool(
-                base_return > 0.0
-                and alt_return > 0.0
-                and tail_return > 0.0
-                and base_pf >= 1.0
-                and alt_pf >= 1.0
-                and tail_pf >= 1.0
-            )
-            consistency_feasible = bool(
-                profit_feasible
-                and base_pos_frac >= min_positive_frac
-                and alt_pos_frac >= min_positive_frac
-                and tail_pos_frac >= min_positive_frac
-                and base_pf_ge_1_frac >= min_positive_frac
-                and alt_pf_ge_1_frac >= min_positive_frac
-                and tail_pf_ge_1_frac >= min_positive_frac
-            )
+                composite = (
+                    robust_return
+                    + pf_bonus
+                    + spr_bonus
+                    + consistency_bonus
+                    - dispersion_penalty
+                    - low_trade_penalty
+                    - pf_shortfall_penalty
+                    - consistency_penalty
+                    - tail_penalty
+                    - negative_return_penalty
+                )
+                profit_feasible = bool(
+                    base_return > 0.0
+                    and alt_return > 0.0
+                    and tail_return > 0.0
+                    and base_pf >= 1.0
+                    and alt_pf >= 1.0
+                    and tail_pf >= 1.0
+                )
+                consistency_feasible = bool(
+                    profit_feasible
+                    and base_pos_frac >= min_positive_frac
+                    and alt_pos_frac >= min_positive_frac
+                    and tail_pos_frac >= min_positive_frac
+                    and base_pf_ge_1_frac >= min_positive_frac
+                    and alt_pf_ge_1_frac >= min_positive_frac
+                    and tail_pf_ge_1_frac >= min_positive_frac
+                )
 
-            tournament.append(
-                {
-                    "episode": int(item.get("episode", -1)),
-                    "filename": filename,
-                    "base_score": base_score,
-                    "alt_score": alt_score,
-                    "tail_score": tail_score,
-                    "robust_score": robust_score,
-                    "base_return_pct": base_return,
-                    "alt_return_pct": alt_return,
-                    "tail_return_pct": tail_return,
-                    "base_return_median_pct": base_return_median,
-                    "alt_return_median_pct": alt_return_median,
-                    "tail_return_median_pct": tail_return_median,
-                    "robust_return_pct": robust_return,
-                    "base_pf": base_pf,
-                    "alt_pf": alt_pf,
-                    "tail_pf": tail_pf,
-                    "base_pf_median": base_pf_median,
-                    "alt_pf_median": alt_pf_median,
-                    "tail_pf_median": tail_pf_median,
-                    "robust_pf": robust_pf,
-                    "base_pos_frac": base_pos_frac,
-                    "alt_pos_frac": alt_pos_frac,
-                    "tail_pos_frac": tail_pos_frac,
-                    "robust_pos_frac": robust_pos_frac,
-                    "base_pf_ge_1_frac": base_pf_ge_1_frac,
-                    "alt_pf_ge_1_frac": alt_pf_ge_1_frac,
-                    "tail_pf_ge_1_frac": tail_pf_ge_1_frac,
-                    "robust_pf_ge_1_frac": robust_pf_ge_1_frac,
-                    "base_iqr": base_iqr,
-                    "alt_iqr": alt_iqr,
-                    "tail_iqr": tail_iqr,
-                    "base_trades": base_trades,
-                    "alt_trades": alt_trades,
-                    "tail_trades": tail_trades,
-                    "dispersion_penalty": dispersion_penalty,
-                    "low_trade_penalty": low_trade_penalty,
-                    "pf_shortfall_penalty": pf_shortfall_penalty,
-                    "consistency_bonus": consistency_bonus,
-                    "consistency_penalty": consistency_penalty,
-                    "tail_penalty": tail_penalty,
-                    "negative_return_penalty": negative_return_penalty,
-                    "profit_feasible": profit_feasible,
-                    "consistency_feasible": consistency_feasible,
-                    "composite_score": composite,
-                }
-            )
-
-        np.random.set_state(rng_state)
-        random.setstate(py_rng_state)
+                tournament.append(
+                    {
+                        "episode": int(item.get("episode", -1)),
+                        "filename": filename,
+                        "base_score": base_score,
+                        "alt_score": alt_score,
+                        "tail_score": tail_score,
+                        "robust_score": robust_score,
+                        "base_return_pct": base_return,
+                        "alt_return_pct": alt_return,
+                        "tail_return_pct": tail_return,
+                        "base_return_median_pct": base_return_median,
+                        "alt_return_median_pct": alt_return_median,
+                        "tail_return_median_pct": tail_return_median,
+                        "robust_return_pct": robust_return,
+                        "base_pf": base_pf,
+                        "alt_pf": alt_pf,
+                        "tail_pf": tail_pf,
+                        "base_pf_median": base_pf_median,
+                        "alt_pf_median": alt_pf_median,
+                        "tail_pf_median": tail_pf_median,
+                        "robust_pf": robust_pf,
+                        "base_pos_frac": base_pos_frac,
+                        "alt_pos_frac": alt_pos_frac,
+                        "tail_pos_frac": tail_pos_frac,
+                        "robust_pos_frac": robust_pos_frac,
+                        "base_pf_ge_1_frac": base_pf_ge_1_frac,
+                        "alt_pf_ge_1_frac": alt_pf_ge_1_frac,
+                        "tail_pf_ge_1_frac": tail_pf_ge_1_frac,
+                        "robust_pf_ge_1_frac": robust_pf_ge_1_frac,
+                        "base_iqr": base_iqr,
+                        "alt_iqr": alt_iqr,
+                        "tail_iqr": tail_iqr,
+                        "base_trades": base_trades,
+                        "alt_trades": alt_trades,
+                        "tail_trades": tail_trades,
+                        "dispersion_penalty": dispersion_penalty,
+                        "low_trade_penalty": low_trade_penalty,
+                        "pf_shortfall_penalty": pf_shortfall_penalty,
+                        "consistency_bonus": consistency_bonus,
+                        "consistency_penalty": consistency_penalty,
+                        "tail_penalty": tail_penalty,
+                        "negative_return_penalty": negative_return_penalty,
+                        "profit_feasible": profit_feasible,
+                        "consistency_feasible": consistency_feasible,
+                        "composite_score": composite,
+                    }
+                )
+        finally:
+            np.random.set_state(rng_state)
+            random.setstate(py_rng_state)
+            setattr(self.config, "VAL_MIN_K", orig_val_min_k)
+            setattr(self.config, "VAL_MAX_K", orig_val_max_k)
+            setattr(self.config, "VAL_JITTER_DRAWS", orig_val_jitter_draws)
 
         if not tournament:
             return None

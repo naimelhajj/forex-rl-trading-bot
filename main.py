@@ -1150,6 +1150,12 @@ def main():
                         help='How many candidate checkpoints to retain during training')
     parser.add_argument('--anti-regression-min-validations', type=int, default=None,
                         help='Minimum validations required before anti-regression tournament')
+    parser.add_argument('--anti-regression-eval-min-k', type=int, default=None,
+                        help='Override VAL_MIN_K only during anti-regression tournament')
+    parser.add_argument('--anti-regression-eval-max-k', type=int, default=None,
+                        help='Override VAL_MAX_K only during anti-regression tournament')
+    parser.add_argument('--anti-regression-eval-jitter-draws', type=int, default=None,
+                        help='Override VAL_JITTER_DRAWS only during anti-regression tournament')
     parser.add_argument('--anti-regression-alt-stride-frac', type=float, default=None,
                         help='Stride fraction for anti-regression secondary hold-out validation')
     parser.add_argument('--anti-regression-alt-window-bars', type=int, default=None,
@@ -1293,6 +1299,12 @@ def main():
         config.training.anti_regression_candidate_keep = max(1, int(args.anti_regression_candidate_keep))
     if args.anti_regression_min_validations is not None:
         config.training.anti_regression_min_validations = max(1, int(args.anti_regression_min_validations))
+    if args.anti_regression_eval_min_k is not None:
+        config.training.anti_regression_eval_min_k = max(1, int(args.anti_regression_eval_min_k))
+    if args.anti_regression_eval_max_k is not None:
+        config.training.anti_regression_eval_max_k = max(1, int(args.anti_regression_eval_max_k))
+    if args.anti_regression_eval_jitter_draws is not None:
+        config.training.anti_regression_eval_jitter_draws = max(1, int(args.anti_regression_eval_jitter_draws))
     if args.anti_regression_alt_stride_frac is not None:
         config.training.anti_regression_alt_stride_frac = max(0.01, float(args.anti_regression_alt_stride_frac))
     if args.anti_regression_alt_window_bars is not None:
