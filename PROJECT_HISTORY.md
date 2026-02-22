@@ -6,6 +6,56 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-22 (Blind10 confirmation: calibrated auto-rescue selector)
+
+Focus: run a full blind10 confirmation with calibrated `auto_rescue` selector, then compare directly against the current tail-holdout blind10 baseline.
+
+Run:
+- Prefix: `autorescue_blind10_fast10ep_20260222_155708`
+- Seeds: `10007,1011,2027,3039,4049,5051,6067,7079,8087,9091`
+- Profile matched the fast 10ep screen (`max_steps=600`, HFM friction settings, no symmetry, no dual controller).
+- Selector config:
+  - `--anti-regression-selector-mode auto_rescue`
+  - rescue thresholds: winner-forward return max `0.65`, forward-return edge min `0.10`, forward-PF edge min `0.10`, challenger base-return max `0.0`, challenger forward-PF min `1.35`.
+
+Aggregates:
+- Base:
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_aggregate_20260222.json`
+  - mean return `+0.9794%`
+  - mean PF `1.5309`
+  - positive+PF>1 `8/10`
+  - walk-forward pass `0/10`
+  - auto-rescue triggers `1/10`
+- WF2400:
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_eval_wf2400_aggregate_20260222.json`
+  - mean return `+0.9794%`
+  - mean PF `1.5309`
+  - positive+PF>1 `8/10`
+  - walk-forward pass `1/10`
+  - auto-rescue triggers `1/10`
+
+Selector behavior:
+- Triggered only for seed `10007` (tail winner `candidate_ep006.pt` -> future winner `candidate_ep002.pt`, result `+0.65%`, PF `1.26`).
+- Remaining seeds stayed on `tail_holdout`.
+
+Direct comparison vs tail-holdout blind10 baseline (`tailholdout_fix_blind10_fast10ep_20260220_231427`):
+- Comparison JSON:
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_vs_tailholdout_fix_blind10_20260222.json`
+- Base deltas:
+  - mean return `-0.4356%`
+  - mean PF `-0.1907`
+  - positive+PF>1 `-1`
+  - walk-forward pass `0` (unchanged at base horizon)
+- WF2400 deltas:
+  - mean return `-0.4356%`
+  - mean PF `-0.1907`
+  - positive+PF>1 `-1`
+  - walk-forward pass `-1` (from `2/10` to `1/10`)
+
+Outcome:
+- Calibrated auto-rescue behaves as designed (targeted trigger on the known failure pattern), but broad blind10 performance is still below the current tail-holdout baseline.
+- Keep auto-rescue available as a targeted mechanism; do not promote it as default for broad-seed production selection yet.
+
 ## 2026-02-22 (Auto-rescue selector trigger implemented + calibrated)
 
 Focus: replace static seed overrides with a validation-diagnostics trigger that keeps `tail_holdout` by default and switches to `future_first` only when a forward-robust challenger matches a failure pattern.
