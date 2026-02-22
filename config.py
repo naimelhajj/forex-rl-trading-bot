@@ -181,7 +181,7 @@ class TrainingConfig:
     anti_regression_candidate_keep: int = 24  # Keep up to N candidate checkpoints during training
     anti_regression_eval_top_k: int = 6  # Evaluate top-K candidates in end-of-run tournament
     anti_regression_min_validations: int = 4  # Require at least N validations before tournament
-    anti_regression_selector_mode: str = "tail_holdout"  # tail_holdout | future_first
+    anti_regression_selector_mode: str = "tail_holdout"  # tail_holdout | future_first | auto_rescue
     anti_regression_alt_stride_frac: float = 0.20  # Secondary hold-out stride for robustness scoring
     anti_regression_alt_window_bars: Optional[int] = None  # Secondary hold-out window (None uses default)
     anti_regression_eval_min_k: Optional[int] = None  # Optional VAL_MIN_K override during anti-regression tournament
@@ -192,6 +192,15 @@ class TrainingConfig:
     anti_regression_tail_weight: float = 0.75  # Extra penalty weight when tail slice return is negative
     anti_regression_base_return_floor: float = 0.0  # Used in future_first mode: soft floor for base return
     anti_regression_base_penalty_weight: float = 0.15  # Used in future_first mode: penalty below base floor
+    # Auto-rescue trigger (used when selector_mode=auto_rescue).
+    # Keeps tail_holdout default behavior, then flips to future_first only when
+    # a forward-robust challenger beats a weak tail winner by configured margins.
+    anti_regression_auto_rescue_enabled: bool = True
+    anti_regression_auto_rescue_winner_forward_return_max: float = 0.65
+    anti_regression_auto_rescue_forward_return_edge_min: float = 0.10
+    anti_regression_auto_rescue_forward_pf_edge_min: float = 0.10
+    anti_regression_auto_rescue_challenger_base_return_max: float = 0.0
+    anti_regression_auto_rescue_challenger_forward_pf_min: float = 1.35
 
 
 @dataclass

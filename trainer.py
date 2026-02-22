@@ -1362,10 +1362,27 @@ class Trainer:
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
         min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
         selector_mode = str(getattr(training_cfg, "anti_regression_selector_mode", "tail_holdout")).strip().lower()
-        if selector_mode not in ("tail_holdout", "future_first"):
+        if selector_mode not in ("tail_holdout", "future_first", "auto_rescue"):
             selector_mode = "tail_holdout"
+        ranking_selector_mode = "tail_holdout" if selector_mode == "auto_rescue" else selector_mode
         base_return_floor = float(getattr(training_cfg, "anti_regression_base_return_floor", 0.0))
         base_penalty_weight = float(getattr(training_cfg, "anti_regression_base_penalty_weight", 0.15))
+        auto_rescue_enabled = bool(getattr(training_cfg, "anti_regression_auto_rescue_enabled", True))
+        auto_rescue_winner_forward_return_max = float(
+            getattr(training_cfg, "anti_regression_auto_rescue_winner_forward_return_max", 0.65)
+        )
+        auto_rescue_forward_return_edge_min = float(
+            getattr(training_cfg, "anti_regression_auto_rescue_forward_return_edge_min", 0.10)
+        )
+        auto_rescue_forward_pf_edge_min = float(
+            getattr(training_cfg, "anti_regression_auto_rescue_forward_pf_edge_min", 0.10)
+        )
+        auto_rescue_challenger_base_return_max = float(
+            getattr(training_cfg, "anti_regression_auto_rescue_challenger_base_return_max", 0.0)
+        )
+        auto_rescue_challenger_forward_pf_min = float(
+            getattr(training_cfg, "anti_regression_auto_rescue_challenger_forward_pf_min", 1.35)
+        )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
         tournament_jitter_draws = getattr(training_cfg, "anti_regression_eval_jitter_draws", None)
@@ -1457,7 +1474,8 @@ class Trainer:
                 # Selector modes:
                 # - tail_holdout (default): strict robustness across base+alt+tail.
                 # - future_first: prioritize alt+tail and use base as a soft penalty.
-                if selector_mode == "future_first":
+                # - auto_rescue: scored as tail_holdout, with optional post-score rescue.
+                if ranking_selector_mode == "future_first":
                     robust_score = min(alt_score, tail_score)
                     robust_return = min(alt_return, tail_return)
                     robust_pf = min(alt_pf, tail_pf)
@@ -1486,7 +1504,7 @@ class Trainer:
                 consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
                 tail_penalty = tail_weight * max(0.0, -tail_return)
                 base_return_penalty = 0.0
-                if selector_mode == "future_first":
+                if ranking_selector_mode == "future_first":
                     base_return_penalty = base_penalty_weight * max(0.0, base_return_floor - base_return)
                 negative_return_penalty = 0.0
                 if robust_return <= 0.0:
@@ -1505,7 +1523,7 @@ class Trainer:
                     - base_return_penalty
                     - negative_return_penalty
                 )
-                if selector_mode == "future_first":
+                if ranking_selector_mode == "future_first":
                     profit_feasible = bool(
                         alt_return > 0.0
                         and tail_return > 0.0
@@ -1537,6 +1555,54 @@ class Trainer:
                         and alt_pf_ge_1_frac >= min_positive_frac
                         and tail_pf_ge_1_frac >= min_positive_frac
                     )
+
+                # Always compute a future-first view for diagnostics/auto-rescue.
+                future_robust_score = min(alt_score, tail_score)
+                future_robust_return = min(alt_return, tail_return)
+                future_robust_pf = min(alt_pf, tail_pf)
+                future_robust_pos_frac = min(alt_pos_frac, tail_pos_frac)
+                future_robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                future_dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
+                future_trade_min = min(alt_trades, tail_trades)
+                future_low_trade_penalty = 0.0
+                if trade_floor > 0 and future_trade_min < trade_floor:
+                    future_low_trade_penalty = 0.02 * ((trade_floor - future_trade_min) / max(1.0, trade_floor))
+                future_pf_bonus = 0.30 * max(0.0, future_robust_pf - 1.0)
+                future_spr_bonus = 0.15 * max(0.0, future_robust_score)
+                future_pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - future_robust_pf)
+                future_consistency_bonus = 0.25 * max(0.0, future_robust_pos_frac - min_positive_frac)
+                future_consistency_penalty = 1.25 * max(0.0, min_positive_frac - future_robust_pos_frac)
+                future_tail_penalty = tail_weight * max(0.0, -tail_return)
+                future_base_return_penalty = base_penalty_weight * max(0.0, base_return_floor - base_return)
+                future_negative_return_penalty = 0.0
+                if future_robust_return <= 0.0:
+                    future_negative_return_penalty = 1.0 + 0.25 * abs(future_robust_return)
+                future_composite = (
+                    future_robust_return
+                    + future_pf_bonus
+                    + future_spr_bonus
+                    + future_consistency_bonus
+                    - future_dispersion_penalty
+                    - future_low_trade_penalty
+                    - future_pf_shortfall_penalty
+                    - future_consistency_penalty
+                    - future_tail_penalty
+                    - future_base_return_penalty
+                    - future_negative_return_penalty
+                )
+                future_profit_feasible = bool(
+                    alt_return > 0.0
+                    and tail_return > 0.0
+                    and alt_pf >= 1.0
+                    and tail_pf >= 1.0
+                )
+                future_consistency_feasible = bool(
+                    future_profit_feasible
+                    and alt_pos_frac >= min_positive_frac
+                    and tail_pos_frac >= min_positive_frac
+                    and alt_pf_ge_1_frac >= min_positive_frac
+                    and tail_pf_ge_1_frac >= min_positive_frac
+                )
 
                 tournament.append(
                     {
@@ -1585,6 +1651,11 @@ class Trainer:
                         "profit_feasible": profit_feasible,
                         "consistency_feasible": consistency_feasible,
                         "composite_score": composite,
+                        "forward_return_min": future_robust_return,
+                        "forward_pf_min": future_robust_pf,
+                        "future_profit_feasible": future_profit_feasible,
+                        "future_consistency_feasible": future_consistency_feasible,
+                        "future_composite_score": future_composite,
                     }
                 )
         finally:
@@ -1617,6 +1688,82 @@ class Trainer:
             reverse=True,
         )
         winner = ranking_pool[0]
+        selected_mode = ranking_selector_mode
+        selection_pool_profit_only = bool(any(x.get("profit_feasible") for x in tournament))
+        auto_rescue_summary = None
+
+        if selector_mode == "auto_rescue":
+            future_pool_mode = "future_consistency_feasible"
+            future_pool = [x for x in tournament if x.get("future_consistency_feasible")]
+            if not future_pool:
+                future_pool_mode = "future_profit_feasible"
+                future_pool = [x for x in tournament if x.get("future_profit_feasible")]
+            if not future_pool:
+                future_pool_mode = "all"
+                future_pool = list(tournament)
+
+            future_pool.sort(
+                key=lambda x: (
+                    x.get("future_composite_score", -1e9),
+                    x.get("forward_return_min", -1e9),
+                    x.get("forward_pf_min", -1e9),
+                    x.get("alt_score", -1e9),
+                    x.get("tail_score", -1e9),
+                ),
+                reverse=True,
+            )
+            future_winner = future_pool[0]
+
+            winner_forward_return = float(winner.get("forward_return_min", 0.0))
+            winner_forward_pf = float(winner.get("forward_pf_min", 0.0))
+            future_forward_return = float(future_winner.get("forward_return_min", 0.0))
+            future_forward_pf = float(future_winner.get("forward_pf_min", 0.0))
+            challenger_base_return = float(future_winner.get("base_return_pct", 0.0))
+            forward_return_edge = future_forward_return - winner_forward_return
+            forward_pf_edge = future_forward_pf - winner_forward_pf
+
+            rescue_triggered = bool(
+                auto_rescue_enabled
+                and future_winner.get("filename") != winner.get("filename")
+                and future_winner.get("future_consistency_feasible", False)
+                and winner_forward_return <= auto_rescue_winner_forward_return_max
+                and forward_return_edge >= auto_rescue_forward_return_edge_min
+                and forward_pf_edge >= auto_rescue_forward_pf_edge_min
+                and challenger_base_return <= auto_rescue_challenger_base_return_max
+                and future_forward_pf >= auto_rescue_challenger_forward_pf_min
+            )
+
+            auto_rescue_summary = {
+                "enabled": bool(auto_rescue_enabled),
+                "triggered": bool(rescue_triggered),
+                "thresholds": {
+                    "winner_forward_return_max": float(auto_rescue_winner_forward_return_max),
+                    "forward_return_edge_min": float(auto_rescue_forward_return_edge_min),
+                    "forward_pf_edge_min": float(auto_rescue_forward_pf_edge_min),
+                    "challenger_base_return_max": float(auto_rescue_challenger_base_return_max),
+                    "challenger_forward_pf_min": float(auto_rescue_challenger_forward_pf_min),
+                },
+                "tail_winner_filename": winner.get("filename"),
+                "future_winner_filename": future_winner.get("filename"),
+                "winner_forward_return": float(winner_forward_return),
+                "winner_forward_pf": float(winner_forward_pf),
+                "future_forward_return": float(future_forward_return),
+                "future_forward_pf": float(future_forward_pf),
+                "forward_return_edge": float(forward_return_edge),
+                "forward_pf_edge": float(forward_pf_edge),
+                "challenger_base_return": float(challenger_base_return),
+                "future_pool_mode": future_pool_mode,
+            }
+
+            if rescue_triggered:
+                winner = future_winner
+                ranking_pool = future_pool
+                pool_mode = f"auto_rescue:{future_pool_mode}"
+                selected_mode = "future_first"
+                selection_pool_profit_only = bool(any(x.get("future_profit_feasible") for x in tournament))
+            else:
+                selected_mode = "tail_holdout"
+
         chosen = winner["filename"]
 
         summary_payload = {
@@ -1626,17 +1773,20 @@ class Trainer:
             "tail_start_frac": tail_start_frac,
             "tail_end_frac": tail_end_frac,
             "tail_weight": tail_weight,
-            "selector_mode": selector_mode,
+            "selector_mode": selected_mode,
+            "selector_mode_requested": selector_mode,
             "base_return_floor": base_return_floor,
             "base_penalty_weight": base_penalty_weight,
             "trade_floor": trade_floor,
             "winner": winner,
             "selection_pool_size": len(ranking_pool),
             "selection_pool_mode": pool_mode,
-            "selection_pool_profit_only": bool(any(x.get("profit_feasible") for x in tournament)),
+            "selection_pool_profit_only": selection_pool_profit_only,
             "selection_pool_filenames": [x.get("filename") for x in ranking_pool],
             "candidates": tournament,
         }
+        if auto_rescue_summary is not None:
+            summary_payload["auto_rescue"] = auto_rescue_summary
         tournament_path = self.log_dir / "checkpoint_tournament.json"
         try:
             with open(tournament_path, "w", encoding="utf-8") as f:
@@ -1645,10 +1795,25 @@ class Trainer:
             pass
 
         if verbose:
+            display_composite = float(
+                winner.get("future_composite_score", winner.get("composite_score", 0.0))
+                if selected_mode == "future_first"
+                else winner.get("composite_score", 0.0)
+            )
+            display_return = float(
+                winner.get("forward_return_min", winner.get("robust_return_pct", 0.0))
+                if selected_mode == "future_first"
+                else winner.get("robust_return_pct", 0.0)
+            )
+            display_pf = float(
+                winner.get("forward_pf_min", winner.get("robust_pf", 0.0))
+                if selected_mode == "future_first"
+                else winner.get("robust_pf", 0.0)
+            )
             print(
-                f"[ANTI-REG] winner={chosen} | composite={winner['composite_score']:.4f} | "
-                f"ret={winner.get('robust_return_pct', 0.0):.2f}% | "
-                f"pf={winner.get('robust_pf', 0.0):.2f} | "
+                f"[ANTI-REG] mode={selected_mode} (requested={selector_mode}) | "
+                f"winner={chosen} | composite={display_composite:.4f} | "
+                f"ret={display_return:.2f}% | pf={display_pf:.2f} | "
                 f"spr_base={winner['base_score']:.4f} | spr_alt={winner['alt_score']:.4f}"
             )
 

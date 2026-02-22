@@ -1151,8 +1151,23 @@ def main():
     parser.add_argument('--anti-regression-min-validations', type=int, default=None,
                         help='Minimum validations required before anti-regression tournament')
     parser.add_argument('--anti-regression-selector-mode', type=str, default=None,
-                        choices=['tail_holdout', 'future_first'],
-                        help='Checkpoint selector mode: tail_holdout (default) or future_first (targeted rescue)')
+                        choices=['tail_holdout', 'future_first', 'auto_rescue'],
+                        help='Checkpoint selector mode: tail_holdout (default), future_first, or auto_rescue')
+    parser.add_argument('--anti-regression-auto-rescue', dest='anti_regression_auto_rescue_enabled', action='store_true',
+                        help='Enable auto-rescue trigger when selector mode is auto_rescue')
+    parser.add_argument('--anti-regression-no-auto-rescue', dest='anti_regression_auto_rescue_enabled', action='store_false',
+                        help='Disable auto-rescue trigger even when selector mode is auto_rescue')
+    parser.set_defaults(anti_regression_auto_rescue_enabled=None)
+    parser.add_argument('--anti-regression-rescue-winner-forward-return-max', type=float, default=None,
+                        help='Auto-rescue trigger: max forward return allowed for tail winner before rescue is considered')
+    parser.add_argument('--anti-regression-rescue-forward-return-edge-min', type=float, default=None,
+                        help='Auto-rescue trigger: min forward return edge required for future-first challenger')
+    parser.add_argument('--anti-regression-rescue-forward-pf-edge-min', type=float, default=None,
+                        help='Auto-rescue trigger: min forward PF edge required for future-first challenger')
+    parser.add_argument('--anti-regression-rescue-challenger-base-return-max', type=float, default=None,
+                        help='Auto-rescue trigger: challenger base return must be <= this threshold')
+    parser.add_argument('--anti-regression-rescue-challenger-forward-pf-min', type=float, default=None,
+                        help='Auto-rescue trigger: challenger forward PF must be >= this threshold')
     parser.add_argument('--anti-regression-eval-min-k', type=int, default=None,
                         help='Override VAL_MIN_K only during anti-regression tournament')
     parser.add_argument('--anti-regression-eval-max-k', type=int, default=None,
@@ -1308,6 +1323,18 @@ def main():
         config.training.anti_regression_min_validations = max(1, int(args.anti_regression_min_validations))
     if args.anti_regression_selector_mode is not None:
         config.training.anti_regression_selector_mode = str(args.anti_regression_selector_mode).strip().lower()
+    if args.anti_regression_auto_rescue_enabled is not None:
+        config.training.anti_regression_auto_rescue_enabled = bool(args.anti_regression_auto_rescue_enabled)
+    if args.anti_regression_rescue_winner_forward_return_max is not None:
+        config.training.anti_regression_auto_rescue_winner_forward_return_max = float(args.anti_regression_rescue_winner_forward_return_max)
+    if args.anti_regression_rescue_forward_return_edge_min is not None:
+        config.training.anti_regression_auto_rescue_forward_return_edge_min = float(args.anti_regression_rescue_forward_return_edge_min)
+    if args.anti_regression_rescue_forward_pf_edge_min is not None:
+        config.training.anti_regression_auto_rescue_forward_pf_edge_min = float(args.anti_regression_rescue_forward_pf_edge_min)
+    if args.anti_regression_rescue_challenger_base_return_max is not None:
+        config.training.anti_regression_auto_rescue_challenger_base_return_max = float(args.anti_regression_rescue_challenger_base_return_max)
+    if args.anti_regression_rescue_challenger_forward_pf_min is not None:
+        config.training.anti_regression_auto_rescue_challenger_forward_pf_min = float(args.anti_regression_rescue_challenger_forward_pf_min)
     if args.anti_regression_eval_min_k is not None:
         config.training.anti_regression_eval_min_k = max(1, int(args.anti_regression_eval_min_k))
     if args.anti_regression_eval_max_k is not None:

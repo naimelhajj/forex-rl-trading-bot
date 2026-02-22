@@ -6,6 +6,57 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-22 (Auto-rescue selector trigger implemented + calibrated)
+
+Focus: replace static seed overrides with a validation-diagnostics trigger that keeps `tail_holdout` by default and switches to `future_first` only when a forward-robust challenger matches a failure pattern.
+
+Code changes:
+- `config.py`:
+  - Added `anti_regression_selector_mode=auto_rescue` support and trigger thresholds:
+    - `anti_regression_auto_rescue_*` settings (winner forward cap, forward edges, challenger base cap, challenger forward PF floor).
+- `main.py`:
+  - Added CLI support for `auto_rescue` mode and all auto-rescue threshold overrides.
+- `trainer.py`:
+  - Anti-regression tournament now computes both primary and future-view diagnostics for each candidate.
+  - Added auto-rescue post-selection pass:
+    - rank normally with `tail_holdout`,
+    - evaluate future-first challenger pool,
+    - trigger switch only if thresholds are met.
+  - Tournament summary now records requested/effective mode and `auto_rescue` diagnostics.
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py` (pass)
+
+Tri-seed screen (raw auto-rescue thresholds):
+- Prefix: `selector_autorescue_tri10ep_20260222_144524` (seeds `10007,4049,8087`).
+- Auto-rescue did not trigger on these defaults.
+- Aggregates:
+  - `seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_aggregate_20260222.json`
+  - `seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_eval_wf2400_aggregate_20260222.json`
+  - Base mean return `+0.6296%`, PF `1.4494`, positive+PF>1 `2/3`.
+  - WF2400 pass `1/3`.
+
+Candidate probes from the same tri run:
+- Seed `10007`: future challenger `candidate_ep002` beats tail winner (`+0.65%` / PF `1.26` vs `-1.22%` / PF `0.58`).
+- Seed `4049`: future challenger regresses strongly (`-1.24%` / PF `0.62` vs tail `+2.36%` / PF `2.41`).
+- Seed `8087`: future challenger is mixed (slightly better base return, worse WF pass).
+
+Calibration update:
+- Tightened trigger defaults to target the `10007`-style case and avoid broad flips:
+  - `challenger_base_return_max=0.0`
+  - `challenger_forward_pf_min=1.35`
+
+Recheck run:
+- Prefix: `selector_autorescue_seed10007_recheck10ep_20260222_153317`
+- Auto-rescue now triggered as intended (`requested=auto_rescue`, `effective=future_first`).
+- Result: `+0.65%`, PF `1.26` (recovered from prior tail mode loss on same seed profile).
+
+Mixed tri aggregate (seed10007 recheck + unchanged 4049/8087 tri runs):
+- `seed_sweep_results/realdata/selector_autorescue_tri10ep_threshold135_mixed_aggregate_20260222.json`
+- `seed_sweep_results/realdata/selector_autorescue_tri10ep_threshold135_mixed_eval_wf2400_aggregate_20260222.json`
+- Mean return `+1.2546%`, PF `1.6757`, positive+PF>1 `3/3`, WF2400 pass `1/3`.
+
 ## 2026-02-22 (Clean rerun: hybrid selector profile, 10 seeds)
 
 Focus: rerun a fully consistent blind10 experiment with explicit selector modes per seed:
