@@ -1361,6 +1361,9 @@ class Trainer:
         tail_end_frac = max(tail_start_frac + 0.05, min(1.0, tail_end_frac))
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
         min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
+        selector_mode = str(getattr(training_cfg, "anti_regression_selector_mode", "tail_holdout")).strip().lower()
+        if selector_mode not in ("tail_holdout", "future_first"):
+            selector_mode = "tail_holdout"
         base_return_floor = float(getattr(training_cfg, "anti_regression_base_return_floor", 0.0))
         base_penalty_weight = float(getattr(training_cfg, "anti_regression_base_penalty_weight", 0.15))
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
@@ -1451,29 +1454,40 @@ class Trainer:
                 alt_trades = float(alt_stats.get("val_trades", 0.0))
                 tail_trades = float(tail_stats.get("val_trades", 0.0))
 
-                # Future-first robustness: use alt+tail slices as the primary signal and
-                # keep the base slice as a soft penalty (to avoid overfitting one late window).
-                robust_score = min(alt_score, tail_score)
-                robust_return = min(alt_return, tail_return)
-                robust_pf = min(alt_pf, tail_pf)
-                robust_pos_frac = min(alt_pos_frac, tail_pos_frac)
-                robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
-                dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
+                # Selector modes:
+                # - tail_holdout (default): strict robustness across base+alt+tail.
+                # - future_first: prioritize alt+tail and use base as a soft penalty.
+                if selector_mode == "future_first":
+                    robust_score = min(alt_score, tail_score)
+                    robust_return = min(alt_return, tail_return)
+                    robust_pf = min(alt_pf, tail_pf)
+                    robust_pos_frac = min(alt_pos_frac, tail_pos_frac)
+                    robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                    dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
+                    trade_min = min(alt_trades, tail_trades)
+                else:
+                    robust_score = min(base_score, alt_score, tail_score)
+                    robust_return = min(base_return, alt_return, tail_return)
+                    robust_pf = min(base_pf, alt_pf, tail_pf)
+                    robust_pos_frac = min(base_pos_frac, alt_pos_frac, tail_pos_frac)
+                    robust_pf_ge_1_frac = min(base_pf_ge_1_frac, alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                    dispersion_penalty = 0.10 * max(base_iqr, alt_iqr, tail_iqr)
+                    trade_min = min(base_trades, alt_trades, tail_trades)
                 low_trade_penalty = 0.0
                 if trade_floor > 0:
-                    trade_min = min(alt_trades, tail_trades)
                     if trade_min < trade_floor:
                         low_trade_penalty = 0.02 * ((trade_floor - trade_min) / max(1.0, trade_floor))
 
-                # Profitability-first ranking:
-                # prioritize robust median return under future-focused alt+tail regimes.
+                # Profitability-first ranking.
                 pf_bonus = 0.30 * max(0.0, robust_pf - 1.0)
                 spr_bonus = 0.15 * max(0.0, robust_score)
                 pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
                 consistency_bonus = 0.25 * max(0.0, robust_pos_frac - min_positive_frac)
                 consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
                 tail_penalty = tail_weight * max(0.0, -tail_return)
-                base_return_penalty = base_penalty_weight * max(0.0, base_return_floor - base_return)
+                base_return_penalty = 0.0
+                if selector_mode == "future_first":
+                    base_return_penalty = base_penalty_weight * max(0.0, base_return_floor - base_return)
                 negative_return_penalty = 0.0
                 if robust_return <= 0.0:
                     negative_return_penalty = 1.0 + 0.25 * abs(robust_return)
@@ -1491,19 +1505,38 @@ class Trainer:
                     - base_return_penalty
                     - negative_return_penalty
                 )
-                profit_feasible = bool(
-                    alt_return > 0.0
-                    and tail_return > 0.0
-                    and alt_pf >= 1.0
-                    and tail_pf >= 1.0
-                )
-                consistency_feasible = bool(
-                    profit_feasible
-                    and alt_pos_frac >= min_positive_frac
-                    and tail_pos_frac >= min_positive_frac
-                    and alt_pf_ge_1_frac >= min_positive_frac
-                    and tail_pf_ge_1_frac >= min_positive_frac
-                )
+                if selector_mode == "future_first":
+                    profit_feasible = bool(
+                        alt_return > 0.0
+                        and tail_return > 0.0
+                        and alt_pf >= 1.0
+                        and tail_pf >= 1.0
+                    )
+                    consistency_feasible = bool(
+                        profit_feasible
+                        and alt_pos_frac >= min_positive_frac
+                        and tail_pos_frac >= min_positive_frac
+                        and alt_pf_ge_1_frac >= min_positive_frac
+                        and tail_pf_ge_1_frac >= min_positive_frac
+                    )
+                else:
+                    profit_feasible = bool(
+                        base_return > 0.0
+                        and alt_return > 0.0
+                        and tail_return > 0.0
+                        and base_pf >= 1.0
+                        and alt_pf >= 1.0
+                        and tail_pf >= 1.0
+                    )
+                    consistency_feasible = bool(
+                        profit_feasible
+                        and base_pos_frac >= min_positive_frac
+                        and alt_pos_frac >= min_positive_frac
+                        and tail_pos_frac >= min_positive_frac
+                        and base_pf_ge_1_frac >= min_positive_frac
+                        and alt_pf_ge_1_frac >= min_positive_frac
+                        and tail_pf_ge_1_frac >= min_positive_frac
+                    )
 
                 tournament.append(
                     {
@@ -1593,6 +1626,7 @@ class Trainer:
             "tail_start_frac": tail_start_frac,
             "tail_end_frac": tail_end_frac,
             "tail_weight": tail_weight,
+            "selector_mode": selector_mode,
             "base_return_floor": base_return_floor,
             "base_penalty_weight": base_penalty_weight,
             "trade_floor": trade_floor,

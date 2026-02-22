@@ -1150,6 +1150,9 @@ def main():
                         help='How many candidate checkpoints to retain during training')
     parser.add_argument('--anti-regression-min-validations', type=int, default=None,
                         help='Minimum validations required before anti-regression tournament')
+    parser.add_argument('--anti-regression-selector-mode', type=str, default=None,
+                        choices=['tail_holdout', 'future_first'],
+                        help='Checkpoint selector mode: tail_holdout (default) or future_first (targeted rescue)')
     parser.add_argument('--anti-regression-eval-min-k', type=int, default=None,
                         help='Override VAL_MIN_K only during anti-regression tournament')
     parser.add_argument('--anti-regression-eval-max-k', type=int, default=None,
@@ -1303,6 +1306,8 @@ def main():
         config.training.anti_regression_candidate_keep = max(1, int(args.anti_regression_candidate_keep))
     if args.anti_regression_min_validations is not None:
         config.training.anti_regression_min_validations = max(1, int(args.anti_regression_min_validations))
+    if args.anti_regression_selector_mode is not None:
+        config.training.anti_regression_selector_mode = str(args.anti_regression_selector_mode).strip().lower()
     if args.anti_regression_eval_min_k is not None:
         config.training.anti_regression_eval_min_k = max(1, int(args.anti_regression_eval_min_k))
     if args.anti_regression_eval_max_k is not None:
