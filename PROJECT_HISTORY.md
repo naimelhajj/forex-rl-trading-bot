@@ -6,6 +6,38 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-22 (Clean rerun: hybrid selector profile, 10 seeds)
+
+Focus: rerun a fully consistent blind10 experiment with explicit selector modes per seed:
+- default `tail_holdout`
+- seed `10007` override `future_first`
+
+Run:
+- Prefix: `tailholdout_hybrid_clean_blind10_fast10ep_20260222_125225`
+- All 10 seeds trained/evaluated from scratch with per-seed logs and WF2400 eval.
+
+Aggregates:
+- Base:
+  - `seed_sweep_results/realdata/tailholdout_hybrid_clean_blind10_fast10ep_20260222_125225_aggregate_20260222.json`
+  - mean return `+0.9794%`
+  - mean PF `1.5309`
+  - positive+PF>1 `8/10`
+  - WF pass `0/10`
+- WF2400:
+  - `seed_sweep_results/realdata/tailholdout_hybrid_clean_blind10_fast10ep_20260222_125225_eval_wf2400_aggregate_20260222.json`
+  - mean return `+0.9794%`
+  - mean PF `1.5309`
+  - positive+PF>1 `8/10`
+  - WF pass `1/10`
+
+Outcome:
+- This clean rerun did not reproduce the stronger synthetic “hybrid-mix” expectation.
+- It is still broadly positive, but below the prior tail-holdout blind10 benchmark.
+
+Decision:
+- Keep selector-mode split in code (`tail_holdout` default, `future_first` available).
+- Do not lock in static per-seed overrides yet; next step should be a data-driven override rule (only trigger rescue mode when checkpoint tournament diagnostics match known failure pattern).
+
 ## 2026-02-22 (Selector mode split + targeted rescue hybrid)
 
 Focus: keep broad-seed robustness from `tail_holdout` while preserving the `future_first` rescue path for seed-specific failures.
