@@ -6,6 +6,37 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-22 (Blind10 confirmation: future-first selector underperforms baseline)
+
+Focus: run full blind 10-seed confirmation for the new future-first anti-regression selector.
+
+Run profile:
+- Prefix: `selector_futurepool_blind10_fast10ep_20260221_231856`
+- Seeds: `10007, 1011, 2027, 3039, 4049, 5051, 6067, 7079, 8087, 9091`
+- Training/eval settings matched the fast 10ep screen (`max_steps=600`) plus per-seed WF2400 eval.
+
+Aggregates:
+- Base:
+  - `seed_sweep_results/realdata/selector_futurepool_blind10_fast10ep_20260221_231856_aggregate_20260222.json`
+  - mean return `+0.7638%`, mean PF `1.4667`, positive+PF>1 `8/10`, WF pass `0/10`
+- WF2400:
+  - `seed_sweep_results/realdata/selector_futurepool_blind10_fast10ep_20260221_231856_eval_wf2400_aggregate_20260222.json`
+  - mean return `+0.8707%`, mean PF `1.5024`, positive+PF>1 `8/10`, WF pass `1/10`
+
+Comparison vs prior tail-holdout blind10 (`tailholdout_fix_blind10_fast10ep_20260220_231427`):
+- Mean return worsened (`+1.4150% -> +0.7638%`)
+- Mean PF worsened (`1.7216 -> 1.4667`)
+- Positive+PF>1 worsened (`9/10 -> 8/10`)
+- WF pass count worsened on WF2400 aggregate (`2/10 -> 1/10`)
+
+Notable seed behavior:
+- Improved: `10007` (`-1.22%/PF 0.58 -> +0.65%/PF 1.26`)
+- Regressed: `4049`, `5051`, `8087` (major drops; especially `8087`)
+
+Decision:
+- Do not promote the pure future-first selector as default.
+- Keep it as a targeted recovery idea for problematic seeds, but return to the stronger tail-holdout baseline for broad blind-seed performance.
+
 ## 2026-02-21 (Future-first checkpoint selector + seed10007 recovery)
 
 Focus: fix anti-regression checkpoint mis-selection where base-window negatives blocked candidates that were stronger on forward-style regimes.
