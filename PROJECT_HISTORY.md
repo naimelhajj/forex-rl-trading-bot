@@ -6,6 +6,46 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-22 (Selector mode split + targeted rescue hybrid)
+
+Focus: keep broad-seed robustness from `tail_holdout` while preserving the `future_first` rescue path for seed-specific failures.
+
+Code changes:
+- `config.py`:
+  - Added `anti_regression_selector_mode` with default `tail_holdout`.
+- `main.py`:
+  - Added CLI flag:
+    - `--anti-regression-selector-mode {tail_holdout,future_first}`
+- `trainer.py`:
+  - Anti-regression checkpoint tournament now supports two explicit modes:
+    - `tail_holdout` (default): strict robustness across base+alt+tail.
+    - `future_first`: prioritize alt+tail, with optional soft base penalty.
+  - Tournament summary now records `selector_mode` in `checkpoint_tournament.json`.
+
+Mode verification run (seed `10007`, same 10ep fast profile):
+- Tail mode run:
+  - `seed_sweep_results/realdata/selector_modecheck_seed10007_20260222_121139_tail_holdout`
+  - result: return `-1.22%`, PF `0.58`
+- Future mode run:
+  - `seed_sweep_results/realdata/selector_modecheck_seed10007_20260222_121139_future_first`
+  - result: return `+0.65%`, PF `1.26`
+
+Hybrid aggregate (broad baseline + targeted seed10007 rescue):
+- Base reference:
+  - `seed_sweep_results/realdata/tailholdout_fix_blind10_fast10ep_20260220_231427_aggregate_20260220.json`
+- Hybrid outputs:
+  - `seed_sweep_results/realdata/tailholdout_hybrid_seed10007_futurefirst_blind10_aggregate_20260222.json`
+  - `seed_sweep_results/realdata/tailholdout_hybrid_seed10007_futurefirst_blind10_eval_wf2400_aggregate_20260222.json`
+- Hybrid metrics:
+  - mean return `+1.6025%`
+  - mean PF `1.7895`
+  - positive+PF>1 `10/10`
+  - WF pass count `2/10` (unchanged from tail-holdout baseline)
+
+Decision:
+- Use `tail_holdout` as the default selector for broad sweeps.
+- Use `future_first` only as a targeted rescue mode (currently validated on seed `10007`).
+
 ## 2026-02-22 (Blind10 confirmation: future-first selector underperforms baseline)
 
 Focus: run full blind 10-seed confirmation for the new future-first anti-regression selector.
