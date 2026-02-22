@@ -6,6 +6,42 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-22 (Control blind10 on current code: tail_holdout vs auto_rescue)
+
+Focus: run a fresh control blind10 on the current code with `tail_holdout` (same fast10 profile) to isolate the effect of the new `auto_rescue` selector.
+
+Control run:
+- Prefix: `tailholdout_current_blind10_fast10ep_20260222_184805`
+- Seeds: `10007,1011,2027,3039,4049,5051,6067,7079,8087,9091`
+- Selector: `--anti-regression-selector-mode tail_holdout`
+
+Control aggregates:
+- Base:
+  - `seed_sweep_results/realdata/tailholdout_current_blind10_fast10ep_20260222_184805_aggregate_20260222.json`
+  - mean return `+0.7919%`
+  - mean PF `1.4630`
+  - positive+PF>1 `7/10`
+  - walk-forward pass `0/10`
+- WF2400:
+  - `seed_sweep_results/realdata/tailholdout_current_blind10_fast10ep_20260222_184805_eval_wf2400_aggregate_20260222.json`
+  - mean return `+0.7919%`
+  - mean PF `1.4630`
+  - positive+PF>1 `7/10`
+  - walk-forward pass `1/10`
+
+Direct control-vs-auto comparison:
+- Comparison JSON:
+  - `seed_sweep_results/realdata/tailholdout_current_blind10_fast10ep_20260222_184805_vs_autorescue_blind10_fast10ep_20260222_155708_20260222.json`
+- Deltas (control minus auto-rescue):
+  - mean return `-0.1875%`
+  - mean PF `-0.0679`
+  - positive+PF>1 `-1`
+  - walk-forward pass `0` (same at WF2400)
+
+Interpretation:
+- On current code, calibrated `auto_rescue` is better than pure `tail_holdout` by exactly one targeted seed flip (`10007`), while other seeds remain effectively unchanged.
+- Both current-code branches (`auto_rescue`, `tail_holdout`) remain below the older tail-holdout benchmark (`tailholdout_fix_blind10_fast10ep_20260220_231427`), so the project bottleneck is broader than selector mode alone.
+
 ## 2026-02-22 (Blind10 confirmation: calibrated auto-rescue selector)
 
 Focus: run a full blind10 confirmation with calibrated `auto_rescue` selector, then compare directly against the current tail-holdout blind10 baseline.
