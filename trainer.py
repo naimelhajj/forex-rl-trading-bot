@@ -11,6 +11,7 @@ import json
 import random
 from datetime import datetime
 import time
+import hashlib
 import torch
 import shutil
 from contextlib import nullcontext
@@ -1362,7 +1363,7 @@ class Trainer:
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
         min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
         selector_mode = str(getattr(training_cfg, "anti_regression_selector_mode", "tail_holdout")).strip().lower()
-        if selector_mode not in ("tail_holdout", "future_first", "auto_rescue"):
+        if selector_mode not in ("tail_holdout", "future_first", "auto_rescue", "base_first"):
             selector_mode = "tail_holdout"
         ranking_selector_mode = "tail_holdout" if selector_mode == "auto_rescue" else selector_mode
         base_return_floor = float(getattr(training_cfg, "anti_regression_base_return_floor", 0.0))
@@ -1382,6 +1383,65 @@ class Trainer:
         )
         auto_rescue_challenger_forward_pf_min = float(
             getattr(training_cfg, "anti_regression_auto_rescue_challenger_forward_pf_min", 1.35)
+        )
+        tiebreak_enabled = bool(getattr(training_cfg, "anti_regression_tiebreak_enabled", False))
+        tiebreak_window_bars = max(
+            200,
+            int(getattr(training_cfg, "anti_regression_tiebreak_window_bars", 2400))
+        )
+        tiebreak_start_frac = float(getattr(training_cfg, "anti_regression_tiebreak_start_frac", 0.20))
+        tiebreak_end_frac = float(getattr(training_cfg, "anti_regression_tiebreak_end_frac", 1.00))
+        tiebreak_start_frac = max(0.0, min(0.95, tiebreak_start_frac))
+        tiebreak_end_frac = max(tiebreak_start_frac + 0.01, min(1.0, tiebreak_end_frac))
+        tiebreak_return_edge_min = float(
+            getattr(training_cfg, "anti_regression_tiebreak_return_edge_min", 0.15)
+        )
+        tiebreak_pf_edge_min = float(
+            getattr(training_cfg, "anti_regression_tiebreak_pf_edge_min", 0.10)
+        )
+        tiebreak_min_trades = float(
+            getattr(training_cfg, "anti_regression_tiebreak_min_trades", 10.0)
+        )
+        horizon_rescue_enabled = bool(
+            getattr(training_cfg, "anti_regression_horizon_rescue_enabled", False)
+        )
+        horizon_window_bars = max(
+            200,
+            int(getattr(training_cfg, "anti_regression_horizon_window_bars", 2400)),
+        )
+        horizon_start_frac = float(
+            getattr(training_cfg, "anti_regression_horizon_start_frac", 0.20)
+        )
+        horizon_end_frac = float(
+            getattr(training_cfg, "anti_regression_horizon_end_frac", 1.00)
+        )
+        horizon_start_frac = max(0.0, min(0.95, horizon_start_frac))
+        horizon_end_frac = max(horizon_start_frac + 0.01, min(1.0, horizon_end_frac))
+        horizon_candidate_limit = max(
+            2,
+            int(getattr(training_cfg, "anti_regression_horizon_candidate_limit", 8)),
+        )
+        horizon_incumbent_return_max = float(
+            getattr(training_cfg, "anti_regression_horizon_incumbent_return_max", 0.40)
+        )
+        horizon_return_edge_min = float(
+            getattr(training_cfg, "anti_regression_horizon_return_edge_min", 0.25)
+        )
+        horizon_pf_edge_min = float(
+            getattr(training_cfg, "anti_regression_horizon_pf_edge_min", 0.10)
+        )
+        horizon_challenger_base_return_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_horizon_challenger_base_return_max",
+                1.0,
+            )
+        )
+        horizon_challenger_pf_min = float(
+            getattr(training_cfg, "anti_regression_horizon_challenger_pf_min", 1.35)
+        )
+        horizon_min_trades = float(
+            getattr(training_cfg, "anti_regression_horizon_min_trades", 10.0)
         )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
@@ -1474,6 +1534,7 @@ class Trainer:
                 # Selector modes:
                 # - tail_holdout (default): strict robustness across base+alt+tail.
                 # - future_first: prioritize alt+tail and use base as a soft penalty.
+                # - base_first: prioritize base-window robustness only.
                 # - auto_rescue: scored as tail_holdout, with optional post-score rescue.
                 if ranking_selector_mode == "future_first":
                     robust_score = min(alt_score, tail_score)
@@ -1483,6 +1544,14 @@ class Trainer:
                     robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
                     dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
                     trade_min = min(alt_trades, tail_trades)
+                elif ranking_selector_mode == "base_first":
+                    robust_score = base_score
+                    robust_return = base_return
+                    robust_pf = base_pf
+                    robust_pos_frac = base_pos_frac
+                    robust_pf_ge_1_frac = base_pf_ge_1_frac
+                    dispersion_penalty = 0.10 * max(0.0, base_iqr)
+                    trade_min = base_trades
                 else:
                     robust_score = min(base_score, alt_score, tail_score)
                     robust_return = min(base_return, alt_return, tail_return)
@@ -1502,7 +1571,9 @@ class Trainer:
                 pf_shortfall_penalty = 0.50 * max(0.0, 1.0 - robust_pf)
                 consistency_bonus = 0.25 * max(0.0, robust_pos_frac - min_positive_frac)
                 consistency_penalty = 1.25 * max(0.0, min_positive_frac - robust_pos_frac)
-                tail_penalty = tail_weight * max(0.0, -tail_return)
+                tail_penalty = 0.0
+                if ranking_selector_mode != "base_first":
+                    tail_penalty = tail_weight * max(0.0, -tail_return)
                 base_return_penalty = 0.0
                 if ranking_selector_mode == "future_first":
                     base_return_penalty = base_penalty_weight * max(0.0, base_return_floor - base_return)
@@ -1536,6 +1607,16 @@ class Trainer:
                         and tail_pos_frac >= min_positive_frac
                         and alt_pf_ge_1_frac >= min_positive_frac
                         and tail_pf_ge_1_frac >= min_positive_frac
+                    )
+                elif ranking_selector_mode == "base_first":
+                    profit_feasible = bool(
+                        base_return > 0.0
+                        and base_pf >= 1.0
+                    )
+                    consistency_feasible = bool(
+                        profit_feasible
+                        and base_pos_frac >= min_positive_frac
+                        and base_pf_ge_1_frac >= min_positive_frac
                     )
                 else:
                     profit_feasible = bool(
@@ -1764,6 +1845,383 @@ class Trainer:
             else:
                 selected_mode = "tail_holdout"
 
+        tiebreak_summary = {"enabled": bool(tiebreak_enabled), "evaluated": False}
+        checkpoint_fingerprint_cache = {}
+
+        def _checkpoint_fingerprint(filename: Optional[str]) -> Optional[str]:
+            """Return a stable content hash so aliases (e.g. best_model.pt) dedupe cleanly."""
+            if not filename:
+                return None
+            cached = checkpoint_fingerprint_cache.get(filename)
+            if cached is not None:
+                return cached
+            ckpt_path = self.checkpoint_dir / filename
+            if not ckpt_path.exists():
+                checkpoint_fingerprint_cache[filename] = None
+                return None
+            try:
+                hasher = hashlib.sha1()
+                with open(ckpt_path, "rb") as f:
+                    for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                        hasher.update(chunk)
+                digest = hasher.hexdigest()
+            except OSError:
+                digest = None
+            checkpoint_fingerprint_cache[filename] = digest
+            return digest
+
+        dedupe_metric_fields = (
+            "base_return_pct",
+            "alt_return_pct",
+            "tail_return_pct",
+            "base_pf",
+            "alt_pf",
+            "tail_pf",
+            "base_trades",
+            "alt_trades",
+            "tail_trades",
+            "future_composite_score",
+            "composite_score",
+        )
+
+        def _candidate_identity_key(candidate: Dict[str, object]) -> Optional[tuple]:
+            name = candidate.get("filename")
+            if not name:
+                return None
+            metric_values = []
+            has_metric = False
+            for field in dedupe_metric_fields:
+                value = candidate.get(field)
+                if isinstance(value, (int, float)):
+                    has_metric = True
+                    metric_values.append(round(float(value), 10))
+                else:
+                    metric_values.append(None)
+            if has_metric:
+                return ("metrics", tuple(metric_values))
+            fp = _checkpoint_fingerprint(name)
+            if fp is not None:
+                return ("fp", fp)
+            return ("name", name)
+
+        distinct_pool_filenames = []
+        distinct_keys = set()
+        for item in ranking_pool:
+            name = item.get("filename")
+            key = _candidate_identity_key(item)
+            if not name or key is None:
+                continue
+            if key in distinct_keys:
+                continue
+            distinct_keys.add(key)
+            distinct_pool_filenames.append(name)
+
+        tiebreak_summary["distinct_pool_size"] = len(distinct_pool_filenames)
+        tiebreak_summary["distinct_pool_filenames"] = distinct_pool_filenames
+
+        if tiebreak_enabled and len(ranking_pool) >= 2 and len(distinct_pool_filenames) >= 2:
+            incumbent_name = winner.get("filename")
+            incumbent_key = _candidate_identity_key(winner)
+            runner_up = next(
+                (
+                    x
+                    for x in ranking_pool
+                    if x.get("filename")
+                    and x.get("filename") != incumbent_name
+                    and _candidate_identity_key(x) != incumbent_key
+                ),
+                None,
+            )
+            if runner_up is not None:
+                challenger_name = runner_up.get("filename")
+                tiebreak_summary["evaluated"] = True
+
+                probe_results = {}
+                tb_rng_state = np.random.get_state()
+                tb_py_rng_state = random.getstate()
+                tb_orig_val_min_k = getattr(self.config, "VAL_MIN_K", None)
+                tb_orig_val_max_k = getattr(self.config, "VAL_MAX_K", None)
+                tb_orig_val_jitter_draws = getattr(self.config, "VAL_JITTER_DRAWS", None)
+                try:
+                    # Force a single-slice deterministic probe for a cheap top-2 tie-break.
+                    setattr(self.config, "VAL_MIN_K", 1)
+                    setattr(self.config, "VAL_MAX_K", 1)
+                    setattr(self.config, "VAL_JITTER_DRAWS", 1)
+
+                    for idx, candidate in enumerate((winner, runner_up)):
+                        filename = candidate.get("filename")
+                        if not filename:
+                            continue
+                        ckpt_path = self.checkpoint_dir / filename
+                        if not ckpt_path.exists():
+                            continue
+                        try:
+                            self.load_checkpoint(filename)
+                        except Exception:
+                            continue
+
+                        seed_offset = 311 + 37 * idx
+                        random.seed(base_seed + seed_offset)
+                        np.random.seed(base_seed + seed_offset)
+                        probe_stats = self.validate(
+                            window_bars_override=tiebreak_window_bars,
+                            start_frac_override=tiebreak_start_frac,
+                            end_frac_override=tiebreak_end_frac,
+                            persist_summary=False,
+                            quiet=True,
+                        )
+                        probe_results[filename] = {
+                            "return_pct": float(
+                                probe_stats.get(
+                                    "val_median_return_pct",
+                                    probe_stats.get("val_return_pct", 0.0),
+                                )
+                            ),
+                            "pf": float(probe_stats.get("val_median_pf", 0.0)),
+                            "trades": float(probe_stats.get("val_trades", 0.0)),
+                            "fitness": float(probe_stats.get("val_fitness", 0.0)),
+                        }
+                finally:
+                    np.random.set_state(tb_rng_state)
+                    random.setstate(tb_py_rng_state)
+                    setattr(self.config, "VAL_MIN_K", tb_orig_val_min_k)
+                    setattr(self.config, "VAL_MAX_K", tb_orig_val_max_k)
+                    setattr(self.config, "VAL_JITTER_DRAWS", tb_orig_val_jitter_draws)
+
+                incumbent_probe = probe_results.get(incumbent_name)
+                challenger_probe = probe_results.get(challenger_name)
+                return_edge = 0.0
+                pf_edge = 0.0
+                switched = False
+                if incumbent_probe is not None and challenger_probe is not None:
+                    return_edge = float(challenger_probe["return_pct"] - incumbent_probe["return_pct"])
+                    pf_edge = float(challenger_probe["pf"] - incumbent_probe["pf"])
+                    switched = bool(
+                        return_edge >= tiebreak_return_edge_min
+                        and pf_edge >= tiebreak_pf_edge_min
+                        and challenger_probe["trades"] >= tiebreak_min_trades
+                        and challenger_probe["return_pct"] > 0.0
+                        and challenger_probe["pf"] >= 1.0
+                    )
+                    if switched:
+                        winner = runner_up
+                        selected_mode = f"{selected_mode}+tiebreak"
+
+                tiebreak_summary.update(
+                    {
+                        "window_bars": int(tiebreak_window_bars),
+                        "start_frac": float(tiebreak_start_frac),
+                        "end_frac": float(tiebreak_end_frac),
+                        "thresholds": {
+                            "return_edge_min": float(tiebreak_return_edge_min),
+                            "pf_edge_min": float(tiebreak_pf_edge_min),
+                            "min_trades": float(tiebreak_min_trades),
+                        },
+                        "incumbent_filename": incumbent_name,
+                        "challenger_filename": challenger_name,
+                        "incumbent_probe": incumbent_probe,
+                        "challenger_probe": challenger_probe,
+                        "return_edge": float(return_edge),
+                        "pf_edge": float(pf_edge),
+                        "switched": bool(switched),
+                        "winner_after_tiebreak": winner.get("filename"),
+                    }
+                )
+
+        horizon_summary = {"enabled": bool(horizon_rescue_enabled), "evaluated": False}
+        if horizon_rescue_enabled and len(tournament) >= 2:
+            candidate_by_name = {}
+            for item in tournament:
+                name = item.get("filename")
+                if name:
+                    candidate_by_name[name] = item
+
+            probe_candidates = sorted(
+                candidate_by_name.values(),
+                key=lambda x: (
+                    x.get("composite_score", -1e9),
+                    x.get("robust_return_pct", -1e9),
+                    x.get("robust_pf", -1e9),
+                    x.get("episode", -1),
+                ),
+                reverse=True,
+            )[:horizon_candidate_limit]
+
+            incumbent_name = winner.get("filename")
+            incumbent_candidate = candidate_by_name.get(incumbent_name)
+            if incumbent_candidate is not None and all(
+                x.get("filename") != incumbent_name for x in probe_candidates
+            ):
+                probe_candidates.append(incumbent_candidate)
+
+            if candidate_by_name:
+                latest_candidate = max(
+                    candidate_by_name.values(), key=lambda x: x.get("episode", -1)
+                )
+                latest_name = latest_candidate.get("filename")
+                if latest_name and all(
+                    x.get("filename") != latest_name for x in probe_candidates
+                ):
+                    probe_candidates.append(latest_candidate)
+
+            distinct_probe_candidates = []
+            seen_probe_keys = set()
+            for item in probe_candidates:
+                key = _candidate_identity_key(item)
+                if key is None or key in seen_probe_keys:
+                    continue
+                seen_probe_keys.add(key)
+                distinct_probe_candidates.append(item)
+
+            horizon_summary["probe_pool_size"] = len(distinct_probe_candidates)
+            horizon_summary["probe_pool_filenames"] = [
+                x.get("filename") for x in distinct_probe_candidates
+            ]
+
+            if len(distinct_probe_candidates) >= 2 and incumbent_name:
+                horizon_summary["evaluated"] = True
+                probe_results = {}
+                hr_rng_state = np.random.get_state()
+                hr_py_rng_state = random.getstate()
+                try:
+                    # Reuse active validation robustness settings so horizon rescue
+                    # is not decided by a single slice artifact.
+
+                    for idx, candidate in enumerate(distinct_probe_candidates):
+                        filename = candidate.get("filename")
+                        if not filename:
+                            continue
+                        ckpt_path = self.checkpoint_dir / filename
+                        if not ckpt_path.exists():
+                            continue
+                        try:
+                            self.load_checkpoint(filename)
+                        except Exception:
+                            continue
+
+                        seed_offset = 611 + 53 * idx
+                        random.seed(base_seed + seed_offset)
+                        np.random.seed(base_seed + seed_offset)
+                        probe_stats = self.validate(
+                            window_bars_override=horizon_window_bars,
+                            start_frac_override=horizon_start_frac,
+                            end_frac_override=horizon_end_frac,
+                            persist_summary=False,
+                            quiet=True,
+                        )
+                        probe_results[filename] = {
+                            "return_pct": float(
+                                probe_stats.get(
+                                    "val_median_return_pct",
+                                    probe_stats.get("val_return_pct", 0.0),
+                                )
+                            ),
+                            "pf": float(probe_stats.get("val_median_pf", 0.0)),
+                            "trades": float(probe_stats.get("val_trades", 0.0)),
+                            "fitness": float(probe_stats.get("val_fitness", 0.0)),
+                        }
+                finally:
+                    np.random.set_state(hr_rng_state)
+                    random.setstate(hr_py_rng_state)
+
+                ranked_probe_names = sorted(
+                    probe_results.keys(),
+                    key=lambda name: (
+                        probe_results[name]["return_pct"],
+                        probe_results[name]["pf"],
+                        probe_results[name]["fitness"],
+                    ),
+                    reverse=True,
+                )
+                fallback_challenger_name = next(
+                    (name for name in ranked_probe_names if name != incumbent_name),
+                    None,
+                )
+                challenger_name = None
+                for name in ranked_probe_names:
+                    if name == incumbent_name:
+                        continue
+                    probe = probe_results.get(name)
+                    candidate = candidate_by_name.get(name)
+                    if probe is None or candidate is None:
+                        continue
+                    candidate_base_return = float(candidate.get("base_return_pct", 0.0))
+                    if (
+                        probe["return_pct"] > 0.0
+                        and probe["pf"] >= horizon_challenger_pf_min
+                        and probe["trades"] >= horizon_min_trades
+                        and candidate_base_return <= horizon_challenger_base_return_max
+                    ):
+                        challenger_name = name
+                        break
+                if challenger_name is None:
+                    challenger_name = fallback_challenger_name
+                incumbent_probe = probe_results.get(incumbent_name)
+                challenger_probe = probe_results.get(challenger_name) if challenger_name else None
+                challenger_candidate = candidate_by_name.get(challenger_name) if challenger_name else None
+
+                incumbent_robust_return = float(winner.get("robust_return_pct", 0.0))
+                incumbent_return = float(incumbent_probe["return_pct"]) if incumbent_probe else 0.0
+                incumbent_pf = float(incumbent_probe["pf"]) if incumbent_probe else 0.0
+                return_edge = 0.0
+                pf_edge = 0.0
+                challenger_base_return = 0.0
+                switched = False
+                if incumbent_probe is not None and challenger_probe is not None and challenger_candidate is not None:
+                    challenger_base_return = float(
+                        challenger_candidate.get("base_return_pct", 0.0)
+                    )
+                    return_edge = float(challenger_probe["return_pct"] - incumbent_probe["return_pct"])
+                    pf_edge = float(challenger_probe["pf"] - incumbent_probe["pf"])
+                    switched = bool(
+                        incumbent_robust_return <= horizon_incumbent_return_max
+                        and return_edge >= horizon_return_edge_min
+                        and pf_edge >= horizon_pf_edge_min
+                        and challenger_probe["return_pct"] > 0.0
+                        and challenger_probe["pf"] >= horizon_challenger_pf_min
+                        and challenger_probe["trades"] >= horizon_min_trades
+                        and challenger_base_return <= horizon_challenger_base_return_max
+                    )
+                    if switched:
+                        winner = challenger_candidate
+                        selected_mode = f"{selected_mode}+horizon"
+                        if all(
+                            x.get("filename") != challenger_name for x in ranking_pool
+                        ):
+                            ranking_pool = list(ranking_pool) + [winner]
+                            pool_mode = f"{pool_mode}+horizon"
+
+                horizon_summary.update(
+                    {
+                        "window_bars": int(horizon_window_bars),
+                        "start_frac": float(horizon_start_frac),
+                        "end_frac": float(horizon_end_frac),
+                        "thresholds": {
+                            "incumbent_return_max": float(horizon_incumbent_return_max),
+                            "return_edge_min": float(horizon_return_edge_min),
+                            "pf_edge_min": float(horizon_pf_edge_min),
+                            "challenger_base_return_max": float(
+                                horizon_challenger_base_return_max
+                            ),
+                            "challenger_pf_min": float(horizon_challenger_pf_min),
+                            "min_trades": float(horizon_min_trades),
+                        },
+                        "incumbent_filename": incumbent_name,
+                        "challenger_filename": challenger_name,
+                        "incumbent_probe": incumbent_probe,
+                        "challenger_probe": challenger_probe,
+                        "incumbent_robust_return": float(incumbent_robust_return),
+                        "incumbent_return": float(incumbent_return),
+                        "incumbent_pf": float(incumbent_pf),
+                        "challenger_base_return": float(challenger_base_return),
+                        "return_edge": float(return_edge),
+                        "pf_edge": float(pf_edge),
+                        "switched": bool(switched),
+                        "winner_after_horizon": winner.get("filename"),
+                        "probe_results": probe_results,
+                    }
+                )
+
         chosen = winner["filename"]
 
         summary_payload = {
@@ -1787,6 +2245,10 @@ class Trainer:
         }
         if auto_rescue_summary is not None:
             summary_payload["auto_rescue"] = auto_rescue_summary
+        if tiebreak_summary is not None:
+            summary_payload["tiebreak"] = tiebreak_summary
+        if horizon_summary is not None:
+            summary_payload["horizon_rescue"] = horizon_summary
         tournament_path = self.log_dir / "checkpoint_tournament.json"
         try:
             with open(tournament_path, "w", encoding="utf-8") as f:
@@ -1795,19 +2257,20 @@ class Trainer:
             pass
 
         if verbose:
+            use_future_metrics = str(selected_mode).startswith("future_first")
             display_composite = float(
                 winner.get("future_composite_score", winner.get("composite_score", 0.0))
-                if selected_mode == "future_first"
+                if use_future_metrics
                 else winner.get("composite_score", 0.0)
             )
             display_return = float(
                 winner.get("forward_return_min", winner.get("robust_return_pct", 0.0))
-                if selected_mode == "future_first"
+                if use_future_metrics
                 else winner.get("robust_return_pct", 0.0)
             )
             display_pf = float(
                 winner.get("forward_pf_min", winner.get("robust_pf", 0.0))
-                if selected_mode == "future_first"
+                if use_future_metrics
                 else winner.get("robust_pf", 0.0)
             )
             print(

@@ -181,7 +181,7 @@ class TrainingConfig:
     anti_regression_candidate_keep: int = 24  # Keep up to N candidate checkpoints during training
     anti_regression_eval_top_k: int = 6  # Evaluate top-K candidates in end-of-run tournament
     anti_regression_min_validations: int = 4  # Require at least N validations before tournament
-    anti_regression_selector_mode: str = "tail_holdout"  # tail_holdout | future_first | auto_rescue
+    anti_regression_selector_mode: str = "tail_holdout"  # tail_holdout | future_first | auto_rescue | base_first
     anti_regression_alt_stride_frac: float = 0.20  # Secondary hold-out stride for robustness scoring
     anti_regression_alt_window_bars: Optional[int] = None  # Secondary hold-out window (None uses default)
     anti_regression_eval_min_k: Optional[int] = None  # Optional VAL_MIN_K override during anti-regression tournament
@@ -201,6 +201,28 @@ class TrainingConfig:
     anti_regression_auto_rescue_forward_pf_edge_min: float = 0.10
     anti_regression_auto_rescue_challenger_base_return_max: float = 0.0
     anti_regression_auto_rescue_challenger_forward_pf_min: float = 1.35
+    # Optional top-2 tie-break probe: run a cheap longer-horizon validation
+    # (single 2400-bar slice by default) and switch only on clear edge.
+    anti_regression_tiebreak_enabled: bool = False
+    anti_regression_tiebreak_window_bars: int = 2400
+    anti_regression_tiebreak_start_frac: float = 0.20
+    anti_regression_tiebreak_end_frac: float = 1.00
+    anti_regression_tiebreak_return_edge_min: float = 0.15
+    anti_regression_tiebreak_pf_edge_min: float = 0.10
+    anti_regression_tiebreak_min_trades: float = 10.0
+    # Optional horizon-rescue probe: evaluate a wider validation horizon on
+    # shortlisted candidates and switch only when a weak incumbent is clearly beaten.
+    anti_regression_horizon_rescue_enabled: bool = False
+    anti_regression_horizon_window_bars: int = 2400
+    anti_regression_horizon_start_frac: float = 0.20
+    anti_regression_horizon_end_frac: float = 1.00
+    anti_regression_horizon_candidate_limit: int = 8
+    anti_regression_horizon_incumbent_return_max: float = 0.40
+    anti_regression_horizon_return_edge_min: float = 0.25
+    anti_regression_horizon_pf_edge_min: float = 0.10
+    anti_regression_horizon_challenger_base_return_max: float = 1.0
+    anti_regression_horizon_challenger_pf_min: float = 1.35
+    anti_regression_horizon_min_trades: float = 10.0
 
 
 @dataclass

@@ -1151,8 +1151,8 @@ def main():
     parser.add_argument('--anti-regression-min-validations', type=int, default=None,
                         help='Minimum validations required before anti-regression tournament')
     parser.add_argument('--anti-regression-selector-mode', type=str, default=None,
-                        choices=['tail_holdout', 'future_first', 'auto_rescue'],
-                        help='Checkpoint selector mode: tail_holdout (default), future_first, or auto_rescue')
+                        choices=['tail_holdout', 'future_first', 'auto_rescue', 'base_first'],
+                        help='Checkpoint selector mode: tail_holdout (default), future_first, auto_rescue, or base_first')
     parser.add_argument('--anti-regression-auto-rescue', dest='anti_regression_auto_rescue_enabled', action='store_true',
                         help='Enable auto-rescue trigger when selector mode is auto_rescue')
     parser.add_argument('--anti-regression-no-auto-rescue', dest='anti_regression_auto_rescue_enabled', action='store_false',
@@ -1188,6 +1188,48 @@ def main():
                         help='Soft floor for base-return in anti-regression checkpoint tournament')
     parser.add_argument('--anti-regression-base-penalty-weight', type=float, default=None,
                         help='Penalty weight when base-return falls below the configured floor')
+    parser.add_argument('--anti-regression-tiebreak', dest='anti_regression_tiebreak_enabled', action='store_true',
+                        help='Enable top-2 checkpoint tie-break probe on a longer validation slice')
+    parser.add_argument('--anti-regression-no-tiebreak', dest='anti_regression_tiebreak_enabled', action='store_false',
+                        help='Disable top-2 checkpoint tie-break probe')
+    parser.set_defaults(anti_regression_tiebreak_enabled=None)
+    parser.add_argument('--anti-regression-tiebreak-window-bars', type=int, default=None,
+                        help='Window length (bars) for top-2 tie-break probe (default 2400)')
+    parser.add_argument('--anti-regression-tiebreak-start-frac', type=float, default=None,
+                        help='Validation segment start fraction for top-2 tie-break probe')
+    parser.add_argument('--anti-regression-tiebreak-end-frac', type=float, default=None,
+                        help='Validation segment end fraction for top-2 tie-break probe')
+    parser.add_argument('--anti-regression-tiebreak-return-edge-min', type=float, default=None,
+                        help='Minimum return edge required for challenger to win top-2 tie-break')
+    parser.add_argument('--anti-regression-tiebreak-pf-edge-min', type=float, default=None,
+                        help='Minimum PF edge required for challenger to win top-2 tie-break')
+    parser.add_argument('--anti-regression-tiebreak-min-trades', type=float, default=None,
+                        help='Minimum median trades required for challenger in top-2 tie-break')
+    parser.add_argument('--anti-regression-horizon-rescue', dest='anti_regression_horizon_rescue_enabled', action='store_true',
+                        help='Enable longer-horizon rescue probe for weak checkpoint winners')
+    parser.add_argument('--anti-regression-no-horizon-rescue', dest='anti_regression_horizon_rescue_enabled', action='store_false',
+                        help='Disable longer-horizon rescue probe')
+    parser.set_defaults(anti_regression_horizon_rescue_enabled=None)
+    parser.add_argument('--anti-regression-horizon-window-bars', type=int, default=None,
+                        help='Window length (bars) for horizon-rescue probe')
+    parser.add_argument('--anti-regression-horizon-start-frac', type=float, default=None,
+                        help='Validation segment start fraction for horizon-rescue probe')
+    parser.add_argument('--anti-regression-horizon-end-frac', type=float, default=None,
+                        help='Validation segment end fraction for horizon-rescue probe')
+    parser.add_argument('--anti-regression-horizon-candidate-limit', type=int, default=None,
+                        help='Max number of distinct candidates to evaluate in horizon-rescue probe')
+    parser.add_argument('--anti-regression-horizon-incumbent-return-max', type=float, default=None,
+                        help='Horizon-rescue trigger: incumbent long-horizon return must be <= this threshold')
+    parser.add_argument('--anti-regression-horizon-return-edge-min', type=float, default=None,
+                        help='Horizon-rescue trigger: challenger long-horizon return edge minimum')
+    parser.add_argument('--anti-regression-horizon-pf-edge-min', type=float, default=None,
+                        help='Horizon-rescue trigger: challenger long-horizon PF edge minimum')
+    parser.add_argument('--anti-regression-horizon-challenger-base-return-max', type=float, default=None,
+                        help='Horizon-rescue trigger: challenger base return must be <= this threshold')
+    parser.add_argument('--anti-regression-horizon-challenger-pf-min', type=float, default=None,
+                        help='Horizon-rescue trigger: challenger long-horizon PF must be >= this threshold')
+    parser.add_argument('--anti-regression-horizon-min-trades', type=float, default=None,
+                        help='Horizon-rescue trigger: challenger long-horizon trades must be >= this threshold')
     
     args = parser.parse_args()
     
@@ -1355,6 +1397,42 @@ def main():
         config.training.anti_regression_base_return_floor = float(args.anti_regression_base_return_floor)
     if args.anti_regression_base_penalty_weight is not None:
         config.training.anti_regression_base_penalty_weight = max(0.0, float(args.anti_regression_base_penalty_weight))
+    if args.anti_regression_tiebreak_enabled is not None:
+        config.training.anti_regression_tiebreak_enabled = bool(args.anti_regression_tiebreak_enabled)
+    if args.anti_regression_tiebreak_window_bars is not None:
+        config.training.anti_regression_tiebreak_window_bars = max(200, int(args.anti_regression_tiebreak_window_bars))
+    if args.anti_regression_tiebreak_start_frac is not None:
+        config.training.anti_regression_tiebreak_start_frac = max(0.0, min(0.95, float(args.anti_regression_tiebreak_start_frac)))
+    if args.anti_regression_tiebreak_end_frac is not None:
+        config.training.anti_regression_tiebreak_end_frac = max(0.05, min(1.0, float(args.anti_regression_tiebreak_end_frac)))
+    if args.anti_regression_tiebreak_return_edge_min is not None:
+        config.training.anti_regression_tiebreak_return_edge_min = max(0.0, float(args.anti_regression_tiebreak_return_edge_min))
+    if args.anti_regression_tiebreak_pf_edge_min is not None:
+        config.training.anti_regression_tiebreak_pf_edge_min = max(0.0, float(args.anti_regression_tiebreak_pf_edge_min))
+    if args.anti_regression_tiebreak_min_trades is not None:
+        config.training.anti_regression_tiebreak_min_trades = max(0.0, float(args.anti_regression_tiebreak_min_trades))
+    if args.anti_regression_horizon_rescue_enabled is not None:
+        config.training.anti_regression_horizon_rescue_enabled = bool(args.anti_regression_horizon_rescue_enabled)
+    if args.anti_regression_horizon_window_bars is not None:
+        config.training.anti_regression_horizon_window_bars = max(200, int(args.anti_regression_horizon_window_bars))
+    if args.anti_regression_horizon_start_frac is not None:
+        config.training.anti_regression_horizon_start_frac = max(0.0, min(0.95, float(args.anti_regression_horizon_start_frac)))
+    if args.anti_regression_horizon_end_frac is not None:
+        config.training.anti_regression_horizon_end_frac = max(0.05, min(1.0, float(args.anti_regression_horizon_end_frac)))
+    if args.anti_regression_horizon_candidate_limit is not None:
+        config.training.anti_regression_horizon_candidate_limit = max(2, int(args.anti_regression_horizon_candidate_limit))
+    if args.anti_regression_horizon_incumbent_return_max is not None:
+        config.training.anti_regression_horizon_incumbent_return_max = float(args.anti_regression_horizon_incumbent_return_max)
+    if args.anti_regression_horizon_return_edge_min is not None:
+        config.training.anti_regression_horizon_return_edge_min = max(0.0, float(args.anti_regression_horizon_return_edge_min))
+    if args.anti_regression_horizon_pf_edge_min is not None:
+        config.training.anti_regression_horizon_pf_edge_min = max(0.0, float(args.anti_regression_horizon_pf_edge_min))
+    if args.anti_regression_horizon_challenger_base_return_max is not None:
+        config.training.anti_regression_horizon_challenger_base_return_max = float(args.anti_regression_horizon_challenger_base_return_max)
+    if args.anti_regression_horizon_challenger_pf_min is not None:
+        config.training.anti_regression_horizon_challenger_pf_min = max(0.0, float(args.anti_regression_horizon_challenger_pf_min))
+    if args.anti_regression_horizon_min_trades is not None:
+        config.training.anti_regression_horizon_min_trades = max(0.0, float(args.anti_regression_horizon_min_trades))
     
     # Override episodes if specified
     if args.episodes is not None:

@@ -6,6 +6,412 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-24 (Horizon rescue hardening: incumbent return cap tightened to 0.40)
+
+Focus: remove the harmful `4049` horizon switch seen in blind-10 while preserving the `5051` recovery.
+
+Targeted probe runs (same GuardB-A 10ep profile, only horizon incumbent cap changed):
+- `seed_sweep_results/realdata/guardbA_horizon_incmax04_probe_10ep_20260224_124247_seed4049`
+- `seed_sweep_results/realdata/guardbA_horizon_incmax04_probe_10ep_20260224_130023_seed5051`
+- `seed_sweep_results/realdata/guardbA_horizon_incmax04_probe_20260224_summary.json`
+
+Probe outcomes:
+- `4049`:
+  - Prior tuned horizon run: `-1.63% / PF 0.43` (horizon switch to `candidate_ep008`)
+  - With cap `0.40`: `+0.19% / PF 1.08` (selector stayed `tail_holdout`, no harmful horizon override)
+- `5051`:
+  - Prior tuned horizon run: `+1.18% / PF 1.56`
+  - With cap `0.40`: `+1.18% / PF 1.56` (recovery preserved, still `tail_holdout+horizon`)
+
+Code update:
+- `config.py`
+  - `anti_regression_horizon_incumbent_return_max` default: `0.65 -> 0.40`
+- `trainer.py`
+  - Horizon rescue fallback default aligned to `0.40`.
+
+Decision:
+- Promote `incumbent_return_max=0.40` as the new tuned default.
+- Next gate: rerun blind-10 with this tightened default to confirm the aggregate lift and check whether negative seeds drop from `2/10` to `<=1/10`.
+
+## 2026-02-24 (GuardB-A horizon tuned: blind-10 confirmation complete)
+
+Focus: run full blind-10 confirmation with the tuned horizon-aware selector and measure lift versus the prior GuardB-A blind-10 baseline.
+
+Run artifacts:
+- Candidate summary:
+  - `seed_sweep_results/realdata/guardbA_horizon_blind10_fast10ep_20260224_094831_summary.json`
+- Baseline summary for direct comparison:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_summary.json`
+- Delta report:
+  - `seed_sweep_results/realdata/guardbA_horizon_blind10_fast10ep_20260224_094831_delta_vs_guardbA_blind10_fast10ep_20260223_200325.json`
+
+Blind-10 aggregate outcome (10 seeds, 10 episodes each):
+- Mean return: `+1.5683%` (baseline `+0.7414%`, delta `+0.8269%`)
+- Mean PF: `2.2969` (baseline `1.8729`, delta `+0.4240`)
+- Positive PF >= 1 seeds: `8/10` (baseline `7/10`)
+- Horizon switches: `5/10` seeds
+- WF pass count in this summary remained `0` (same strict gate issue as prior 10ep runs)
+
+Per-seed readout:
+- Largest recoveries from horizon switching:
+  - `10007`: `-1.82%/PF 0.57` -> `+2.97%/PF 2.73`
+  - `5051`: `-3.22%/PF 0.34` -> `+1.18%/PF 1.56`
+- Regressions still present:
+  - `4049`: `+0.19%/PF 1.08` -> `-1.63%/PF 0.43`
+  - `9091` remained negative (`-1.28%/PF 0.56`)
+
+Decision:
+- Promote horizon-aware selector as the current leading branch (clear blind-set mean lift).
+- Next gate is targeted robustness hardening for `4049` and `9091` before broader promotion.
+
+## 2026-02-24 (Horizon-aware selector implementation + tuned pilot)
+
+Focus: add a selector-stage mechanism that can rescue weak seeds without forcing global episode-budget changes.
+
+Code implementation:
+- `trainer.py`
+  - Added `horizon_rescue` stage in anti-regression tournament.
+  - Evaluates a longer validation horizon (`window_bars` default `2400`) across distinct checkpoint candidates.
+  - Uses deterministic candidate probes and logs full diagnostics in `logs/checkpoint_tournament.json` under `horizon_rescue`.
+  - Switch condition now keys off incumbent **robust return** (not single-slice probe return) to avoid flipping strong incumbents on noisy long probes.
+  - Challenger selection now prefers candidates that satisfy viability thresholds (positive return, PF floor, min trades).
+- `config.py`
+  - Added horizon-rescue controls:
+    - `anti_regression_horizon_rescue_enabled`
+    - probe window/start/end/candidate limit
+    - incumbent/challenger thresholds
+  - Tuned defaults:
+    - `incumbent_return_max=0.65`
+    - `pf_edge_min=0.10`
+    - `challenger_base_return_max=1.0`
+- `main.py`
+  - Added CLI flags for all horizon-rescue controls.
+- `run_realdata_seed_sweep.py`
+  - Added pass-through CLI support for horizon-rescue options.
+
+Tuned pilot (10ep, HFM profile, same GuardB-A baseline settings):
+- Seed runs:
+  - `seed_sweep_results/realdata/guardbA_horizon_tuned_10ep_20260224_024819_seed10007`
+  - `seed_sweep_results/realdata/guardbA_horizon_tuned_10ep_20260224_023734_seed5051`
+  - `seed_sweep_results/realdata/guardbA_horizon_tuned_10ep_20260224_024251_seed7079`
+- Aggregate summary:
+  - `seed_sweep_results/realdata/guardbA_horizon_tuned_pilot3_10ep_20260224_025406_summary.json`
+
+Pilot outcome vs baseline selected checkpoints (`guardbA_blind10_fast10ep_20260223_200325` subset):
+- Mean return: `+3.1338%` delta
+- Mean PF: `+1.1412` delta
+- Positive+PF>=1: `3/3` (baseline `1/3`)
+- Per-seed behavior:
+  - `10007`: switched to `candidate_ep010`, large recovery.
+  - `5051`: switched to `candidate_ep004`, recovered from deep negative to positive PF.
+  - `7079`: no switch; preserved strong baseline winner.
+- Note: WF pass count remained lower on this pilot subset (`0` vs baseline `3`), so full blind confirmation is still required.
+
+Decision:
+- Horizon-aware selector is now the leading path.
+- Next gate: blind-10 confirmation with horizon rescue enabled using the tuned defaults above.
+
+## 2026-02-24 (GuardB-A 20ep mixed-seed probe: weak-tail fix, strong-seed regression)
+
+Focus: verify whether extending episode budget to 20 is globally helpful, not just on known weak seeds.
+
+Additional 20ep probes (same GuardB-A profile):
+- `seed_sweep_results/realdata/guardbA_20ep_probe_20260224_002523_seed2027`
+- `seed_sweep_results/realdata/guardbA_20ep_probe_20260224_002523_seed8087`
+- `seed_sweep_results/realdata/guardbA_20ep_probe_20260224_002523_seed7079`
+
+Combined analysis (weak3 + strong3 vs 10ep selected baseline):
+- `seed_sweep_results/realdata/guardbA_20ep_probe_6seed_20260224_summary.json`
+
+Key deltas (`20ep` minus `10ep`) by subset:
+- All 6 seeds:
+  - Mean return `+0.2630%`
+  - Mean PF `-0.7185`
+  - WF pass count `-4`
+  - Improved return/PF seeds: `3/6` and `3/6`
+- Weak 3 (`10007,5051,9091`):
+  - Mean return `+2.7730%`
+  - Mean PF `+0.9090`
+  - Improved return/PF seeds: `3/3`
+- Strong 3 (`2027,8087,7079`):
+  - Mean return `-2.2470%`
+  - Mean PF `-2.3460`
+  - Improved return/PF seeds: `0/3`
+
+Reading:
+- 20 episodes clearly repairs weak tails, but simultaneously erodes previously strong seeds.
+- This is a budget/selection interaction, not a simple "more episodes is better" rule.
+
+Decision:
+- Do not promote a global move from 10ep to 20ep.
+- Next step should target horizon-aware checkpoint selection (or equivalent stopping logic) so weak seeds can use later checkpoints without sacrificing strong seeds.
+
+## 2026-02-24 (GuardB-A weak-seed probe: 20 episodes vs 10)
+
+Focus: test whether weak-seed collapses are mostly a short-horizon issue (10 episodes) rather than a selector rule issue.
+
+Runs (same friction/gating profile as GuardB-A blind10, only `episodes=20`):
+- `seed_sweep_results/realdata/guardbA_20ep_probe_20260224_000603_seed10007`
+- `seed_sweep_results/realdata/guardbA_20ep_probe_20260224_001144_seed5051`
+- `seed_sweep_results/realdata/guardbA_20ep_probe_20260224_001144_seed9091`
+
+Per-seed WF2400 test results:
+- `10007`: `-2.03% / PF 0.53` -> `+0.36% / PF 1.12` (recovered)
+- `5051`: `-3.22% / PF 0.34` -> `+2.42% / PF 2.32` (strong recovery)
+- `9091`: `-1.31% / PF 0.59` -> `-1.02% / PF 0.75` (partial, still failing)
+
+Aggregate vs same 3 seeds from GuardB-A blind10 (selected winners at 10 episodes):
+- Summary:
+  - `seed_sweep_results/realdata/guardbA_20ep_probe_weak3_20260224_summary.json`
+- Delta (`20ep` minus `10ep`):
+  - Mean return: `+2.7730%` (`-2.1867% -> +0.5863%`)
+  - Mean PF: `+0.9090` (`0.4869 -> 1.3959`)
+  - Positive+PF>=1: `0/3 -> 2/3`
+  - WF pass count: `2 -> 0` (stricter pass metric not aligned with improved full-period profitability in this probe)
+
+Reading:
+- This is the first strong evidence in this branch that extending episode budget can materially reduce weak-seed tail losses without changing the core reward/cost profile.
+- The selector miss remains real, but part of the prior failure pattern appears to be under-training at 10 episodes.
+
+Decision:
+- Next promotion gate should be a tri-seed (or blind subset) confirmation at `20 episodes` under GuardB-A profile, before introducing additional selector complexity.
+
+## 2026-02-23 (Selector rescue probes: no robust fix yet)
+
+Focus: pressure-test fast selector rescue ideas after the GuardB-A weak-seed oracle miss (`10007`, `5051`).
+
+1) Tournament stability probe (`k/jitter` up only during anti-regression):
+- Run: `selector_k8j3_probe_10ep_20260223_232023_seed10007`
+- Changes vs prior fast profile:
+  - `--anti-regression-eval-min-k 8 --anti-regression-eval-max-k 10`
+  - `--anti-regression-eval-jitter-draws 3`
+  - `--anti-regression-tiebreak` (2400-bar probe, relaxed edge thresholds)
+- Result:
+  - Selector still chose `candidate_ep008.pt` (same failure mode).
+  - WF2400 test remained negative: `-1.82% / PF 0.57`.
+- Oracle re-check in this run:
+  - `seed_sweep_results/realdata/selector_k8j3_probe_10ep_20260223_232023_seed10007/oracle_probe_wf2400_summary.json`
+  - Best candidate remained `candidate_ep010.pt` at `+2.97% / PF 2.73`.
+- Conclusion: stronger tournament sampling alone does not resolve the selection miss.
+
+2) Full blind10 scan: force `candidate_ep010` (latest) for all seeds:
+- Scan summary:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_candidate_ep010_scan_summary.json`
+- Comparison vs selected winners:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_ep010_vs_selected_wf2400_comparison.json`
+- Aggregate delta (`ep010` minus selected):
+  - Mean return `+0.3173%` (better)
+  - Mean PF `-0.4008` (worse)
+  - WF pass count `-3` (worse)
+  - Positive+PF>=1 unchanged (`7/10`)
+- Reading: latest-checkpoint fallback rescues weak tails but degrades robust seeds; not a safe global selector policy.
+
+3) Full blind10 scan: 50/50 weight blend (`winner` + `ep010`):
+- Blend summary:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_blend_winner_ep010_wf2400_summary.json`
+- Comparison vs selected winners:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_blend_vs_selected_wf2400_comparison.json`
+- Aggregate delta (`blend` minus selected):
+  - Mean return `+0.1051%` (slight)
+  - Mean PF `-0.3669` (worse)
+  - WF pass count unchanged
+  - Positive+PF>=1 `7/10 -> 6/10`
+- Reading: blending does not provide a robust Pareto improvement.
+
+Decision:
+- Do not promote either `latest-checkpoint` or `winner+ep010 blend` as global selector policy.
+- Selection remains the main blocker; next work should target a selector signal that improves weak tails without sacrificing PF/WF robustness on strong seeds.
+
+## 2026-02-23 (GuardB-A blind10 confirmation + weak-seed oracle audit)
+
+Focus: confirm the promising GuardB-A pivot on full blind10 and diagnose new tail failures.
+
+Blind10 run:
+- Prefix: `guardbA_blind10_fast10ep_20260223_200325`
+- Seeds: `10007,1011,2027,3039,4049,5051,6067,7079,8087,9091`
+- Config: `trade_penalty=0.0`, `flip_penalty=0.00045`, `min_atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`, `trade_gate_z=0.30`, no symmetry loss, no dual controller, `auto_rescue` selector.
+- Artifacts:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_summary.json`
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_vs_autorescue_blind10_fast10ep_20260222_155708_eval_wf2400_comparison.json`
+
+WF2400 aggregate vs previous blind10 baseline (`autorescue_blind10_fast10ep_20260222_155708`):
+- Mean return: `+0.7246%` (delta `-0.2547%`)
+- Mean PF: `1.8721` (delta `+0.3412`)
+- Positive + PF>=1: `7/10` (delta `-1`)
+- WF pass count: `5/10` (delta `+4`)
+
+Reading:
+- Distribution shifted to higher PF / more WF passes, but with heavier downside tails.
+- Major regressions concentrated in `10007` and `5051` (both became strongly negative under selected checkpoints).
+
+Weak-seed oracle audit (selected-checkpoint miss test):
+- Probe source:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_oracle_probe_weakseeds_wf2400_20260223_220212.json`
+- Summary:
+  - `seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_oracle_probe_weakseeds_wf2400_summary_20260223_220212.json`
+- Findings:
+  - Seed `10007`: selected `candidate_ep008` gave `-2.03% / PF 0.53`; oracle best `candidate_ep010` gave `+2.97% / PF 2.73`.
+  - Seed `5051`: selected `candidate_ep006` gave `-3.22% / PF 0.34`; oracle best `candidate_ep010` gave `+2.76% / PF 2.34`.
+- Conclusion: large blind10 failures are primarily checkpoint-selection misses again, not pure inability to train profitable candidates.
+
+Validation-window probe (selection calibration check):
+- Prefix: `guardbA_val1200_probe2_10ep_20260223_221535` on seeds `10007,5051`
+- Artifacts:
+  - `seed_sweep_results/realdata/guardbA_val1200_probe2_10ep_20260223_221535_summary.json`
+  - `seed_sweep_results/realdata/guardbA_val1200_probe2_10ep_20260223_221535_vs_guardbA_blind10_fast10ep_20260223_200325_subset_comparison.json`
+- Result: no change at all (same winners, same WF2400 outcomes), so simply increasing `val_window_bars` to `1200` does not fix this selector failure mode.
+
+Decision:
+- Keep GuardB-A as promising but not yet promotable.
+- Next step should focus on a selection-rule update for this branch (candidate-ranking policy) rather than another reward/cadence sweep.
+
+## 2026-02-23 (Weak-seed reward/cadence pivot: GuardB-A rescue)
+
+Focus: move beyond selector-only tuning and test a reward/cadence pivot on weak seeds (`2027`, `8087`, `9091`) using the older robust GuardB-style controls under current code.
+
+Main weak-seed tri run:
+- Prefix: `weakseed_guardbA_reward_tri10ep_20260223_172019`
+- Config: `trade_penalty=0.0`, `flip_penalty=0.00045`, `min_atr_cost_ratio=0.15`, `cooldown=8`, `min_hold=4`, `max_trades=28`, `trade_gate_z=0.30`, no symmetry loss, no dual controller, `auto_rescue` selector.
+- Artifacts:
+  - `seed_sweep_results/realdata/weakseed_guardbA_reward_tri10ep_20260223_172019_summary.json`
+  - `seed_sweep_results/realdata/weakseed_guardbA_reward_tri10ep_20260223_172019_vs_autorescue_blind10_fast10ep_20260222_155708_eval_wf2400_subset_comparison.json`
+
+WF2400 results (tri aggregate):
+- Mean return `+0.7199%` (baseline subset: `-0.6066%`, delta `+1.3265%`)
+- Mean PF `1.6859` (baseline subset: `0.7690`, delta `+0.9169`)
+- Positive + PF>=1: `2/3` (baseline `1/3`)
+- WF pass count: `1/3` (unchanged)
+
+Per-seed WF2400:
+- `2027`: `-1.07% / PF 0.55` -> `+1.41% / PF 1.64` (major recovery)
+- `8087`: `+0.75% / PF 1.35` -> `+2.06% / PF 2.82` (strong improvement)
+- `9091`: `-1.50% / PF 0.41` -> `-1.31% / PF 0.59` (improved but still failing)
+
+Follow-up on failing seed `9091`:
+- Micro-sweep prefix: `seed9091_guardbA_micro4_10ep_20260223_182015`
+- Summary:
+  - `seed_sweep_results/realdata/seed9091_guardbA_micro4_10ep_20260223_182015_summary.json`
+- Best local variant was `D_gate035`:
+  - WF2400 `-0.03%`, PF `0.99` (near break-even), better than `A_base/B_atr018/C_flip050` (`-1.31%`, PF `0.59`).
+
+Tri confirmation of `gate_z=0.35`:
+- Prefix: `weakseed_guardbA_gate035_tri10ep_20260223_192347`
+- Artifacts:
+  - `seed_sweep_results/realdata/weakseed_guardbA_gate035_tri10ep_20260223_192347_summary.json`
+  - `seed_sweep_results/realdata/weakseed_guardbA_gate035_tri10ep_20260223_192347_vs_baseline_and_gate03_comparison.json`
+- Outcome:
+  - Helped `9091` (`-1.31% -> -0.03%`) but regressed `2027` and `8087` enough to reduce tri aggregate versus `gate_z=0.30`.
+
+Decision:
+- Keep GuardB-A reward/cadence pivot as the current promising path (`gate_z=0.30`).
+- Reject global move to `gate_z=0.35`; treat it as a seed-local rescue only.
+- Next work should target `9091` recovery without sacrificing the recovered `2027/8087` behavior.
+
+## 2026-02-23 (Weak-seed tiebreak check + alias-dedup fix validation)
+
+Focus: test whether `auto_rescue+tiebreak` improves the known weak seeds (`2027`, `8087`, `9091`) and verify a selector bug where top-2 tie-break could compare alias checkpoints (`candidate_epXXX` vs `best_model.pt`) that represent the same candidate.
+
+Weak-seed tri run (pre-fix code path):
+- Prefix: `selector_autorescue_tiebreak_weakseed_tri10ep_20260223_131550`
+- Seeds: `2027, 8087, 9091`
+- Profile: fast10 (`max_steps=600`, HFM friction, no symmetry, no dual)
+- Outputs:
+  - `seed_sweep_results/realdata/selector_autorescue_tiebreak_weakseed_tri10ep_20260223_131550_summary.json`
+  - `seed_sweep_results/realdata/selector_autorescue_tiebreak_weakseed_tri10ep_20260223_131550_vs_autorescue_blind10_fast10ep_20260222_155708_eval_wf2400_subset_comparison.json`
+
+Result:
+- Exact parity vs baseline auto-rescue on this 3-seed subset (no metric delta).
+- Root cause: tie-break often had no effective second candidate (alias/no-op comparisons), so it did not change selection.
+
+Code change:
+- `trainer.py` tie-break candidate deduplication now removes alias-equivalent entries from top-2 consideration using tournament metric identity keys (and records `distinct_pool_filenames` in `checkpoint_tournament.json`).
+
+Post-fix seed-level verification:
+- `selector_autorescue_tiebreak_dedupe_verify_seed2027_10ep_20260223_142724_seed2027`
+  - tie-break now evaluated true-distinct candidates and switched:
+    - `candidate_ep002.pt -> candidate_ep010.pt` (`selected_mode=tail_holdout+tiebreak`)
+  - WF2400 eval worsened versus baseline seed-2027:
+    - return `-1.07% -> -1.67%`, PF `0.55 -> 0.68` (still failing).
+- `selector_autorescue_tiebreak_dedupe_verify_seed9091_10ep_20260223_144207_seed9091`
+  - tie-break evaluated distinct challenger but did not switch.
+  - WF2400 eval unchanged vs baseline behavior (still negative/failing).
+
+Decision:
+- Keep alias-dedup logic (it fixes a real selector flaw), but do **not** promote current tie-break switching thresholds as a profitability upgrade yet.
+- Selector-only refinements remain insufficient to resolve the weak-seed failure mode.
+
+## 2026-02-23 (A/B tri-seed check: `base_first` vs `auto_rescue`)
+
+Focus: validate whether the new base-dominant checkpoint selector (`base_first`) improves out-of-sample behavior versus the current selector path (`auto_rescue`) on unseen seeds.
+
+Run setup:
+- Seeds: `1123, 2213, 3347` (unseen in prior blind10)
+- Profile: fast real-data 10ep (`max_steps=600`, HFM friction settings, no symmetry, no dual controller)
+- Arms:
+  - `autorescue`: `--anti-regression-selector-mode auto_rescue` (with calibrated rescue thresholds)
+  - `basefirst`: `--anti-regression-selector-mode base_first`
+- Per-seed WF2400 re-eval done from selected `checkpoints/best_model.pt`.
+
+Artifacts:
+- `seed_sweep_results/realdata/selector_ab_autorescue_tri10ep_20260223_095309_summary.json`
+- `seed_sweep_results/realdata/selector_ab_basefirst_tri10ep_20260223_095309_summary.json`
+- `seed_sweep_results/realdata/selector_ab_basefirst_vs_autorescue_tri10ep_20260223_095309_comparison.json`
+- Logs per seed:
+  - `logs/selector_ab_autorescue_tri10ep_20260223_095309_seed*.log`
+  - `logs/selector_ab_basefirst_tri10ep_20260223_095309_seed*.log`
+  - `logs/selector_ab_*_seed*_eval_wf2400.log`
+
+Results:
+- Train-horizon aggregate:
+  - `autorescue`: mean return `+0.4550%`, mean PF `1.5054`, positive+PF>1 `2/3`
+  - `basefirst`: mean return `+0.2483%`, mean PF `1.4162`, positive+PF>1 `1/3`
+- WF2400 aggregate:
+  - `autorescue`: mean return `+0.5119%`, mean PF `1.5447`, positive+PF>1 `2/3`, WF pass `1/3`
+  - `basefirst`: mean return `+0.3052%`, mean PF `1.4555`, positive+PF>1 `1/3`, WF pass `2/3`
+- Delta (`basefirst - autorescue`, WF2400):
+  - mean return `-0.2067%`
+  - mean PF `-0.0892`
+  - positive+PF>1 `-1`
+  - WF pass `+1`
+
+Interpretation:
+- On this tri-seed A/B, `base_first` is not an upgrade in profitability metrics.
+- Keep `auto_rescue` as preferred selector path; do not promote `base_first` as default.
+
+## 2026-02-23 (Checkpoint selector root-cause audit: full candidate oracle)
+
+Focus: verify whether the remaining weak-seed failures are mainly a checkpoint-selection problem or a model-capacity problem, using the already trained blind10 run `autorescue_blind10_fast10ep_20260222_155708`.
+
+What was run:
+- Candidate probe on weak seeds (`2027`, `9091`) across all saved checkpoints (`ep002/004/006/008/010`, plus best/final where present).
+- Full blind10 candidate probe for missing checkpoints (same WF2400 profile), then aggregate oracle analysis.
+- Offline selector policy scan using only tournament metrics (`checkpoint_tournament.json`) as ranking signals.
+
+Result files:
+- Weak-seed oracle summary:
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_candidate_probe_oracle_wf2400_summary_20260223_015914.json`
+- Fixed `candidate_ep006` comparison vs selected winners:
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_candidate_ep006_wf2400_vs_baseline_20260223_021542.json`
+- Full blind10 oracle summary (with `ep006` included for all seeds):
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_candidate_probe_oracle_wf2400_full_blind10_with_ep006_summary_20260223_025304.json`
+- Selector policy scan:
+  - `seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_selector_policy_scan_20260223_025509.json`
+
+Key findings:
+- Current selected-winner aggregate (WF2400): mean return `+0.9794%`, mean PF `1.5309`, positive+PF>1 `8/10`.
+- Fixed `candidate_ep006` does **not** solve globally: mean return `+0.6678%`, mean PF `1.2808`, positive+PF>1 `7/10`.
+- Oracle upper bound (best checkpoint per seed among `ep002/004/006/008/010`): mean return `+2.3651%`, mean PF `2.7013`, positive+PF>1 `10/10`.
+- Selector miss pattern is broad, not isolated:
+  - selected candidate rank by realized return: mean rank `2.6/5`, top-1 only `3/10` seeds.
+  - largest misses remained `seed2027` and `seed9091`, but additional medium misses appeared in `3039`, `5051`, `6067`, `7079`, `8087`.
+- Policy scan (ranking candidates by tournament metrics only):
+  - `selected_current`: `+0.979%` return, PF `1.531`, `8/10`.
+  - `max_base_return`: `+1.255%` return, PF `1.625`, `9/10` (best among tested simple rules).
+  - forward/future-heavy scores underperformed on this blind10 sample.
+
+Decision:
+- Next step is to implement and validate a base-dominant selector path (fresh unseen seeds) before any broader retraining cycle.
+
 ## 2026-02-22 (Control blind10 on current code: tail_holdout vs auto_rescue)
 
 Focus: run a fresh control blind10 on the current code with `tail_holdout` (same fast10 profile) to isolate the effect of the new `auto_rescue` selector.

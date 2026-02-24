@@ -65,6 +65,17 @@ class SweepConfig:
     allow_actions: str | None
     atr_mult_sl: float | None
     tp_mult: float | None
+    anti_regression_horizon_rescue_enabled: bool | None
+    anti_regression_horizon_window_bars: int | None
+    anti_regression_horizon_start_frac: float | None
+    anti_regression_horizon_end_frac: float | None
+    anti_regression_horizon_candidate_limit: int | None
+    anti_regression_horizon_incumbent_return_max: float | None
+    anti_regression_horizon_return_edge_min: float | None
+    anti_regression_horizon_pf_edge_min: float | None
+    anti_regression_horizon_challenger_base_return_max: float | None
+    anti_regression_horizon_challenger_pf_min: float | None
+    anti_regression_horizon_min_trades: float | None
 
 
 def build_run_dir(root: Path, prefix: str, timestamp: str, seed: int) -> Path:
@@ -216,6 +227,30 @@ def run_single_seed(seed: int, config: SweepConfig, timestamp: str) -> Dict[str,
         cmd.extend(["--atr-mult-sl", str(config.atr_mult_sl)])
     if config.tp_mult is not None:
         cmd.extend(["--tp-mult", str(config.tp_mult)])
+    if config.anti_regression_horizon_rescue_enabled is True:
+        cmd.append("--anti-regression-horizon-rescue")
+    elif config.anti_regression_horizon_rescue_enabled is False:
+        cmd.append("--anti-regression-no-horizon-rescue")
+    if config.anti_regression_horizon_window_bars is not None:
+        cmd.extend(["--anti-regression-horizon-window-bars", str(config.anti_regression_horizon_window_bars)])
+    if config.anti_regression_horizon_start_frac is not None:
+        cmd.extend(["--anti-regression-horizon-start-frac", str(config.anti_regression_horizon_start_frac)])
+    if config.anti_regression_horizon_end_frac is not None:
+        cmd.extend(["--anti-regression-horizon-end-frac", str(config.anti_regression_horizon_end_frac)])
+    if config.anti_regression_horizon_candidate_limit is not None:
+        cmd.extend(["--anti-regression-horizon-candidate-limit", str(config.anti_regression_horizon_candidate_limit)])
+    if config.anti_regression_horizon_incumbent_return_max is not None:
+        cmd.extend(["--anti-regression-horizon-incumbent-return-max", str(config.anti_regression_horizon_incumbent_return_max)])
+    if config.anti_regression_horizon_return_edge_min is not None:
+        cmd.extend(["--anti-regression-horizon-return-edge-min", str(config.anti_regression_horizon_return_edge_min)])
+    if config.anti_regression_horizon_pf_edge_min is not None:
+        cmd.extend(["--anti-regression-horizon-pf-edge-min", str(config.anti_regression_horizon_pf_edge_min)])
+    if config.anti_regression_horizon_challenger_base_return_max is not None:
+        cmd.extend(["--anti-regression-horizon-challenger-base-return-max", str(config.anti_regression_horizon_challenger_base_return_max)])
+    if config.anti_regression_horizon_challenger_pf_min is not None:
+        cmd.extend(["--anti-regression-horizon-challenger-pf-min", str(config.anti_regression_horizon_challenger_pf_min)])
+    if config.anti_regression_horizon_min_trades is not None:
+        cmd.extend(["--anti-regression-horizon-min-trades", str(config.anti_regression_horizon_min_trades)])
 
     print("=" * 70)
     print(f"SEED {seed} | episodes={config.episodes} | output={run_dir}")
@@ -355,6 +390,19 @@ def parse_args() -> SweepConfig:
                         help="Comma-separated actions: hold,long,short,move_sl or 0-3")
     parser.add_argument("--atr-mult-sl", type=float, default=None)
     parser.add_argument("--tp-mult", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-rescue", dest="anti_regression_horizon_rescue_enabled", action="store_true")
+    parser.add_argument("--anti-regression-no-horizon-rescue", dest="anti_regression_horizon_rescue_enabled", action="store_false")
+    parser.set_defaults(anti_regression_horizon_rescue_enabled=None)
+    parser.add_argument("--anti-regression-horizon-window-bars", type=int, default=None)
+    parser.add_argument("--anti-regression-horizon-start-frac", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-end-frac", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-candidate-limit", type=int, default=None)
+    parser.add_argument("--anti-regression-horizon-incumbent-return-max", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-return-edge-min", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-pf-edge-min", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-challenger-base-return-max", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-challenger-pf-min", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-min-trades", type=float, default=None)
 
     args = parser.parse_args()
 
@@ -400,6 +448,17 @@ def parse_args() -> SweepConfig:
         allow_actions=args.allow_actions,
         atr_mult_sl=args.atr_mult_sl,
         tp_mult=args.tp_mult,
+        anti_regression_horizon_rescue_enabled=args.anti_regression_horizon_rescue_enabled,
+        anti_regression_horizon_window_bars=args.anti_regression_horizon_window_bars,
+        anti_regression_horizon_start_frac=args.anti_regression_horizon_start_frac,
+        anti_regression_horizon_end_frac=args.anti_regression_horizon_end_frac,
+        anti_regression_horizon_candidate_limit=args.anti_regression_horizon_candidate_limit,
+        anti_regression_horizon_incumbent_return_max=args.anti_regression_horizon_incumbent_return_max,
+        anti_regression_horizon_return_edge_min=args.anti_regression_horizon_return_edge_min,
+        anti_regression_horizon_pf_edge_min=args.anti_regression_horizon_pf_edge_min,
+        anti_regression_horizon_challenger_base_return_max=args.anti_regression_horizon_challenger_base_return_max,
+        anti_regression_horizon_challenger_pf_min=args.anti_regression_horizon_challenger_pf_min,
+        anti_regression_horizon_min_trades=args.anti_regression_horizon_min_trades,
     )
 
 
@@ -439,6 +498,8 @@ def main() -> int:
     print(f"Trade gate z: {config.trade_gate_z}")
     print(f"R-multiple reward weight: {config.r_multiple_reward_weight}")
     print(f"R-multiple reward clip: {config.r_multiple_reward_clip}")
+    print(f"Horizon rescue enabled: {config.anti_regression_horizon_rescue_enabled}")
+    print(f"Horizon window bars: {config.anti_regression_horizon_window_bars}")
     print()
 
     results = []
