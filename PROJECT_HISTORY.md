@@ -6,6 +6,22 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-24 (Targeted 9091 oracle check after blind-10 rerun)
+
+Focus: determine whether the remaining failing seed (`9091`) is still a selection miss or a true no-candidate failure.
+
+Artifact:
+- `seed_sweep_results/realdata/guardbA_horizon_incmax04_blind10_fast10ep_20260224_135954_seed9091/oracle_eval_candidates_9091_summary.json`
+
+Oracle evaluation over candidate checkpoints (`candidate_ep002/004/006/008/010`):
+- Best checkpoint on test: `candidate_ep010.pt` -> `+1.02%` return, `PF 1.36`, `20` trades.
+- Selected checkpoint from tournament: `candidate_ep006.pt` -> `-1.28%` return, `PF 0.56`.
+- Interpretation: `9091` remains a checkpoint-selection miss (profitable candidate exists but was not selected).
+
+Decision:
+- Keep current horizon cap hardening (`0.40`) because it improved aggregate blind-10 reliability.
+- Next technical step should target selector alignment for this residual miss (candidate-ranking refinement), not reward/cost profile changes.
+
 ## 2026-02-24 (Blind-10 confirmation rerun with horizon incumbent cap 0.40)
 
 Focus: rerun the full GuardB-A blind-10 after tightening horizon rescue incumbent cap (`0.65 -> 0.40`) to remove false-positive switches.
