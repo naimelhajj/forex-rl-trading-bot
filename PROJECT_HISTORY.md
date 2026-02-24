@@ -6,6 +6,42 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-24 (Blind-10 confirmation rerun with horizon incumbent cap 0.40)
+
+Focus: rerun the full GuardB-A blind-10 after tightening horizon rescue incumbent cap (`0.65 -> 0.40`) to remove false-positive switches.
+
+Run artifacts:
+- Main summary:
+  - `seed_sweep_results/realdata/guardbA_horizon_incmax04_blind10_fast10ep_20260224_135954_summary.json`
+- Comparison vs prior horizon blind-10 and GuardB-A baseline:
+  - `seed_sweep_results/realdata/guardbA_horizon_incmax04_blind10_fast10ep_20260224_135954_comparison.json`
+
+Blind-10 aggregate outcome (10 seeds):
+- Mean return: `+1.7009%`
+- Mean PF: `2.3298`
+- Positive PF >= 1 seeds: `9/10`
+- Negative seeds (`return<0 or PF<1`): `1/10` (target met; prior horizon run was `2/10`)
+- Horizon switches: `3/10` (down from `5/10`, fewer forced overrides)
+
+Delta vs prior horizon blind-10 (`guardbA_horizon_blind10_fast10ep_20260224_094831`):
+- Mean return: `+0.1327%`
+- Mean PF: `+0.0329`
+- Positive PF >= 1: `+1` seed (`8/10 -> 9/10`)
+- Key fix: `4049` recovered from `-1.63% / PF 0.43` to `+0.19% / PF 1.08`.
+
+Delta vs GuardB-A baseline blind-10 (`guardbA_blind10_fast10ep_20260223_200325`):
+- Mean return: `+0.9595%`
+- Mean PF: `+0.4569`
+- Positive PF >= 1: `+2` seeds (`7/10 -> 9/10`)
+
+Reading:
+- Tightening incumbent cap to `0.40` improved safety without sacrificing the large weak-seed rescues (`10007`, `5051`).
+- Remaining blocker is concentrated in `9091` (still negative).
+
+Decision:
+- Keep `incumbent_return_max=0.40` as default.
+- Next gate should be a targeted anti-regression probe for `9091` (selection-only), not a broad profile change.
+
 ## 2026-02-24 (Horizon rescue hardening: incumbent return cap tightened to 0.40)
 
 Focus: remove the harmful `4049` horizon switch seen in blind-10 while preserving the `5051` recovery.
