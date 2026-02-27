@@ -1226,6 +1226,8 @@ def main():
                         help='Horizon-rescue trigger: challenger long-horizon PF edge minimum')
     parser.add_argument('--anti-regression-horizon-challenger-base-return-max', type=float, default=None,
                         help='Horizon-rescue trigger: challenger base return must be <= this threshold')
+    parser.add_argument('--anti-regression-horizon-challenger-robust-return-min', type=float, default=None,
+                        help='Horizon-rescue trigger: challenger robust return must be >= this threshold')
     parser.add_argument('--anti-regression-horizon-challenger-pf-min', type=float, default=None,
                         help='Horizon-rescue trigger: challenger long-horizon PF must be >= this threshold')
     parser.add_argument('--anti-regression-horizon-min-trades', type=float, default=None,
@@ -1456,6 +1458,8 @@ def main():
         config.training.anti_regression_horizon_pf_edge_min = max(0.0, float(args.anti_regression_horizon_pf_edge_min))
     if args.anti_regression_horizon_challenger_base_return_max is not None:
         config.training.anti_regression_horizon_challenger_base_return_max = float(args.anti_regression_horizon_challenger_base_return_max)
+    if args.anti_regression_horizon_challenger_robust_return_min is not None:
+        config.training.anti_regression_horizon_challenger_robust_return_min = float(args.anti_regression_horizon_challenger_robust_return_min)
     if args.anti_regression_horizon_challenger_pf_min is not None:
         config.training.anti_regression_horizon_challenger_pf_min = max(0.0, float(args.anti_regression_horizon_challenger_pf_min))
     if args.anti_regression_horizon_min_trades is not None:

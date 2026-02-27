@@ -74,6 +74,7 @@ class SweepConfig:
     anti_regression_horizon_return_edge_min: float | None
     anti_regression_horizon_pf_edge_min: float | None
     anti_regression_horizon_challenger_base_return_max: float | None
+    anti_regression_horizon_challenger_robust_return_min: float | None
     anti_regression_horizon_challenger_pf_min: float | None
     anti_regression_horizon_min_trades: float | None
     anti_regression_top_k: int | None
@@ -282,6 +283,8 @@ def run_single_seed(seed: int, config: SweepConfig, timestamp: str) -> Dict[str,
         cmd.extend(["--anti-regression-horizon-pf-edge-min", str(config.anti_regression_horizon_pf_edge_min)])
     if config.anti_regression_horizon_challenger_base_return_max is not None:
         cmd.extend(["--anti-regression-horizon-challenger-base-return-max", str(config.anti_regression_horizon_challenger_base_return_max)])
+    if config.anti_regression_horizon_challenger_robust_return_min is not None:
+        cmd.extend(["--anti-regression-horizon-challenger-robust-return-min", str(config.anti_regression_horizon_challenger_robust_return_min)])
     if config.anti_regression_horizon_challenger_pf_min is not None:
         cmd.extend(["--anti-regression-horizon-challenger-pf-min", str(config.anti_regression_horizon_challenger_pf_min)])
     if config.anti_regression_horizon_min_trades is not None:
@@ -471,6 +474,7 @@ def parse_args() -> SweepConfig:
     parser.add_argument("--anti-regression-horizon-return-edge-min", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-pf-edge-min", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-challenger-base-return-max", type=float, default=None)
+    parser.add_argument("--anti-regression-horizon-challenger-robust-return-min", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-challenger-pf-min", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-min-trades", type=float, default=None)
     parser.add_argument("--anti-regression-alignment-probe", dest="anti_regression_alignment_probe_enabled", action="store_true")
@@ -550,6 +554,7 @@ def parse_args() -> SweepConfig:
         anti_regression_horizon_return_edge_min=args.anti_regression_horizon_return_edge_min,
         anti_regression_horizon_pf_edge_min=args.anti_regression_horizon_pf_edge_min,
         anti_regression_horizon_challenger_base_return_max=args.anti_regression_horizon_challenger_base_return_max,
+        anti_regression_horizon_challenger_robust_return_min=args.anti_regression_horizon_challenger_robust_return_min,
         anti_regression_horizon_challenger_pf_min=args.anti_regression_horizon_challenger_pf_min,
         anti_regression_horizon_min_trades=args.anti_regression_horizon_min_trades,
         anti_regression_alignment_probe_enabled=args.anti_regression_alignment_probe_enabled,
@@ -605,6 +610,7 @@ def main() -> int:
     print(f"Auto rescue enabled: {config.anti_regression_auto_rescue_enabled}")
     print(f"Horizon rescue enabled: {config.anti_regression_horizon_rescue_enabled}")
     print(f"Horizon window bars: {config.anti_regression_horizon_window_bars}")
+    print(f"Horizon challenger robust return min: {config.anti_regression_horizon_challenger_robust_return_min}")
     print(f"Alignment probe enabled: {config.anti_regression_alignment_probe_enabled}")
     print(f"Alignment probe top-k: {config.anti_regression_alignment_probe_top_k}")
     print()
@@ -664,6 +670,7 @@ def main() -> int:
             "anti_regression_horizon_return_edge_min": config.anti_regression_horizon_return_edge_min,
             "anti_regression_horizon_pf_edge_min": config.anti_regression_horizon_pf_edge_min,
             "anti_regression_horizon_challenger_base_return_max": config.anti_regression_horizon_challenger_base_return_max,
+            "anti_regression_horizon_challenger_robust_return_min": config.anti_regression_horizon_challenger_robust_return_min,
             "anti_regression_horizon_challenger_pf_min": config.anti_regression_horizon_challenger_pf_min,
             "anti_regression_horizon_min_trades": config.anti_regression_horizon_min_trades,
             "anti_regression_alignment_probe_enabled": config.anti_regression_alignment_probe_enabled,

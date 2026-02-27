@@ -1446,6 +1446,13 @@ class Trainer:
                 1.0,
             )
         )
+        horizon_challenger_robust_return_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_horizon_challenger_robust_return_min",
+                0.0,
+            )
+        )
         horizon_challenger_pf_min = float(
             getattr(training_cfg, "anti_regression_horizon_challenger_pf_min", 1.35)
         )
@@ -2187,11 +2194,13 @@ class Trainer:
                     if probe is None or candidate is None:
                         continue
                     candidate_base_return = float(candidate.get("base_return_pct", 0.0))
+                    candidate_robust_return = float(candidate.get("robust_return_pct", 0.0))
                     if (
                         probe["return_pct"] > 0.0
                         and probe["pf"] >= horizon_challenger_pf_min
                         and probe["trades"] >= horizon_min_trades
                         and candidate_base_return <= horizon_challenger_base_return_max
+                        and candidate_robust_return >= horizon_challenger_robust_return_min
                     ):
                         challenger_name = name
                         break
@@ -2207,10 +2216,14 @@ class Trainer:
                 return_edge = 0.0
                 pf_edge = 0.0
                 challenger_base_return = 0.0
+                challenger_robust_return = 0.0
                 switched = False
                 if incumbent_probe is not None and challenger_probe is not None and challenger_candidate is not None:
                     challenger_base_return = float(
                         challenger_candidate.get("base_return_pct", 0.0)
+                    )
+                    challenger_robust_return = float(
+                        challenger_candidate.get("robust_return_pct", 0.0)
                     )
                     return_edge = float(challenger_probe["return_pct"] - incumbent_probe["return_pct"])
                     pf_edge = float(challenger_probe["pf"] - incumbent_probe["pf"])
@@ -2222,6 +2235,7 @@ class Trainer:
                         and challenger_probe["pf"] >= horizon_challenger_pf_min
                         and challenger_probe["trades"] >= horizon_min_trades
                         and challenger_base_return <= horizon_challenger_base_return_max
+                        and challenger_robust_return >= horizon_challenger_robust_return_min
                     )
                     if switched:
                         winner = challenger_candidate
@@ -2244,6 +2258,9 @@ class Trainer:
                             "challenger_base_return_max": float(
                                 horizon_challenger_base_return_max
                             ),
+                            "challenger_robust_return_min": float(
+                                horizon_challenger_robust_return_min
+                            ),
                             "challenger_pf_min": float(horizon_challenger_pf_min),
                             "min_trades": float(horizon_min_trades),
                         },
@@ -2255,6 +2272,7 @@ class Trainer:
                         "incumbent_return": float(incumbent_return),
                         "incumbent_pf": float(incumbent_pf),
                         "challenger_base_return": float(challenger_base_return),
+                        "challenger_robust_return": float(challenger_robust_return),
                         "return_edge": float(return_edge),
                         "pf_edge": float(pf_edge),
                         "switched": bool(switched),
