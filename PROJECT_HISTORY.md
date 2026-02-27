@@ -6,6 +6,39 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-27 (Larger confirmation step: +4 seed extension and 10-seed aggregate)
+
+Focus: execute the next robustness step after promoting `horizon100/noalign` by adding four unseen seeds.
+
+Profile used:
+- `anti_regression_selector_mode=auto_rescue`
+- `anti_regression_top_k=10`
+- `anti_regression_horizon_rescue_enabled=true`
+- `anti_regression_horizon_incumbent_return_max=1.00`
+- `anti_regression_alignment_probe_enabled=false`
+
+Extension sweep (new seeds):
+- seeds: `123, 1011, 2027, 8087`
+- summary: `seed_sweep_results/realdata/guardbA_horizon100_noalign_ext4_10ep_20260227_104113_summary.json`
+- log: `logs/guardbA_horizon100_noalign_ext4_10ep_20260227_104113.log`
+
+Extension outcomes:
+- mean return: `+0.16%`
+- mean PF: `1.07`
+- positive with PF>=1: `2/4`
+- per-seed: `123` (-0.20%, PF 0.94), `1011` (+0.60%, PF 1.23), `2027` (-0.55%, PF 0.88), `8087` (+0.80%, PF 1.22)
+
+Combined aggregate (previous 6 + extension 4):
+- summary: `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_seed10_summary_20260227_1115.json`
+- count: `10`
+- mean return: `+1.28%`
+- mean PF: `1.72`
+- positive with PF>=1: `8/10`
+
+Interpretation:
+- The profile remains net-positive and robust in aggregate, but no longer clears every seed.
+- `123` and `2027` are the current weak cases for targeted follow-up.
+
 ## 2026-02-27 (Cross-triad combined check: horizon100/noalign is 6/6 positive on tested seeds)
 
 Focus: merge both confirmed triads into one combined view before launching a broader sweep.
