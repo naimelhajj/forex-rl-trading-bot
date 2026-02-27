@@ -1230,6 +1230,33 @@ def main():
                         help='Horizon-rescue trigger: challenger long-horizon PF must be >= this threshold')
     parser.add_argument('--anti-regression-horizon-min-trades', type=float, default=None,
                         help='Horizon-rescue trigger: challenger long-horizon trades must be >= this threshold')
+    parser.add_argument('--anti-regression-alignment-probe', dest='anti_regression_alignment_probe_enabled', action='store_true',
+                        help='Enable walk-forward aligned probe on top anti-regression candidates')
+    parser.add_argument('--anti-regression-no-alignment-probe', dest='anti_regression_alignment_probe_enabled', action='store_false',
+                        help='Disable walk-forward aligned probe on top anti-regression candidates')
+    parser.set_defaults(anti_regression_alignment_probe_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-top-k', type=int, default=None,
+                        help='Number of top candidates to include in alignment probe (default 2)')
+    parser.add_argument('--anti-regression-alignment-probe-window-bars', type=int, default=None,
+                        help='Window length (bars) for alignment probe (None uses test/validation default)')
+    parser.add_argument('--anti-regression-alignment-probe-stride-frac', type=float, default=None,
+                        help='Stride fraction for alignment probe windows (None uses test/validation default)')
+    parser.add_argument('--anti-regression-alignment-probe-all-windows', dest='anti_regression_alignment_probe_use_all_windows', action='store_true',
+                        help='Use all feasible windows (no K thinning) during alignment probe')
+    parser.add_argument('--anti-regression-alignment-probe-even-windows', dest='anti_regression_alignment_probe_use_all_windows', action='store_false',
+                        help='Use evenly-thinned windows (respecting K limits) during alignment probe')
+    parser.set_defaults(anti_regression_alignment_probe_use_all_windows=None)
+    parser.add_argument('--anti-regression-alignment-probe-return-edge-min', type=float, default=None,
+                        help='Minimum return edge required for alignment probe challenger switch')
+    parser.add_argument('--anti-regression-alignment-probe-pf-edge-min', type=float, default=None,
+                        help='Minimum PF edge required for alignment probe challenger switch')
+    parser.add_argument('--anti-regression-alignment-probe-min-trades', type=float, default=None,
+                        help='Minimum median trades required for alignment probe challenger switch')
+    parser.add_argument('--anti-regression-alignment-probe-require-pass', dest='anti_regression_alignment_probe_require_pass', action='store_true',
+                        help='Require walk-forward-style pass for alignment probe challenger')
+    parser.add_argument('--anti-regression-alignment-probe-allow-no-pass', dest='anti_regression_alignment_probe_require_pass', action='store_false',
+                        help='Allow alignment probe challenger even without walk-forward-style pass')
+    parser.set_defaults(anti_regression_alignment_probe_require_pass=None)
     
     args = parser.parse_args()
     
@@ -1433,6 +1460,24 @@ def main():
         config.training.anti_regression_horizon_challenger_pf_min = max(0.0, float(args.anti_regression_horizon_challenger_pf_min))
     if args.anti_regression_horizon_min_trades is not None:
         config.training.anti_regression_horizon_min_trades = max(0.0, float(args.anti_regression_horizon_min_trades))
+    if args.anti_regression_alignment_probe_enabled is not None:
+        config.training.anti_regression_alignment_probe_enabled = bool(args.anti_regression_alignment_probe_enabled)
+    if args.anti_regression_alignment_probe_top_k is not None:
+        config.training.anti_regression_alignment_probe_top_k = max(2, int(args.anti_regression_alignment_probe_top_k))
+    if args.anti_regression_alignment_probe_window_bars is not None:
+        config.training.anti_regression_alignment_probe_window_bars = max(100, int(args.anti_regression_alignment_probe_window_bars))
+    if args.anti_regression_alignment_probe_stride_frac is not None:
+        config.training.anti_regression_alignment_probe_stride_frac = max(0.01, float(args.anti_regression_alignment_probe_stride_frac))
+    if args.anti_regression_alignment_probe_use_all_windows is not None:
+        config.training.anti_regression_alignment_probe_use_all_windows = bool(args.anti_regression_alignment_probe_use_all_windows)
+    if args.anti_regression_alignment_probe_return_edge_min is not None:
+        config.training.anti_regression_alignment_probe_return_edge_min = max(0.0, float(args.anti_regression_alignment_probe_return_edge_min))
+    if args.anti_regression_alignment_probe_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_pf_edge_min = max(0.0, float(args.anti_regression_alignment_probe_pf_edge_min))
+    if args.anti_regression_alignment_probe_min_trades is not None:
+        config.training.anti_regression_alignment_probe_min_trades = max(0.0, float(args.anti_regression_alignment_probe_min_trades))
+    if args.anti_regression_alignment_probe_require_pass is not None:
+        config.training.anti_regression_alignment_probe_require_pass = bool(args.anti_regression_alignment_probe_require_pass)
     
     # Override episodes if specified
     if args.episodes is not None:

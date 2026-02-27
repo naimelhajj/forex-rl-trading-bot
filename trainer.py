@@ -716,6 +716,7 @@ class Trainer:
                  window_bars_override: Optional[int] = None,
                  start_frac_override: Optional[float] = None,
                  end_frac_override: Optional[float] = None,
+                 use_all_windows_override: Optional[bool] = None,
                  persist_summary: bool = True,
                  quiet: bool = False) -> Dict:
         """
@@ -809,18 +810,22 @@ class Trainer:
             if candidate_starts[-1] != max_start:
                 candidate_starts.append(max_start)
 
-        starts = _pick_even_spread(candidate_starts, min(max_k, len(candidate_starts)))
+        use_all_windows = bool(use_all_windows_override) if use_all_windows_override is not None else False
+        if use_all_windows:
+            starts = list(candidate_starts)
+        else:
+            starts = _pick_even_spread(candidate_starts, min(max_k, len(candidate_starts)))
 
-        # Ensure minimum K windows by reducing stride if needed.
-        if len(starts) < min_k and segment_length >= window_len:
-            stride_min = max(1, (segment_length - window_len) // max(1, (min_k - 1)))
-            if max_start == 0:
-                dense_candidates = [0]
-            else:
-                dense_candidates = list(range(0, max_start + 1, stride_min))
-                if dense_candidates[-1] != max_start:
-                    dense_candidates.append(max_start)
-            starts = _pick_even_spread(dense_candidates, min(min_k, len(dense_candidates)))
+            # Ensure minimum K windows by reducing stride if needed.
+            if len(starts) < min_k and segment_length >= window_len:
+                stride_min = max(1, (segment_length - window_len) // max(1, (min_k - 1)))
+                if max_start == 0:
+                    dense_candidates = [0]
+                else:
+                    dense_candidates = list(range(0, max_start + 1, stride_min))
+                    if dense_candidates[-1] != max_start:
+                        dense_candidates.append(max_start)
+                starts = _pick_even_spread(dense_candidates, min(min_k, len(dense_candidates)))
         starts = sorted(starts)
         
         # Build window tuples (start, end)
@@ -846,7 +851,7 @@ class Trainer:
         jitter_msg = f" | jitter-avg K={jitter_draws}" if jitter_draws > 1 and not freeze_frictions else ""
         if not quiet:
             print(f"[VAL] {len(windows)} passes | window={window_len} | stride~{int(window_len*stride_frac)} | "
-                  f"coverage~{coverage:.2f}x{jitter_msg}")
+                  f"coverage~{coverage:.2f}x{jitter_msg} | all_windows={use_all_windows}")
             if start_frac_override is not None or end_frac_override is not None:
                 print(
                     f"[VAL] segment={start_frac:.2f}-{end_frac:.2f} "
@@ -1092,6 +1097,10 @@ class Trainer:
         val_stats['val_trades'] = median_trades
         # Expose robust-validation internals to callers (training loop/post-restore ALT).
         val_stats['val_k'] = int(len(windows))
+        val_stats['val_window_bars'] = int(window_len)
+        val_stats['val_stride_bars'] = int(stride)
+        val_stats['val_segment_bars'] = int(segment_length)
+        val_stats['val_use_all_windows'] = bool(use_all_windows)
         val_stats['val_median_fitness'] = float(median)
         val_stats['val_iqr'] = float(iqr)
         val_stats['val_stability_adj'] = float(stability_adj)
@@ -1442,6 +1451,38 @@ class Trainer:
         )
         horizon_min_trades = float(
             getattr(training_cfg, "anti_regression_horizon_min_trades", 10.0)
+        )
+        alignment_probe_enabled = bool(
+            getattr(training_cfg, "anti_regression_alignment_probe_enabled", False)
+        )
+        alignment_probe_top_k = max(
+            2,
+            int(getattr(training_cfg, "anti_regression_alignment_probe_top_k", 2)),
+        )
+        alignment_probe_window_bars = getattr(
+            training_cfg, "anti_regression_alignment_probe_window_bars", None
+        )
+        if alignment_probe_window_bars is not None:
+            alignment_probe_window_bars = max(100, int(alignment_probe_window_bars))
+        alignment_probe_stride_frac = getattr(
+            training_cfg, "anti_regression_alignment_probe_stride_frac", None
+        )
+        if alignment_probe_stride_frac is not None:
+            alignment_probe_stride_frac = max(0.01, float(alignment_probe_stride_frac))
+        alignment_probe_use_all_windows = bool(
+            getattr(training_cfg, "anti_regression_alignment_probe_use_all_windows", True)
+        )
+        alignment_probe_return_edge_min = float(
+            getattr(training_cfg, "anti_regression_alignment_probe_return_edge_min", 0.10)
+        )
+        alignment_probe_pf_edge_min = float(
+            getattr(training_cfg, "anti_regression_alignment_probe_pf_edge_min", 0.10)
+        )
+        alignment_probe_min_trades = float(
+            getattr(training_cfg, "anti_regression_alignment_probe_min_trades", 10.0)
+        )
+        alignment_probe_require_pass = bool(
+            getattr(training_cfg, "anti_regression_alignment_probe_require_pass", True)
         )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
@@ -2222,6 +2263,188 @@ class Trainer:
                     }
                 )
 
+        alignment_summary = {"enabled": bool(alignment_probe_enabled), "evaluated": False}
+        if alignment_probe_enabled and len(ranking_pool) >= 2:
+            tournament_by_name = {
+                item.get("filename"): item for item in tournament if item.get("filename")
+            }
+            incumbent_name = winner.get("filename")
+            probe_candidates = []
+            seen_probe_keys = set()
+            for item in ranking_pool:
+                key = _candidate_identity_key(item)
+                if key is None or key in seen_probe_keys:
+                    continue
+                seen_probe_keys.add(key)
+                probe_candidates.append(item)
+                if len(probe_candidates) >= alignment_probe_top_k:
+                    break
+
+            if (
+                incumbent_name
+                and all(x.get("filename") != incumbent_name for x in probe_candidates)
+            ):
+                incumbent_item = tournament_by_name.get(incumbent_name)
+                if incumbent_item is not None:
+                    probe_candidates.append(incumbent_item)
+
+            probe_candidates = [x for x in probe_candidates if x.get("filename")]
+            alignment_summary["probe_pool_size"] = len(probe_candidates)
+            alignment_summary["probe_pool_filenames"] = [
+                x.get("filename") for x in probe_candidates
+            ]
+
+            if len(probe_candidates) >= 2 and incumbent_name:
+                alignment_summary["evaluated"] = True
+                probe_results = {}
+                al_rng_state = np.random.get_state()
+                al_py_rng_state = random.getstate()
+                al_orig_val_jitter_draws = getattr(self.config, "VAL_JITTER_DRAWS", None)
+                try:
+                    # Keep probes deterministic and cheap; test evaluation has no jitter averaging.
+                    setattr(self.config, "VAL_JITTER_DRAWS", 1)
+
+                    for idx, candidate in enumerate(probe_candidates):
+                        filename = candidate.get("filename")
+                        if not filename:
+                            continue
+                        ckpt_path = self.checkpoint_dir / filename
+                        if not ckpt_path.exists():
+                            continue
+                        try:
+                            self.load_checkpoint(filename)
+                        except Exception:
+                            continue
+
+                        seed_offset = 877 + 29 * idx
+                        random.seed(base_seed + seed_offset)
+                        np.random.seed(base_seed + seed_offset)
+                        probe_stats = self.validate(
+                            stride_frac_override=alignment_probe_stride_frac,
+                            window_bars_override=alignment_probe_window_bars,
+                            use_all_windows_override=alignment_probe_use_all_windows,
+                            persist_summary=False,
+                            quiet=True,
+                        )
+                        probe_windows = int(probe_stats.get("val_k", 0))
+                        probe_spr = float(
+                            probe_stats.get(
+                                "val_median_fitness",
+                                probe_stats.get("val_fitness", 0.0),
+                            )
+                        )
+                        probe_pf = float(probe_stats.get("val_median_pf", 0.0))
+                        probe_pos_frac = float(probe_stats.get("val_positive_frac", 0.0))
+                        probe_return = float(
+                            probe_stats.get(
+                                "val_median_return_pct",
+                                probe_stats.get("val_return_pct", 0.0),
+                            )
+                        )
+                        probe_trades = float(probe_stats.get("val_trades", 0.0))
+                        probe_pass = bool(
+                            probe_windows >= int(self.config.fitness.test_walkforward_min_windows)
+                            and probe_spr >= float(self.config.fitness.test_walkforward_min_spr)
+                            and probe_pf >= float(self.config.fitness.test_walkforward_min_pf)
+                            and probe_pos_frac >= float(self.config.fitness.test_walkforward_min_pos_frac)
+                        )
+                        probe_results[filename] = {
+                            "windows": int(probe_windows),
+                            "spr": float(probe_spr),
+                            "return_pct": float(probe_return),
+                            "pf": float(probe_pf),
+                            "positive_frac": float(probe_pos_frac),
+                            "trades": float(probe_trades),
+                            "pass": bool(probe_pass),
+                        }
+                finally:
+                    np.random.set_state(al_rng_state)
+                    random.setstate(al_py_rng_state)
+                    setattr(self.config, "VAL_JITTER_DRAWS", al_orig_val_jitter_draws)
+
+                ranked_probe_names = sorted(
+                    probe_results.keys(),
+                    key=lambda name: (
+                        int(bool(probe_results[name]["pass"])),
+                        probe_results[name]["return_pct"],
+                        probe_results[name]["pf"],
+                        probe_results[name]["positive_frac"],
+                        probe_results[name]["spr"],
+                        probe_results[name]["trades"],
+                    ),
+                    reverse=True,
+                )
+                challenger_name = next(
+                    (name for name in ranked_probe_names if name != incumbent_name),
+                    None,
+                )
+                incumbent_probe = probe_results.get(incumbent_name)
+                challenger_probe = probe_results.get(challenger_name) if challenger_name else None
+                return_edge = 0.0
+                pf_edge = 0.0
+                switched = False
+                if incumbent_probe is not None and challenger_probe is not None:
+                    return_edge = float(challenger_probe["return_pct"] - incumbent_probe["return_pct"])
+                    pf_edge = float(challenger_probe["pf"] - incumbent_probe["pf"])
+                    challenger_passes = bool(challenger_probe.get("pass", False))
+                    if not alignment_probe_require_pass:
+                        challenger_passes = True
+
+                    switched = bool(
+                        challenger_probe["trades"] >= alignment_probe_min_trades
+                        and challenger_passes
+                        and (
+                            (
+                                challenger_probe.get("pass", False)
+                                and not incumbent_probe.get("pass", False)
+                                and challenger_probe["return_pct"] > 0.0
+                                and challenger_probe["pf"] >= 1.0
+                            )
+                            or (
+                                return_edge >= alignment_probe_return_edge_min
+                                and pf_edge >= alignment_probe_pf_edge_min
+                                and challenger_probe["return_pct"] > 0.0
+                                and challenger_probe["pf"] >= 1.0
+                            )
+                        )
+                    )
+
+                    if switched and challenger_name in tournament_by_name:
+                        winner = tournament_by_name[challenger_name]
+                        selected_mode = f"{selected_mode}+wfalign"
+                        if all(
+                            x.get("filename") != challenger_name for x in ranking_pool
+                        ):
+                            ranking_pool = list(ranking_pool) + [winner]
+                            pool_mode = f"{pool_mode}+wfalign"
+
+                alignment_summary.update(
+                    {
+                        "window_bars": int(alignment_probe_window_bars) if alignment_probe_window_bars is not None else None,
+                        "stride_frac": float(alignment_probe_stride_frac) if alignment_probe_stride_frac is not None else None,
+                        "use_all_windows": bool(alignment_probe_use_all_windows),
+                        "thresholds": {
+                            "return_edge_min": float(alignment_probe_return_edge_min),
+                            "pf_edge_min": float(alignment_probe_pf_edge_min),
+                            "min_trades": float(alignment_probe_min_trades),
+                            "require_pass": bool(alignment_probe_require_pass),
+                            "walkforward_min_windows": int(self.config.fitness.test_walkforward_min_windows),
+                            "walkforward_min_spr": float(self.config.fitness.test_walkforward_min_spr),
+                            "walkforward_min_pf": float(self.config.fitness.test_walkforward_min_pf),
+                            "walkforward_min_positive_frac": float(self.config.fitness.test_walkforward_min_pos_frac),
+                        },
+                        "incumbent_filename": incumbent_name,
+                        "challenger_filename": challenger_name,
+                        "incumbent_probe": incumbent_probe,
+                        "challenger_probe": challenger_probe,
+                        "return_edge": float(return_edge),
+                        "pf_edge": float(pf_edge),
+                        "switched": bool(switched),
+                        "winner_after_alignment": winner.get("filename"),
+                        "probe_results": probe_results,
+                    }
+                )
+
         chosen = winner["filename"]
 
         summary_payload = {
@@ -2249,6 +2472,8 @@ class Trainer:
             summary_payload["tiebreak"] = tiebreak_summary
         if horizon_summary is not None:
             summary_payload["horizon_rescue"] = horizon_summary
+        if alignment_summary is not None:
+            summary_payload["alignment_probe"] = alignment_summary
         tournament_path = self.log_dir / "checkpoint_tournament.json"
         try:
             with open(tournament_path, "w", encoding="utf-8") as f:

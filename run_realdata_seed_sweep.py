@@ -76,6 +76,23 @@ class SweepConfig:
     anti_regression_horizon_challenger_base_return_max: float | None
     anti_regression_horizon_challenger_pf_min: float | None
     anti_regression_horizon_min_trades: float | None
+    anti_regression_top_k: int | None
+    anti_regression_selector_mode: str | None
+    anti_regression_auto_rescue_enabled: bool | None
+    anti_regression_rescue_winner_forward_return_max: float | None
+    anti_regression_rescue_forward_return_edge_min: float | None
+    anti_regression_rescue_forward_pf_edge_min: float | None
+    anti_regression_rescue_challenger_base_return_max: float | None
+    anti_regression_rescue_challenger_forward_pf_min: float | None
+    anti_regression_alignment_probe_enabled: bool | None
+    anti_regression_alignment_probe_top_k: int | None
+    anti_regression_alignment_probe_window_bars: int | None
+    anti_regression_alignment_probe_stride_frac: float | None
+    anti_regression_alignment_probe_use_all_windows: bool | None
+    anti_regression_alignment_probe_return_edge_min: float | None
+    anti_regression_alignment_probe_pf_edge_min: float | None
+    anti_regression_alignment_probe_min_trades: float | None
+    anti_regression_alignment_probe_require_pass: bool | None
 
 
 def build_run_dir(root: Path, prefix: str, timestamp: str, seed: int) -> Path:
@@ -227,6 +244,24 @@ def run_single_seed(seed: int, config: SweepConfig, timestamp: str) -> Dict[str,
         cmd.extend(["--atr-mult-sl", str(config.atr_mult_sl)])
     if config.tp_mult is not None:
         cmd.extend(["--tp-mult", str(config.tp_mult)])
+    if config.anti_regression_top_k is not None:
+        cmd.extend(["--anti-regression-top-k", str(config.anti_regression_top_k)])
+    if config.anti_regression_selector_mode is not None:
+        cmd.extend(["--anti-regression-selector-mode", str(config.anti_regression_selector_mode)])
+    if config.anti_regression_auto_rescue_enabled is True:
+        cmd.append("--anti-regression-auto-rescue")
+    elif config.anti_regression_auto_rescue_enabled is False:
+        cmd.append("--anti-regression-no-auto-rescue")
+    if config.anti_regression_rescue_winner_forward_return_max is not None:
+        cmd.extend(["--anti-regression-rescue-winner-forward-return-max", str(config.anti_regression_rescue_winner_forward_return_max)])
+    if config.anti_regression_rescue_forward_return_edge_min is not None:
+        cmd.extend(["--anti-regression-rescue-forward-return-edge-min", str(config.anti_regression_rescue_forward_return_edge_min)])
+    if config.anti_regression_rescue_forward_pf_edge_min is not None:
+        cmd.extend(["--anti-regression-rescue-forward-pf-edge-min", str(config.anti_regression_rescue_forward_pf_edge_min)])
+    if config.anti_regression_rescue_challenger_base_return_max is not None:
+        cmd.extend(["--anti-regression-rescue-challenger-base-return-max", str(config.anti_regression_rescue_challenger_base_return_max)])
+    if config.anti_regression_rescue_challenger_forward_pf_min is not None:
+        cmd.extend(["--anti-regression-rescue-challenger-forward-pf-min", str(config.anti_regression_rescue_challenger_forward_pf_min)])
     if config.anti_regression_horizon_rescue_enabled is True:
         cmd.append("--anti-regression-horizon-rescue")
     elif config.anti_regression_horizon_rescue_enabled is False:
@@ -251,6 +286,30 @@ def run_single_seed(seed: int, config: SweepConfig, timestamp: str) -> Dict[str,
         cmd.extend(["--anti-regression-horizon-challenger-pf-min", str(config.anti_regression_horizon_challenger_pf_min)])
     if config.anti_regression_horizon_min_trades is not None:
         cmd.extend(["--anti-regression-horizon-min-trades", str(config.anti_regression_horizon_min_trades)])
+    if config.anti_regression_alignment_probe_enabled is True:
+        cmd.append("--anti-regression-alignment-probe")
+    elif config.anti_regression_alignment_probe_enabled is False:
+        cmd.append("--anti-regression-no-alignment-probe")
+    if config.anti_regression_alignment_probe_top_k is not None:
+        cmd.extend(["--anti-regression-alignment-probe-top-k", str(config.anti_regression_alignment_probe_top_k)])
+    if config.anti_regression_alignment_probe_window_bars is not None:
+        cmd.extend(["--anti-regression-alignment-probe-window-bars", str(config.anti_regression_alignment_probe_window_bars)])
+    if config.anti_regression_alignment_probe_stride_frac is not None:
+        cmd.extend(["--anti-regression-alignment-probe-stride-frac", str(config.anti_regression_alignment_probe_stride_frac)])
+    if config.anti_regression_alignment_probe_use_all_windows is True:
+        cmd.append("--anti-regression-alignment-probe-all-windows")
+    elif config.anti_regression_alignment_probe_use_all_windows is False:
+        cmd.append("--anti-regression-alignment-probe-even-windows")
+    if config.anti_regression_alignment_probe_return_edge_min is not None:
+        cmd.extend(["--anti-regression-alignment-probe-return-edge-min", str(config.anti_regression_alignment_probe_return_edge_min)])
+    if config.anti_regression_alignment_probe_pf_edge_min is not None:
+        cmd.extend(["--anti-regression-alignment-probe-pf-edge-min", str(config.anti_regression_alignment_probe_pf_edge_min)])
+    if config.anti_regression_alignment_probe_min_trades is not None:
+        cmd.extend(["--anti-regression-alignment-probe-min-trades", str(config.anti_regression_alignment_probe_min_trades)])
+    if config.anti_regression_alignment_probe_require_pass is True:
+        cmd.append("--anti-regression-alignment-probe-require-pass")
+    elif config.anti_regression_alignment_probe_require_pass is False:
+        cmd.append("--anti-regression-alignment-probe-allow-no-pass")
 
     print("=" * 70)
     print(f"SEED {seed} | episodes={config.episodes} | output={run_dir}")
@@ -390,6 +449,17 @@ def parse_args() -> SweepConfig:
                         help="Comma-separated actions: hold,long,short,move_sl or 0-3")
     parser.add_argument("--atr-mult-sl", type=float, default=None)
     parser.add_argument("--tp-mult", type=float, default=None)
+    parser.add_argument("--anti-regression-top-k", type=int, default=None)
+    parser.add_argument("--anti-regression-selector-mode", type=str, default=None,
+                        choices=["tail_holdout", "future_first", "auto_rescue", "base_first"])
+    parser.add_argument("--anti-regression-auto-rescue", dest="anti_regression_auto_rescue_enabled", action="store_true")
+    parser.add_argument("--anti-regression-no-auto-rescue", dest="anti_regression_auto_rescue_enabled", action="store_false")
+    parser.set_defaults(anti_regression_auto_rescue_enabled=None)
+    parser.add_argument("--anti-regression-rescue-winner-forward-return-max", type=float, default=None)
+    parser.add_argument("--anti-regression-rescue-forward-return-edge-min", type=float, default=None)
+    parser.add_argument("--anti-regression-rescue-forward-pf-edge-min", type=float, default=None)
+    parser.add_argument("--anti-regression-rescue-challenger-base-return-max", type=float, default=None)
+    parser.add_argument("--anti-regression-rescue-challenger-forward-pf-min", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-rescue", dest="anti_regression_horizon_rescue_enabled", action="store_true")
     parser.add_argument("--anti-regression-no-horizon-rescue", dest="anti_regression_horizon_rescue_enabled", action="store_false")
     parser.set_defaults(anti_regression_horizon_rescue_enabled=None)
@@ -403,6 +473,21 @@ def parse_args() -> SweepConfig:
     parser.add_argument("--anti-regression-horizon-challenger-base-return-max", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-challenger-pf-min", type=float, default=None)
     parser.add_argument("--anti-regression-horizon-min-trades", type=float, default=None)
+    parser.add_argument("--anti-regression-alignment-probe", dest="anti_regression_alignment_probe_enabled", action="store_true")
+    parser.add_argument("--anti-regression-no-alignment-probe", dest="anti_regression_alignment_probe_enabled", action="store_false")
+    parser.set_defaults(anti_regression_alignment_probe_enabled=None)
+    parser.add_argument("--anti-regression-alignment-probe-top-k", type=int, default=None)
+    parser.add_argument("--anti-regression-alignment-probe-window-bars", type=int, default=None)
+    parser.add_argument("--anti-regression-alignment-probe-stride-frac", type=float, default=None)
+    parser.add_argument("--anti-regression-alignment-probe-all-windows", dest="anti_regression_alignment_probe_use_all_windows", action="store_true")
+    parser.add_argument("--anti-regression-alignment-probe-even-windows", dest="anti_regression_alignment_probe_use_all_windows", action="store_false")
+    parser.set_defaults(anti_regression_alignment_probe_use_all_windows=None)
+    parser.add_argument("--anti-regression-alignment-probe-return-edge-min", type=float, default=None)
+    parser.add_argument("--anti-regression-alignment-probe-pf-edge-min", type=float, default=None)
+    parser.add_argument("--anti-regression-alignment-probe-min-trades", type=float, default=None)
+    parser.add_argument("--anti-regression-alignment-probe-require-pass", dest="anti_regression_alignment_probe_require_pass", action="store_true")
+    parser.add_argument("--anti-regression-alignment-probe-allow-no-pass", dest="anti_regression_alignment_probe_require_pass", action="store_false")
+    parser.set_defaults(anti_regression_alignment_probe_require_pass=None)
 
     args = parser.parse_args()
 
@@ -448,6 +533,14 @@ def parse_args() -> SweepConfig:
         allow_actions=args.allow_actions,
         atr_mult_sl=args.atr_mult_sl,
         tp_mult=args.tp_mult,
+        anti_regression_top_k=args.anti_regression_top_k,
+        anti_regression_selector_mode=args.anti_regression_selector_mode,
+        anti_regression_auto_rescue_enabled=args.anti_regression_auto_rescue_enabled,
+        anti_regression_rescue_winner_forward_return_max=args.anti_regression_rescue_winner_forward_return_max,
+        anti_regression_rescue_forward_return_edge_min=args.anti_regression_rescue_forward_return_edge_min,
+        anti_regression_rescue_forward_pf_edge_min=args.anti_regression_rescue_forward_pf_edge_min,
+        anti_regression_rescue_challenger_base_return_max=args.anti_regression_rescue_challenger_base_return_max,
+        anti_regression_rescue_challenger_forward_pf_min=args.anti_regression_rescue_challenger_forward_pf_min,
         anti_regression_horizon_rescue_enabled=args.anti_regression_horizon_rescue_enabled,
         anti_regression_horizon_window_bars=args.anti_regression_horizon_window_bars,
         anti_regression_horizon_start_frac=args.anti_regression_horizon_start_frac,
@@ -459,6 +552,15 @@ def parse_args() -> SweepConfig:
         anti_regression_horizon_challenger_base_return_max=args.anti_regression_horizon_challenger_base_return_max,
         anti_regression_horizon_challenger_pf_min=args.anti_regression_horizon_challenger_pf_min,
         anti_regression_horizon_min_trades=args.anti_regression_horizon_min_trades,
+        anti_regression_alignment_probe_enabled=args.anti_regression_alignment_probe_enabled,
+        anti_regression_alignment_probe_top_k=args.anti_regression_alignment_probe_top_k,
+        anti_regression_alignment_probe_window_bars=args.anti_regression_alignment_probe_window_bars,
+        anti_regression_alignment_probe_stride_frac=args.anti_regression_alignment_probe_stride_frac,
+        anti_regression_alignment_probe_use_all_windows=args.anti_regression_alignment_probe_use_all_windows,
+        anti_regression_alignment_probe_return_edge_min=args.anti_regression_alignment_probe_return_edge_min,
+        anti_regression_alignment_probe_pf_edge_min=args.anti_regression_alignment_probe_pf_edge_min,
+        anti_regression_alignment_probe_min_trades=args.anti_regression_alignment_probe_min_trades,
+        anti_regression_alignment_probe_require_pass=args.anti_regression_alignment_probe_require_pass,
     )
 
 
@@ -498,8 +600,13 @@ def main() -> int:
     print(f"Trade gate z: {config.trade_gate_z}")
     print(f"R-multiple reward weight: {config.r_multiple_reward_weight}")
     print(f"R-multiple reward clip: {config.r_multiple_reward_clip}")
+    print(f"Selector top-k: {config.anti_regression_top_k}")
+    print(f"Selector mode: {config.anti_regression_selector_mode}")
+    print(f"Auto rescue enabled: {config.anti_regression_auto_rescue_enabled}")
     print(f"Horizon rescue enabled: {config.anti_regression_horizon_rescue_enabled}")
     print(f"Horizon window bars: {config.anti_regression_horizon_window_bars}")
+    print(f"Alignment probe enabled: {config.anti_regression_alignment_probe_enabled}")
+    print(f"Alignment probe top-k: {config.anti_regression_alignment_probe_top_k}")
     print()
 
     results = []
@@ -540,6 +647,34 @@ def main() -> int:
             "trade_gate_z": config.trade_gate_z,
             "r_multiple_reward_weight": config.r_multiple_reward_weight,
             "r_multiple_reward_clip": config.r_multiple_reward_clip,
+            "anti_regression_top_k": config.anti_regression_top_k,
+            "anti_regression_selector_mode": config.anti_regression_selector_mode,
+            "anti_regression_auto_rescue_enabled": config.anti_regression_auto_rescue_enabled,
+            "anti_regression_rescue_winner_forward_return_max": config.anti_regression_rescue_winner_forward_return_max,
+            "anti_regression_rescue_forward_return_edge_min": config.anti_regression_rescue_forward_return_edge_min,
+            "anti_regression_rescue_forward_pf_edge_min": config.anti_regression_rescue_forward_pf_edge_min,
+            "anti_regression_rescue_challenger_base_return_max": config.anti_regression_rescue_challenger_base_return_max,
+            "anti_regression_rescue_challenger_forward_pf_min": config.anti_regression_rescue_challenger_forward_pf_min,
+            "anti_regression_horizon_rescue_enabled": config.anti_regression_horizon_rescue_enabled,
+            "anti_regression_horizon_window_bars": config.anti_regression_horizon_window_bars,
+            "anti_regression_horizon_start_frac": config.anti_regression_horizon_start_frac,
+            "anti_regression_horizon_end_frac": config.anti_regression_horizon_end_frac,
+            "anti_regression_horizon_candidate_limit": config.anti_regression_horizon_candidate_limit,
+            "anti_regression_horizon_incumbent_return_max": config.anti_regression_horizon_incumbent_return_max,
+            "anti_regression_horizon_return_edge_min": config.anti_regression_horizon_return_edge_min,
+            "anti_regression_horizon_pf_edge_min": config.anti_regression_horizon_pf_edge_min,
+            "anti_regression_horizon_challenger_base_return_max": config.anti_regression_horizon_challenger_base_return_max,
+            "anti_regression_horizon_challenger_pf_min": config.anti_regression_horizon_challenger_pf_min,
+            "anti_regression_horizon_min_trades": config.anti_regression_horizon_min_trades,
+            "anti_regression_alignment_probe_enabled": config.anti_regression_alignment_probe_enabled,
+            "anti_regression_alignment_probe_top_k": config.anti_regression_alignment_probe_top_k,
+            "anti_regression_alignment_probe_window_bars": config.anti_regression_alignment_probe_window_bars,
+            "anti_regression_alignment_probe_stride_frac": config.anti_regression_alignment_probe_stride_frac,
+            "anti_regression_alignment_probe_use_all_windows": config.anti_regression_alignment_probe_use_all_windows,
+            "anti_regression_alignment_probe_return_edge_min": config.anti_regression_alignment_probe_return_edge_min,
+            "anti_regression_alignment_probe_pf_edge_min": config.anti_regression_alignment_probe_pf_edge_min,
+            "anti_regression_alignment_probe_min_trades": config.anti_regression_alignment_probe_min_trades,
+            "anti_regression_alignment_probe_require_pass": config.anti_regression_alignment_probe_require_pass,
         },
         "runs": results,
         "aggregate": summarize_results(results),

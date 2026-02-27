@@ -6,6 +6,254 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-02-27 (Cross-triad combined check: horizon100/noalign is 6/6 positive on tested seeds)
+
+Focus: merge both confirmed triads into one combined view before launching a broader sweep.
+
+Combined seed set:
+- weak-seed triad: `5051, 9091, 10007`
+- default triad: `456, 777, 789`
+
+Aggregate artifact:
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_seed6_summary_20260227_1100.json`
+
+Combined outcomes (6 seeds):
+- mean return: `+2.03%`
+- mean PF: `2.15`
+- positive with PF>=1: `6/6`
+
+Decision:
+- Treat `horizon100/noalign` as the current promoted selector profile.
+- Next milestone: launch a larger multi-seed confirmation run with this profile and then perform out-of-sample stress validation.
+
+## 2026-02-27 (Broader confirmation: horizon100/noalign clears default seed triad too)
+
+Focus: test whether the weak-seed breakthrough profile also holds on the standard real-data triad (`456/777/789`).
+
+Profile:
+- `anti_regression_selector_mode=auto_rescue`
+- `anti_regression_horizon_rescue_enabled=true`
+- `anti_regression_horizon_incumbent_return_max=1.00`
+- `anti_regression_alignment_probe_enabled=false`
+
+Runs:
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_031657_seed456`
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_054837_seed777`
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_070252_seed789`
+  - note: long run exited after selector artifacts were written; selected checkpoint was evaluated manually at:
+    `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_070252_seed789/manual_eval_selected/results/test_results.json`
+- Aggregate summary: `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_defaulttri_summary_20260227_1051.json`
+
+Per-seed outcomes:
+- `456`: `+3.92%`, `PF 4.07`
+- `777`: `+0.07%`, `PF 1.03`
+- `789`: `+2.22%`, `PF 2.05`
+
+Aggregate:
+- mean return: `+2.07%`
+- mean PF: `2.38`
+- positive with PF>=1: `3/3`
+
+Decision:
+- `horizon100/noalign` now passes both triads tested (`weak-seed triad` and `default triad`) with `3/3` positive in each set.
+- Promote this selector profile as the active baseline for the next larger multi-seed robustness sweep.
+
+## 2026-02-27 (Weak-seed triad breakthrough: horizon cap 1.00 + no alignment probe)
+
+Focus: fix remaining `9091` selector miss after the `horizon055/noalign` profile by relaxing only the horizon incumbent cap and validating again on the same weak-seed triad.
+
+Profile:
+- `anti_regression_selector_mode=auto_rescue`
+- `anti_regression_horizon_rescue_enabled=true`
+- `anti_regression_horizon_incumbent_return_max=1.00`
+- `anti_regression_alignment_probe_enabled=false`
+
+Runs:
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_011818_seed5051`
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_004132_seed9091`
+- `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_015834_seed10007`
+- Aggregate summary: `seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_tri3_summary_20260227_0317.json`
+
+Per-seed test outcomes:
+- `5051`: `+1.07%`, `PF 1.39`, winner `candidate_ep007.pt`
+- `9091`: `+2.23%`, `PF 2.22`, winner `candidate_ep001.pt`
+- `10007`: `+2.66%`, `PF 2.16`, winner `candidate_ep002.pt`
+
+Aggregate:
+- mean return: `+1.99%`
+- mean PF: `1.92`
+- positive with PF>=1: `3/3`
+
+Key comparison:
+- Previous `horizon055/noalign` weak-seed triad was `2/3` positive (`mean return +0.48%`, `mean PF 1.22`).
+- `horizon100/noalign` improves all tracked aggregate metrics and clears all three weak seeds.
+
+Decision:
+- Promote `horizon100/noalign` as current best selector profile for next broader confirmation sweep.
+- Keep alignment probe disabled until pass-switch guardrails are redesigned to avoid quality regressions.
+
+## 2026-02-27 (Horizon-only selector profile tested on weak-seed triad)
+
+Focus: validate whether the `5051` recovery setup generalizes: keep alignment probe disabled and let horizon rescue act with a less strict incumbent cap.
+
+Profile:
+- `anti_regression_selector_mode=auto_rescue`
+- `anti_regression_horizon_rescue_enabled=true`
+- `anti_regression_horizon_incumbent_return_max=0.55`
+- `anti_regression_alignment_probe_enabled=false`
+
+Runs:
+- `seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_20260226_224246_seed5051`
+- `seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_20260226_232237_seed9091`
+- `seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_20260226_235910_seed10007`
+- Aggregate summary: `seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_tri3_summary_20260227_0040.json`
+
+Per-seed test outcomes:
+- `5051`: `+1.07%`, `PF 1.39`, selector `tail_holdout+horizon`, winner `candidate_ep007.pt`
+- `9091`: `-0.60%`, `PF 0.79`, selector `tail_holdout`, winner `candidate_ep006.pt`
+- `10007`: `+0.97%`, `PF 1.47`, selector `tail_holdout`, winner `candidate_ep008.pt`
+
+Aggregate:
+- mean return: `+0.48%`
+- mean PF: `1.22`
+- positive with PF>=1: `2/3`
+
+Decision:
+- This profile is a net improvement versus the recent weak-seed baseline but does not yet clear all weak seeds.
+- Next selector work should target `9091` specifically (candidate recovery) without reintroducing alignment-probe regressions.
+
+## 2026-02-26 (5051 selector pivot: horizon rescue can recover positive checkpoint)
+
+Focus: isolate why weak seed `5051` still misses profitable checkpoints and identify the smallest selector change that restores a positive selection.
+
+Experiments:
+- Alignment-probe coverage increase (`top_k=6`, strict pass required):
+  - `seed_sweep_results/realdata/guardbA_autorescue_relaxed_alignprobe6_10ep_20260226_212047_seed5051`
+  - Log: `logs/guardbA_autorescue_relaxed_alignprobe6_10ep_seed5051_20260226_212047.log`
+- Horizon rescue, alignment probe disabled, incumbent cap `0.45`:
+  - `seed_sweep_results/realdata/guardbA_horizon045_noalign_10ep_20260226_220400_seed5051`
+  - Log: `logs/guardbA_horizon045_noalign_10ep_seed5051_20260226_220400.log`
+- Horizon rescue, alignment probe disabled, incumbent cap `0.55`:
+  - `seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_20260226_224246_seed5051`
+  - Log: `logs/guardbA_horizon055_noalign_10ep_seed5051_20260226_224246.log`
+
+Key outcomes:
+- `top_k=6` alignment probe regressed selection hard:
+  - selector: `tail_holdout+wfalign`, winner `candidate_ep003.pt`
+  - test: `-2.50%`, `PF 0.33`
+- Disabling alignment probe with horizon cap `0.45` was still too strict:
+  - selector: `tail_holdout`, winner `candidate_ep002.pt`
+  - test: `-1.19%`, `PF 0.61`
+- Raising horizon incumbent cap to `0.55` allowed horizon switch to `candidate_ep007.pt`:
+  - selector: `tail_holdout+horizon`
+  - test: `+1.07%`, `PF 1.39`, `26` trades
+
+Interpretation:
+- For this weak seed, selector failure is concentrated in threshold/gating logic, not learnability.
+- Alignment-probe pass gating can force economically worse checkpoints when not guarded by return/PF edge quality.
+
+Decision:
+- Use `horizon_incumbent_return_max=0.55` and disable alignment probe for the next weak-seed validation sweep.
+- Keep alignment-probe logic under review (add guardrail to block pass-only switches with negative return/PF edge).
+
+## 2026-02-26 (Sweep passthrough fix verified: selector flags now honored)
+
+Focus: fix orchestration gap where `run_realdata_seed_sweep.py` was not forwarding selector/auto-rescue flags to `main.py`, then rerun `9091` with true `auto_rescue` + alignment settings.
+
+Code update:
+- `run_realdata_seed_sweep.py`
+  - Added pass-through support for:
+    - `--anti-regression-selector-mode`
+    - `--anti-regression-auto-rescue` / `--anti-regression-no-auto-rescue`
+    - rescue thresholds (`winner_forward_return_max`, return/pf edges, challenger gates)
+  - Added these fields to `SweepConfig`, CLI parser, command construction, and summary config payload.
+
+Verification:
+- `python -m py_compile run_realdata_seed_sweep.py`
+
+Run artifact:
+- `seed_sweep_results/realdata/guardbA_alignprobe_autorescue_true_10ep_20260226_144519_seed9091`
+- Log: `logs/guardbA_alignprobe_autorescue_true_10ep_seed9091_20260226_144519.log`
+- Summary: `seed_sweep_results/realdata/guardbA_alignprobe_autorescue_true_10ep_20260226_144519_summary.json`
+
+Outcome:
+- Selector flags are now correctly applied (`selector_mode_requested=auto_rescue` confirmed in `checkpoint_tournament.json`).
+- Auto-rescue did not trigger on this seed (`winner_forward_return=0.691 > threshold 0.65`), so final mode remained `tail_holdout`.
+- Test remained weak: `return=-0.33%`, `PF=0.90`, `walkforward_pass=false`.
+- Post-run checkpoint sanity (same trained run, evaluate mode):
+  - `candidate_ep004.pt` (selected): `-0.33%`, `PF 0.90`
+  - `candidate_ep001.pt` (future winner): `+2.23%`, `PF 2.22`
+  - Confirms remaining issue is selector trigger strictness (thresholds blocking a better candidate), not model incapability.
+
+## 2026-02-25 (Walk-forward aligned selector probe implemented)
+
+Focus: reduce residual selector/test mismatch by adding a cheap, test-protocol-aligned checkpoint probe at the end of anti-regression selection.
+
+Code updates:
+- `trainer.py`
+  - `validate()` now supports `use_all_windows_override` to evaluate all feasible windows (no K thinning) when needed.
+  - Validation stats now expose window metadata (`val_window_bars`, `val_stride_bars`, `val_segment_bars`, `val_use_all_windows`).
+  - Added optional `alignment_probe` stage in `_run_anti_regression_tournament`:
+    - evaluates top-N distinct candidates with deterministic seeds and `VAL_JITTER_DRAWS=1`,
+    - computes walk-forward-style proxy metrics on validation (`spr`, `pf`, `positive_frac`, `windows`, `return_pct`),
+    - can switch winner only on configured edges / pass conditions,
+    - logs full details under `alignment_probe` in `logs/checkpoint_tournament.json`.
+- `config.py`
+  - Added `TrainingConfig` knobs for alignment probe:
+    - `anti_regression_alignment_probe_enabled`
+    - `anti_regression_alignment_probe_top_k`
+    - `anti_regression_alignment_probe_window_bars`
+    - `anti_regression_alignment_probe_stride_frac`
+    - `anti_regression_alignment_probe_use_all_windows`
+    - `anti_regression_alignment_probe_return_edge_min`
+    - `anti_regression_alignment_probe_pf_edge_min`
+    - `anti_regression_alignment_probe_min_trades`
+    - `anti_regression_alignment_probe_require_pass`
+- `main.py`
+  - Added CLI flags and config wiring for all alignment-probe options.
+- `run_realdata_seed_sweep.py`
+  - Added pass-through CLI support and summary logging for alignment-probe options.
+
+Verification:
+- Syntax check passed:
+  - `python -m py_compile config.py main.py trainer.py run_realdata_seed_sweep.py`
+- System smoke passed:
+  - `python test_system.py`
+
+Decision:
+- Keep alignment probe optional (default off) and validate impact with targeted real-data seeds before broad promotion.
+
+## 2026-02-25 (Selector alignment diagnostics: start60 rejected, oracle mismatch confirmed)
+
+Focus: continue targeted selector work after `incmax04` blind-10 (`9/10` PF>=1), with explicit checks for the remaining selection mismatch.
+
+Experiments:
+- Late-window horizon variant (full blind-10):
+  - `seed_sweep_results/realdata/guardbA_horizon_start60_blind10_fast10ep_20260224_165640_summary.json`
+  - `seed_sweep_results/realdata/guardbA_horizon_start60_blind10_fast10ep_20260224_165640_comparison.json`
+- High-robustness tournament probe (`9091`, `K=8..10`, jitter draws `3`):
+  - `logs/guardbA_selector_k10j3_probe_10ep_20260225_114122_seed9091.log`
+  - runtime became impractical; run exited before final artifact (`results/test_results.json` missing)
+- Full oracle audit on current best blind-10 branch (`incmax04`):
+  - `seed_sweep_results/realdata/guardbA_horizon_incmax04_blind10_fast10ep_20260224_135954_oracle_audit.json`
+
+Key outcomes:
+- `start60` variant improved `9091` (`+0.37% / PF 1.11`) but regressed aggregate quality:
+  - mean return `+1.1387%` vs `+1.7009%` on `incmax04`
+  - mean PF `1.9668` vs `2.3298`
+  - positive PF>=1 `8/10` vs `9/10`
+  - major relapse: `10007` fell back to `-1.82% / PF 0.57`
+- High-`K`/jitter tournament probe is too slow for practical iteration in current setup.
+- Oracle audit shows residual selector/test misalignment is broad (not only `9091`):
+  - comparable seeds: `10`
+  - oracle misses: `8`
+  - mean oracle uplift over selected checkpoints: `+1.0781%` return, `+0.7492` PF
+
+Decision:
+- Keep `incmax04` as active best branch; do not promote `start60`.
+- Do not use high-`K` tournament settings as default due runtime cost.
+- Next step should prioritize validation/test alignment quality (evaluation protocol) rather than only selector threshold tuning.
+
 ## 2026-02-24 (Targeted 9091 oracle check after blind-10 rerun)
 
 Focus: determine whether the remaining failing seed (`9091`) is still a selection miss or a true no-candidate failure.

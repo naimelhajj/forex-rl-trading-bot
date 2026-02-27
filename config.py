@@ -223,6 +223,16 @@ class TrainingConfig:
     anti_regression_horizon_challenger_base_return_max: float = 1.0
     anti_regression_horizon_challenger_pf_min: float = 1.35
     anti_regression_horizon_min_trades: float = 10.0
+    # Optional walk-forward aligned selector probe (top-N candidates only).
+    anti_regression_alignment_probe_enabled: bool = False
+    anti_regression_alignment_probe_top_k: int = 2
+    anti_regression_alignment_probe_window_bars: Optional[int] = None
+    anti_regression_alignment_probe_stride_frac: Optional[float] = None
+    anti_regression_alignment_probe_use_all_windows: bool = True
+    anti_regression_alignment_probe_return_edge_min: float = 0.10
+    anti_regression_alignment_probe_pf_edge_min: float = 0.10
+    anti_regression_alignment_probe_min_trades: float = 10.0
+    anti_regression_alignment_probe_require_pass: bool = True
 
 
 @dataclass
