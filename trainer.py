@@ -2282,14 +2282,28 @@ class Trainer:
                 )
 
         alignment_summary = {"enabled": bool(alignment_probe_enabled), "evaluated": False}
-        if alignment_probe_enabled and len(ranking_pool) >= 2:
+        if alignment_probe_enabled and len(tournament) >= 2:
             tournament_by_name = {
                 item.get("filename"): item for item in tournament if item.get("filename")
             }
             incumbent_name = winner.get("filename")
             probe_candidates = []
             seen_probe_keys = set()
-            for item in ranking_pool:
+            # Prefer feasible ranking-pool candidates, but backfill from the full
+            # tournament so alignment probe can still run when the feasible pool
+            # collapses to a single candidate.
+            tournament_ranked = sorted(
+                tournament,
+                key=lambda x: (
+                    x.get("composite_score", -1e9),
+                    x.get("robust_return_pct", -1e9),
+                    x.get("robust_pf", -1e9),
+                    x.get("episode", -1),
+                ),
+                reverse=True,
+            )
+            probe_source = list(ranking_pool) + tournament_ranked
+            for item in probe_source:
                 key = _candidate_identity_key(item)
                 if key is None or key in seen_probe_keys:
                     continue
@@ -2307,6 +2321,8 @@ class Trainer:
                     probe_candidates.append(incumbent_item)
 
             probe_candidates = [x for x in probe_candidates if x.get("filename")]
+            alignment_summary["ranking_pool_size"] = len(ranking_pool)
+            alignment_summary["tournament_size"] = len(tournament)
             alignment_summary["probe_pool_size"] = len(probe_candidates)
             alignment_summary["probe_pool_filenames"] = [
                 x.get("filename") for x in probe_candidates
