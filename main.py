@@ -707,33 +707,40 @@ def evaluate_agent(agent, test_env, config: Config):
         )
 
     def _run_walkforward_slice(env, start_idx, end_idx):
-        state = env.reset()
-        if start_idx > 0:
-            env._frame_stack = None
-            stack_n = int(getattr(env, "stack_n", 1))
-            start_fill = max(0, int(start_idx) - max(stack_n - 1, 0))
-            for idx in range(start_fill, int(start_idx) + 1):
-                env.current_step = idx
+        orig_max_steps = getattr(env, "max_steps", None)
+        window_len = max(1, int(end_idx) - int(start_idx))
+        if orig_max_steps is not None and int(orig_max_steps) < window_len:
+            env.max_steps = int(window_len)
+        try:
+            state = env.reset()
+            if start_idx > 0:
+                env._frame_stack = None
+                stack_n = int(getattr(env, "stack_n", 1))
+                start_fill = max(0, int(start_idx) - max(stack_n - 1, 0))
+                for idx in range(start_fill, int(start_idx) + 1):
+                    env.current_step = idx
+                    state = env._get_state()
+            else:
                 state = env._get_state()
-        else:
-            state = env._get_state()
-        if hasattr(env, "equity_history"):
-            env.equity_history = [getattr(env, "equity", config.environment.initial_balance)]
-        if hasattr(env, "trade_history"):
-            env.trade_history = []
+            if hasattr(env, "equity_history"):
+                env.equity_history = [getattr(env, "equity", config.environment.initial_balance)]
+            if hasattr(env, "trade_history"):
+                env.trade_history = []
 
-        base_timestamp = datetime(2024, 1, 1)
-        timestamps = []
-        equity_curve = []
+            base_timestamp = datetime(2024, 1, 1)
+            timestamps = []
+            equity_curve = []
 
-        done = False
-        while not done and env.current_step < end_idx:
-            timestamps.append(_resolve_step_timestamp(env, base_timestamp))
-            mask = getattr(env, "legal_action_mask", lambda: None)()
-            action = agent.select_action(state, explore=False, mask=mask, eval_mode=True, env=env)
-            next_state, _, done, info = env.step(action)
-            equity_curve.append(info.get("equity", getattr(env, "equity", 0.0)))
-            state = next_state
+            done = False
+            while not done and env.current_step < end_idx:
+                timestamps.append(_resolve_step_timestamp(env, base_timestamp))
+                mask = getattr(env, "legal_action_mask", lambda: None)()
+                action = agent.select_action(state, explore=False, mask=mask, eval_mode=True, env=env)
+                next_state, _, done, info = env.step(action)
+                equity_curve.append(info.get("equity", getattr(env, "equity", 0.0)))
+                state = next_state
+        finally:
+            env.max_steps = orig_max_steps
 
         trade_stats = env.get_trade_statistics()
         trade_pnls = [t.get("pnl", 0.0) for t in env.trade_history if isinstance(t, dict)]
@@ -880,10 +887,8 @@ def evaluate_agent(agent, test_env, config: Config):
 
     walkforward = {}
     if fitness_mode == "spr":
+        # Walk-forward should reflect the full test split, not training episode caps.
         total_bars = len(test_env.data)
-        max_steps = getattr(test_env, "max_steps", None)
-        if max_steps:
-            total_bars = min(total_bars, int(max_steps))
         windows = _walkforward_windows(total_bars)
         wf_results = [_run_walkforward_slice(test_env, start, end) for start, end in windows]
         sprs = [w["spr"] for w in wf_results]
@@ -1045,6 +1050,11 @@ def main():
                         help='Apply broker defaults (costs/leverage) for a known account profile')
     parser.add_argument('--eval-zero-costs', action='store_true',
                         help='Zero spread/commission/slippage in evaluate mode')
+    parser.add_argument('--eval-enable-trade-gating', dest='eval_disable_trade_gating', action='store_false',
+                        help='Enable trade-gating during evaluation action selection')
+    parser.add_argument('--eval-disable-trade-gating', dest='eval_disable_trade_gating', action='store_true',
+                        help='Disable trade-gating during evaluation action selection')
+    parser.set_defaults(eval_disable_trade_gating=None)
     parser.add_argument('--spread', type=float, default=None,
                         help='Override spread (applies to train/eval)')
     parser.add_argument('--commission', type=float, default=None,
@@ -1507,6 +1517,8 @@ def main():
         config.VAL_MIN_K = args.val_min_k
     if args.val_max_k is not None:
         config.VAL_MAX_K = args.val_max_k
+    if args.eval_disable_trade_gating is not None:
+        config.VAL_DISABLE_TRADE_GATING = bool(args.eval_disable_trade_gating)
     
     # Override seed if specified
     if args.seed is not None:

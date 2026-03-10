@@ -1325,10 +1325,56 @@ class Trainer:
         )
         top_k = max(1, int(getattr(training_cfg, "anti_regression_eval_top_k", 6)))
         shortlist = ranked[:top_k]
+        anchor_budget = max(0, int(getattr(training_cfg, "anti_regression_anchor_budget", 8)))
+
+        def _append_shortlist(candidate: Optional[Dict[str, object]]) -> bool:
+            if not candidate:
+                return False
+            name = candidate.get("filename")
+            if not name:
+                return False
+            if any(existing.get("filename") == name for existing in shortlist):
+                return False
+            shortlist.append(candidate)
+            return True
+
         if ranked:
             newest = max(ranked, key=lambda x: x.get("episode", -1))
-            if newest not in shortlist:
-                shortlist.append(newest)
+            oldest = min(ranked, key=lambda x: x.get("episode", -1))
+            _append_shortlist(newest)
+
+            max_episode = int(newest.get("episode", -1))
+            anchor_candidates = [oldest]
+            if max_episode > 0:
+                # Keep temporal anchors so mid-run winners remain visible even
+                # when EMA/top-k ranking drifts toward late checkpoints.
+                target_episodes = {1, max_episode}
+                target_episodes.add(max(1, int(round(max_episode * 0.25))))
+                midpoint_low = max(1, max_episode // 2)
+                midpoint_high = max(1, min(max_episode, midpoint_low + 1))
+                target_episodes.add(midpoint_low)
+                target_episodes.add(midpoint_high)
+                target_episodes.add(max(1, int(round(max_episode * 0.75))))
+
+                def _nearest_by_episode(target_episode: int) -> Dict[str, object]:
+                    return min(
+                        ranked,
+                        key=lambda x: (
+                            abs(int(x.get("episode", -1)) - int(target_episode)),
+                            -float(x.get("ema_fitness", -1e9)),
+                            -float(x.get("val_fitness", -1e9)),
+                        ),
+                    )
+
+                for target_episode in sorted(target_episodes):
+                    anchor_candidates.append(_nearest_by_episode(target_episode))
+
+            anchors_added = 0
+            for candidate in anchor_candidates:
+                if anchors_added >= anchor_budget:
+                    break
+                if _append_shortlist(candidate):
+                    anchors_added += 1
 
         best_model_name = "best_model.pt"
         best_model_path = self.checkpoint_dir / best_model_name
@@ -2303,14 +2349,78 @@ class Trainer:
                 reverse=True,
             )
             probe_source = list(ranking_pool) + tournament_ranked
-            for item in probe_source:
+
+            def _append_probe_candidate(item: Optional[Dict[str, object]]) -> None:
+                if not item:
+                    return
                 key = _candidate_identity_key(item)
                 if key is None or key in seen_probe_keys:
-                    continue
+                    return
                 seen_probe_keys.add(key)
                 probe_candidates.append(item)
+
+            for item in probe_source:
+                _append_probe_candidate(item)
                 if len(probe_candidates) >= alignment_probe_top_k:
                     break
+
+            # Keep metric anchors in the probe pool so strong outlier checkpoints
+            # are still compared even if they fall outside rank-based top-k.
+            if tournament_ranked:
+                metric_anchors = [
+                    tournament_ranked[0],  # best composite
+                    max(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("robust_return_pct", -1e9),
+                            x.get("robust_pf", -1e9),
+                            x.get("episode", -1),
+                        ),
+                    ),
+                    max(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("robust_pf", -1e9),
+                            x.get("robust_return_pct", -1e9),
+                            x.get("episode", -1),
+                        ),
+                    ),
+                    max(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("base_return_pct", -1e9),
+                            x.get("base_pf", -1e9),
+                            x.get("episode", -1),
+                        ),
+                    ),
+                    max(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("base_pf", -1e9),
+                            x.get("base_return_pct", -1e9),
+                            x.get("episode", -1),
+                        ),
+                    ),
+                    max(tournament_ranked, key=lambda x: x.get("episode", -1)),
+                    max(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("forward_return_min", -1e9),
+                            x.get("forward_pf_min", -1e9),
+                            x.get("episode", -1),
+                        ),
+                    ),
+                    max(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("forward_pf_min", -1e9),
+                            x.get("forward_return_min", -1e9),
+                            x.get("episode", -1),
+                        ),
+                    ),
+                ]
+                for candidate in metric_anchors:
+                    _append_probe_candidate(candidate)
 
             if (
                 incumbent_name
@@ -2318,7 +2428,7 @@ class Trainer:
             ):
                 incumbent_item = tournament_by_name.get(incumbent_name)
                 if incumbent_item is not None:
-                    probe_candidates.append(incumbent_item)
+                    _append_probe_candidate(incumbent_item)
 
             probe_candidates = [x for x in probe_candidates if x.get("filename")]
             alignment_summary["ranking_pool_size"] = len(ranking_pool)
