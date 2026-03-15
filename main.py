@@ -1280,6 +1280,12 @@ def main():
                         help='Keep pass-positive candidates with return >= this fraction of best pass-positive probe return before temporal tie-break')
     parser.add_argument('--anti-regression-alignment-probe-temporal-min-episode', type=int, default=None,
                         help='Minimum episode eligible for temporal-bias challenger selection')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-return-slack-pct', type=float, default=None,
+                        help='Allow a temporal-bias challenger to trail incumbent probe return by up to this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-pf-slack', type=float, default=None,
+                        help='Allow a temporal-bias challenger to trail incumbent probe PF by up to this amount')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-positive-frac-slack', type=float, default=None,
+                        help='Allow a temporal-bias challenger to trail incumbent positive-fraction by up to this amount')
     
     args = parser.parse_args()
     
@@ -1519,6 +1525,21 @@ def main():
         config.training.anti_regression_alignment_probe_temporal_min_episode = max(
             1,
             int(args.anti_regression_alignment_probe_temporal_min_episode),
+        )
+    if args.anti_regression_alignment_probe_temporal_return_slack_pct is not None:
+        config.training.anti_regression_alignment_probe_temporal_return_slack_pct = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_return_slack_pct),
+        )
+    if args.anti_regression_alignment_probe_temporal_pf_slack is not None:
+        config.training.anti_regression_alignment_probe_temporal_pf_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_pf_slack),
+        )
+    if args.anti_regression_alignment_probe_temporal_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_temporal_positive_frac_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_positive_frac_slack),
         )
     
     # Override episodes if specified

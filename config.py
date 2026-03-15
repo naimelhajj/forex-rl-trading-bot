@@ -238,6 +238,9 @@ class TrainingConfig:
     anti_regression_alignment_probe_temporal_bias_enabled: bool = True
     anti_regression_alignment_probe_temporal_keep_return_frac: float = 0.60
     anti_regression_alignment_probe_temporal_min_episode: int = 5
+    anti_regression_alignment_probe_temporal_return_slack_pct: float = 0.30
+    anti_regression_alignment_probe_temporal_pf_slack: float = 0.15
+    anti_regression_alignment_probe_temporal_positive_frac_slack: float = 0.15
 
 
 @dataclass

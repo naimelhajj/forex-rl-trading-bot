@@ -1576,6 +1576,36 @@ class Trainer:
                 )
             ),
         )
+        alignment_probe_temporal_return_slack_pct = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_return_slack_pct",
+                    0.30,
+                )
+            ),
+        )
+        alignment_probe_temporal_pf_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_pf_slack",
+                    0.15,
+                )
+            ),
+        )
+        alignment_probe_temporal_positive_frac_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_positive_frac_slack",
+                    0.15,
+                )
+            ),
+        )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
         tournament_jitter_draws = getattr(training_cfg, "anti_regression_eval_jitter_draws", None)
@@ -2635,25 +2665,52 @@ class Trainer:
                 challenger_probe = probe_results.get(challenger_name) if challenger_name else None
                 return_edge = 0.0
                 pf_edge = 0.0
+                positive_frac_edge = 0.0
                 switched = False
                 if incumbent_probe is not None and challenger_probe is not None:
                     return_edge = float(challenger_probe["return_pct"] - incumbent_probe["return_pct"])
                     pf_edge = float(challenger_probe["pf"] - incumbent_probe["pf"])
+                    positive_frac_edge = float(
+                        challenger_probe.get("positive_frac", 0.0)
+                        - incumbent_probe.get("positive_frac", 0.0)
+                    )
                     challenger_passes = bool(challenger_probe.get("pass", False))
                     if not alignment_probe_require_pass:
                         challenger_passes = True
 
+                    temporal_edge_gate = False
+                    if challenger_from_temporal_bias and challenger_name in tournament_by_name:
+                        challenger_episode = int(
+                            tournament_by_name[challenger_name].get("episode", 10**9)
+                        )
+                        incumbent_episode = int(
+                            tournament_by_name.get(incumbent_name, {}).get("episode", 10**9)
+                        )
+                        temporal_edge_gate = bool(
+                            challenger_episode < incumbent_episode
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and (
+                                challenger_probe["return_pct"] + alignment_probe_temporal_return_slack_pct
+                                >= incumbent_probe["return_pct"]
+                            )
+                            and (
+                                challenger_probe["pf"] + alignment_probe_temporal_pf_slack
+                                >= incumbent_probe["pf"]
+                            )
+                            and (
+                                challenger_probe.get("positive_frac", 0.0)
+                                + alignment_probe_temporal_positive_frac_slack
+                                >= incumbent_probe.get("positive_frac", 0.0)
+                            )
+                        )
+
                     edge_gate = bool(
-                        return_edge >= alignment_probe_return_edge_min
-                        and (
-                            (
-                                pf_edge >= alignment_probe_pf_edge_min
-                            )
-                            if not challenger_from_temporal_bias
-                            else (
-                                float(challenger_probe.get("positive_frac", 0.0))
-                                >= float(incumbent_probe.get("positive_frac", 0.0))
-                            )
+                        temporal_edge_gate
+                        if challenger_from_temporal_bias
+                        else (
+                            return_edge >= alignment_probe_return_edge_min
+                            and pf_edge >= alignment_probe_pf_edge_min
                         )
                     )
 
@@ -2697,6 +2754,9 @@ class Trainer:
                             "temporal_bias_enabled": bool(alignment_probe_temporal_bias_enabled),
                             "temporal_keep_return_frac": float(alignment_probe_temporal_keep_return_frac),
                             "temporal_min_episode": int(alignment_probe_temporal_min_episode),
+                            "temporal_return_slack_pct": float(alignment_probe_temporal_return_slack_pct),
+                            "temporal_pf_slack": float(alignment_probe_temporal_pf_slack),
+                            "temporal_positive_frac_slack": float(alignment_probe_temporal_positive_frac_slack),
                             "walkforward_min_windows": int(self.config.fitness.test_walkforward_min_windows),
                             "walkforward_min_spr": float(self.config.fitness.test_walkforward_min_spr),
                             "walkforward_min_pf": float(self.config.fitness.test_walkforward_min_pf),
@@ -2715,6 +2775,11 @@ class Trainer:
                         "challenger_probe": challenger_probe,
                         "return_edge": float(return_edge),
                         "pf_edge": float(pf_edge),
+                        "positive_frac_edge": float(positive_frac_edge),
+                        "temporal_return_slack_pct": float(alignment_probe_temporal_return_slack_pct),
+                        "temporal_pf_slack": float(alignment_probe_temporal_pf_slack),
+                        "temporal_positive_frac_slack": float(alignment_probe_temporal_positive_frac_slack),
+                        "temporal_edge_gate": bool(temporal_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
                         "switched": bool(switched),
                         "winner_after_alignment": winner.get("filename"),
                         "probe_results": probe_results,

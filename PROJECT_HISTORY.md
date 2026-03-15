@@ -54,6 +54,15 @@ Decision:
 - the remaining bottleneck is automatic checkpoint selection, not model learnability
 - next selector work should explicitly favor `ep006` / `ep009` type early robust checkpoints over later fragile winners like `ep010`
 
+Follow-up selector replay:
+- added temporal slack gates so an earlier pass-positive checkpoint can beat a later incumbent when it is only modestly worse on probe return/PF/positive-fraction
+- offline replay on saved tournament artifacts now flips:
+  - corrected `seed8087` run: `candidate_ep010.pt` -> `candidate_ep006.pt`
+  - `seed1011 baseline17`: `candidate_ep010.pt` -> `candidate_ep009.pt`
+- both replay-selected checkpoints already have direct held-out test confirmations:
+  - `seed8087 ep006`: `+1.22%`, `PF 1.46`, walk-forward `pass`
+  - `seed1011 ep009`: `+0.83%`, `PF 1.31`, walk-forward `pass`
+
 ## 2026-02-27 (Larger confirmation step: +4 seed extension and 10-seed aggregate)
 
 Focus: execute the next robustness step after promoting `horizon100/noalign` by adding four unseen seeds.
