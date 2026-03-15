@@ -1160,6 +1160,8 @@ def main():
                         help='How many candidate checkpoints to retain during training')
     parser.add_argument('--anti-regression-min-validations', type=int, default=None,
                         help='Minimum validations required before anti-regression tournament')
+    parser.add_argument('--anti-regression-full-shortlist-episode-cutoff', type=int, default=None,
+                        help='Evaluate every candidate checkpoint when the run episode count is at or below this cutoff')
     parser.add_argument('--anti-regression-selector-mode', type=str, default=None,
                         choices=['tail_holdout', 'future_first', 'auto_rescue', 'base_first'],
                         help='Checkpoint selector mode: tail_holdout (default), future_first, auto_rescue, or base_first')
@@ -1269,6 +1271,15 @@ def main():
     parser.add_argument('--anti-regression-alignment-probe-allow-no-pass', dest='anti_regression_alignment_probe_require_pass', action='store_false',
                         help='Allow alignment probe challenger even without walk-forward-style pass')
     parser.set_defaults(anti_regression_alignment_probe_require_pass=None)
+    parser.add_argument('--anti-regression-alignment-probe-temporal-bias', dest='anti_regression_alignment_probe_temporal_bias_enabled', action='store_true',
+                        help='Bias alignment-probe challenger selection toward earlier checkpoints when returns are comparable')
+    parser.add_argument('--anti-regression-alignment-probe-no-temporal-bias', dest='anti_regression_alignment_probe_temporal_bias_enabled', action='store_false',
+                        help='Disable temporal bias in alignment-probe challenger selection')
+    parser.set_defaults(anti_regression_alignment_probe_temporal_bias_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-temporal-keep-return-frac', type=float, default=None,
+                        help='Keep pass-positive candidates with return >= this fraction of best pass-positive probe return before temporal tie-break')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-min-episode', type=int, default=None,
+                        help='Minimum episode eligible for temporal-bias challenger selection')
     
     args = parser.parse_args()
     
@@ -1402,6 +1413,11 @@ def main():
         config.training.anti_regression_candidate_keep = max(1, int(args.anti_regression_candidate_keep))
     if args.anti_regression_min_validations is not None:
         config.training.anti_regression_min_validations = max(1, int(args.anti_regression_min_validations))
+    if args.anti_regression_full_shortlist_episode_cutoff is not None:
+        config.training.anti_regression_full_shortlist_episode_cutoff = max(
+            0,
+            int(args.anti_regression_full_shortlist_episode_cutoff),
+        )
     if args.anti_regression_selector_mode is not None:
         config.training.anti_regression_selector_mode = str(args.anti_regression_selector_mode).strip().lower()
     if args.anti_regression_auto_rescue_enabled is not None:
@@ -1492,6 +1508,18 @@ def main():
         config.training.anti_regression_alignment_probe_min_trades = max(0.0, float(args.anti_regression_alignment_probe_min_trades))
     if args.anti_regression_alignment_probe_require_pass is not None:
         config.training.anti_regression_alignment_probe_require_pass = bool(args.anti_regression_alignment_probe_require_pass)
+    if args.anti_regression_alignment_probe_temporal_bias_enabled is not None:
+        config.training.anti_regression_alignment_probe_temporal_bias_enabled = bool(args.anti_regression_alignment_probe_temporal_bias_enabled)
+    if args.anti_regression_alignment_probe_temporal_keep_return_frac is not None:
+        config.training.anti_regression_alignment_probe_temporal_keep_return_frac = max(
+            0.0,
+            min(1.0, float(args.anti_regression_alignment_probe_temporal_keep_return_frac)),
+        )
+    if args.anti_regression_alignment_probe_temporal_min_episode is not None:
+        config.training.anti_regression_alignment_probe_temporal_min_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_temporal_min_episode),
+        )
     
     # Override episodes if specified
     if args.episodes is not None:

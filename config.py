@@ -181,6 +181,7 @@ class TrainingConfig:
     anti_regression_candidate_keep: int = 24  # Keep up to N candidate checkpoints during training
     anti_regression_eval_top_k: int = 6  # Evaluate top-K candidates in end-of-run tournament
     anti_regression_min_validations: int = 4  # Require at least N validations before tournament
+    anti_regression_full_shortlist_episode_cutoff: int = 20  # Evaluate every checkpoint when the run itself is short
     anti_regression_selector_mode: str = "tail_holdout"  # tail_holdout | future_first | auto_rescue | base_first
     anti_regression_alt_stride_frac: float = 0.20  # Secondary hold-out stride for robustness scoring
     anti_regression_alt_window_bars: Optional[int] = None  # Secondary hold-out window (None uses default)
@@ -234,6 +235,9 @@ class TrainingConfig:
     anti_regression_alignment_probe_pf_edge_min: float = 0.10
     anti_regression_alignment_probe_min_trades: float = 10.0
     anti_regression_alignment_probe_require_pass: bool = True
+    anti_regression_alignment_probe_temporal_bias_enabled: bool = True
+    anti_regression_alignment_probe_temporal_keep_return_frac: float = 0.60
+    anti_regression_alignment_probe_temporal_min_episode: int = 5
 
 
 @dataclass

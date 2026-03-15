@@ -6,6 +6,54 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-03-15 (Selector path corrected: viable `seed8087` checkpoint exists, auto-pick still misses it)
+
+Focus:
+- tighten the checkpoint selector around earlier robust candidates without retraining blindly
+- verify whether the recent `seed8087` drift was real nondeterminism or just config mismatch
+
+Code updates:
+- `config.py`
+  - added temporal-bias selector defaults so alignment probe can prefer earlier pass-positive checkpoints
+  - added full-shortlist cutoff for short runs so tournaments do not prune candidate checkpoints too aggressively
+- `main.py`
+  - added CLI overrides for the new selector controls
+- `trainer.py`
+  - widened short-run candidate pools
+  - added temporal shortlist handling in alignment probe
+  - kept probe/tournament evaluations deterministic by restoring RNG state around selector-only probes
+
+Verification:
+- `python -m py_compile main.py trainer.py config.py`
+- `python test_system.py`
+- same-config reproducibility smoke:
+  - `test_output/repro_selectorfix_seed8087_run1`
+  - `test_output/repro_selectorfix_seed8087_run2`
+  - result: training/validation histories matched; validation summary diffs were timestamp-only
+
+Critical audit finding:
+- the previously “non-reproducing” `seed8087` rerun was not actually the same setup:
+  - older good run used `--no-dual-controller`
+  - failing rerun had dual controller enabled
+- this was confirmed by comparing:
+  - `seed_sweep_results/realdata/seed8087_baseline17ep_20260312_182618_20260312_182618_seed8087/config.json`
+  - `seed_sweep_results/realdata/seed8087_baseline17_temporalmin5_20260314_110252_seed8087/config.json`
+
+Corrected rerun:
+- run: `seed_sweep_results/realdata/seed8087_baseline17_selectorfix_nodual_20260314_200730_seed8087`
+- log: `logs/seed8087_baseline17_selectorfix_nodual_20260314_200730.log`
+- selector winner: `candidate_ep010.pt`
+- final test: `-0.50%`, `PF 0.83`, walk-forward `fail`
+
+Direct checkpoint audit from the same corrected run:
+- eval: `test_output/seed8087_baseline17_selectorfix_nodual_eval_candidate_ep006_20260315a/results/test_results.json`
+- `candidate_ep006.pt`: `+1.22%`, `PF 1.46`, `21` trades, walk-forward `pass`
+
+Decision:
+- the `baseline17 + no-dual-controller` branch is viable
+- the remaining bottleneck is automatic checkpoint selection, not model learnability
+- next selector work should explicitly favor `ep006` / `ep009` type early robust checkpoints over later fragile winners like `ep010`
+
 ## 2026-02-27 (Larger confirmation step: +4 seed extension and 10-seed aggregate)
 
 Focus: execute the next robustness step after promoting `horizon100/noalign` by adding four unseen seeds.

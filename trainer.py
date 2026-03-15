@@ -1324,7 +1324,18 @@ class Trainer:
             reverse=True,
         )
         top_k = max(1, int(getattr(training_cfg, "anti_regression_eval_top_k", 6)))
-        shortlist = ranked[:top_k]
+        full_shortlist_episode_cutoff = max(
+            0,
+            int(getattr(training_cfg, "anti_regression_full_shortlist_episode_cutoff", 20)),
+        )
+        max_ranked_episode = max((int(x.get("episode", -1)) for x in ranked), default=-1)
+        use_full_shortlist = bool(
+            ranked
+            and full_shortlist_episode_cutoff > 0
+            and max_ranked_episode > 0
+            and max_ranked_episode <= full_shortlist_episode_cutoff
+        )
+        shortlist = list(ranked) if use_full_shortlist else ranked[:top_k]
         anchor_budget = max(0, int(getattr(training_cfg, "anti_regression_anchor_budget", 8)))
 
         def _append_shortlist(candidate: Optional[Dict[str, object]]) -> bool:
@@ -1338,7 +1349,7 @@ class Trainer:
             shortlist.append(candidate)
             return True
 
-        if ranked:
+        if ranked and not use_full_shortlist:
             newest = max(ranked, key=lambda x: x.get("episode", -1))
             oldest = min(ranked, key=lambda x: x.get("episode", -1))
             _append_shortlist(newest)
@@ -1536,6 +1547,34 @@ class Trainer:
         )
         alignment_probe_require_pass = bool(
             getattr(training_cfg, "anti_regression_alignment_probe_require_pass", True)
+        )
+        alignment_probe_temporal_bias_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_bias_enabled",
+                True,
+            )
+        )
+        alignment_probe_temporal_keep_return_frac = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_keep_return_frac",
+                0.60,
+            )
+        )
+        alignment_probe_temporal_keep_return_frac = max(
+            0.0,
+            min(1.0, alignment_probe_temporal_keep_return_frac),
+        )
+        alignment_probe_temporal_min_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_min_episode",
+                    5,
+                )
+            ),
         )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
@@ -2385,22 +2424,6 @@ class Trainer:
                             x.get("episode", -1),
                         ),
                     ),
-                    max(
-                        tournament_ranked,
-                        key=lambda x: (
-                            x.get("base_return_pct", -1e9),
-                            x.get("base_pf", -1e9),
-                            x.get("episode", -1),
-                        ),
-                    ),
-                    max(
-                        tournament_ranked,
-                        key=lambda x: (
-                            x.get("base_pf", -1e9),
-                            x.get("base_return_pct", -1e9),
-                            x.get("episode", -1),
-                        ),
-                    ),
                     max(tournament_ranked, key=lambda x: x.get("episode", -1)),
                     max(
                         tournament_ranked,
@@ -2421,6 +2444,41 @@ class Trainer:
                 ]
                 for candidate in metric_anchors:
                     _append_probe_candidate(candidate)
+
+                # Admit the next-best base performers as probe challengers.
+                # This keeps the pool compact while surfacing early checkpoints
+                # like ep009 that are strong on base return/PF but not winners on
+                # the future-oriented tournament metrics.
+                metric_anchor_budget = max(1, min(2, alignment_probe_top_k))
+                extra_metric_rankings = [
+                    sorted(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("base_return_pct", -1e9),
+                            x.get("base_pf", -1e9),
+                            x.get("episode", -1),
+                        ),
+                        reverse=True,
+                    ),
+                    sorted(
+                        tournament_ranked,
+                        key=lambda x: (
+                            x.get("base_pf", -1e9),
+                            x.get("base_return_pct", -1e9),
+                            x.get("episode", -1),
+                        ),
+                        reverse=True,
+                    ),
+                ]
+                for ranking in extra_metric_rankings:
+                    added = 0
+                    for candidate in ranking:
+                        before = len(probe_candidates)
+                        _append_probe_candidate(candidate)
+                        if len(probe_candidates) > before:
+                            added += 1
+                        if added >= metric_anchor_budget:
+                            break
 
             if (
                 incumbent_name
@@ -2518,10 +2576,61 @@ class Trainer:
                     ),
                     reverse=True,
                 )
-                challenger_name = next(
-                    (name for name in ranked_probe_names if name != incumbent_name),
-                    None,
-                )
+                preferred_probe_name = ranked_probe_names[0] if ranked_probe_names else None
+                temporal_shortlist_names: List[str] = []
+                temporal_keep_floor = None
+                if alignment_probe_temporal_bias_enabled and ranked_probe_names:
+                    pass_positive_names = [
+                        name
+                        for name in ranked_probe_names
+                        if bool(probe_results[name].get("pass", False))
+                        and float(probe_results[name].get("return_pct", 0.0)) > 0.0
+                        and float(probe_results[name].get("pf", 0.0)) >= 1.0
+                    ]
+                    if pass_positive_names:
+                        best_pass_return = max(
+                            float(probe_results[name]["return_pct"])
+                            for name in pass_positive_names
+                        )
+                        temporal_keep_floor = (
+                            alignment_probe_temporal_keep_return_frac * best_pass_return
+                        )
+                        temporal_ranked = []
+                        for name in pass_positive_names:
+                            probe_return = float(probe_results[name]["return_pct"])
+                            if probe_return < temporal_keep_floor:
+                                continue
+                            candidate_episode = int(
+                                tournament_by_name.get(name, {}).get("episode", 10**9)
+                            )
+                            if candidate_episode < alignment_probe_temporal_min_episode:
+                                continue
+                            temporal_ranked.append(
+                                (
+                                    candidate_episode,
+                                    -probe_return,
+                                    -float(probe_results[name]["pf"]),
+                                    name,
+                                )
+                            )
+                        if temporal_ranked:
+                            temporal_ranked.sort()
+                            temporal_shortlist_names = [x[3] for x in temporal_ranked]
+                            preferred_probe_name = temporal_shortlist_names[0]
+
+                challenger_name = None
+                challenger_from_temporal_bias = False
+                if preferred_probe_name and preferred_probe_name != incumbent_name:
+                    challenger_name = preferred_probe_name
+                    challenger_from_temporal_bias = (
+                        alignment_probe_temporal_bias_enabled
+                        and preferred_probe_name in temporal_shortlist_names
+                    )
+                elif not temporal_shortlist_names:
+                    challenger_name = next(
+                        (name for name in ranked_probe_names if name != incumbent_name),
+                        None,
+                    )
                 incumbent_probe = probe_results.get(incumbent_name)
                 challenger_probe = probe_results.get(challenger_name) if challenger_name else None
                 return_edge = 0.0
@@ -2534,6 +2643,20 @@ class Trainer:
                     if not alignment_probe_require_pass:
                         challenger_passes = True
 
+                    edge_gate = bool(
+                        return_edge >= alignment_probe_return_edge_min
+                        and (
+                            (
+                                pf_edge >= alignment_probe_pf_edge_min
+                            )
+                            if not challenger_from_temporal_bias
+                            else (
+                                float(challenger_probe.get("positive_frac", 0.0))
+                                >= float(incumbent_probe.get("positive_frac", 0.0))
+                            )
+                        )
+                    )
+
                     switched = bool(
                         challenger_probe["trades"] >= alignment_probe_min_trades
                         and challenger_passes
@@ -2545,8 +2668,7 @@ class Trainer:
                                 and challenger_probe["pf"] >= 1.0
                             )
                             or (
-                                return_edge >= alignment_probe_return_edge_min
-                                and pf_edge >= alignment_probe_pf_edge_min
+                                edge_gate
                                 and challenger_probe["return_pct"] > 0.0
                                 and challenger_probe["pf"] >= 1.0
                             )
@@ -2572,6 +2694,9 @@ class Trainer:
                             "pf_edge_min": float(alignment_probe_pf_edge_min),
                             "min_trades": float(alignment_probe_min_trades),
                             "require_pass": bool(alignment_probe_require_pass),
+                            "temporal_bias_enabled": bool(alignment_probe_temporal_bias_enabled),
+                            "temporal_keep_return_frac": float(alignment_probe_temporal_keep_return_frac),
+                            "temporal_min_episode": int(alignment_probe_temporal_min_episode),
                             "walkforward_min_windows": int(self.config.fitness.test_walkforward_min_windows),
                             "walkforward_min_spr": float(self.config.fitness.test_walkforward_min_spr),
                             "walkforward_min_pf": float(self.config.fitness.test_walkforward_min_pf),
@@ -2579,6 +2704,13 @@ class Trainer:
                         },
                         "incumbent_filename": incumbent_name,
                         "challenger_filename": challenger_name,
+                        "challenger_from_temporal_bias": bool(challenger_from_temporal_bias),
+                        "ranked_probe_filenames": ranked_probe_names,
+                        "preferred_probe_filename": preferred_probe_name,
+                        "temporal_shortlist_filenames": temporal_shortlist_names,
+                        "temporal_keep_floor_return_pct": (
+                            float(temporal_keep_floor) if temporal_keep_floor is not None else None
+                        ),
                         "incumbent_probe": incumbent_probe,
                         "challenger_probe": challenger_probe,
                         "return_edge": float(return_edge),
