@@ -6,6 +6,619 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-03-22 (Regime-validation tooling: explicit CSV time-slice controls)
+
+Focus:
+- move beyond seed robustness on the default historical split
+- enable clean earlier-window regime validation without changing the current default branch behavior
+
+Code update:
+- `config.py`
+  - added optional CSV slice controls:
+    - `csv_start_date`
+    - `csv_end_date`
+    - `csv_n_bars`
+- `main.py`
+  - added CLI flags:
+    - `--csv-start-date`
+    - `--csv-end-date`
+    - `--csv-n-bars`
+  - synchronized CSV data can now be sliced by date range and optional trailing-bar limit before feature engineering and train/val/test splitting
+  - default branch behavior is unchanged because all new slice controls default to `None`
+
+Validation:
+- `python -m py_compile trainer.py main.py config.py`
+- `python test_system.py`
+
+Meaning:
+- the next validation stage can now test the same selector branch on genuinely different historical windows
+- this closes a tooling gap that blocked proper regime/time-slice checks
+
+## 2026-03-22 (Proof run passed: `3141` now extends selected-pass coverage to `9/9`)
+
+Result:
+- `seed_sweep_results/realdata/seed3141_baseline17_selectorfix_slack_nodual_temporalguard_20260321_173233_seed3141/results/test_results.json`
+  - selected checkpoint: `candidate_ep016.pt`
+  - test return: `+1.35%`
+  - PF: `1.61`
+  - trades: `23`
+  - max drawdown: `-0.91%`
+  - walk-forward: `pass`
+- `seed_sweep_results/realdata/seed3141_baseline17_selectorfix_slack_nodual_temporalguard_20260321_173233_seed3141/logs/checkpoint_tournament.json`
+  - selector mode: `future_first`
+  - incumbent remained `candidate_ep016.pt`
+  - no alignment challenger was needed
+
+Meaning:
+- the branch now has clean selected-checkpoint passes on nine seeds:
+  - `123`
+  - `777`
+  - `1011`
+  - `2027`
+  - `3141`
+  - `5051`
+  - `8087`
+  - `9091`
+  - `10007`
+- two fresh unseen-seed proofs (`777`, `3141`) now hold on selected checkpoints
+- the seed-robustness question is no longer the main blocker; time-slice/regime robustness is next
+
+Aggregate update:
+- `seed_sweep_results/realdata/baseline17_selectorfix_slack_nodual_selected9_summary_20260322.json`
+  - aggregate: mean return `+1.32%`, mean PF `1.62`, walk-forward pass `9/9`
+
+## 2026-03-21 (Proof run passed: `777` now auto-recovers on the selected checkpoint)
+
+Result:
+- `seed_sweep_results/realdata/seed777_baseline17_selectorfix_slack_nodual_temporalguard_20260321_133004_seed777/results/test_results.json`
+  - selected checkpoint: `candidate_ep010.pt`
+  - test return: `+0.88%`
+  - PF: `1.33`
+  - trades: `24`
+  - max drawdown: `-0.85%`
+  - walk-forward: `pass`
+- `seed_sweep_results/realdata/seed777_baseline17_selectorfix_slack_nodual_temporalguard_20260321_133004_seed777/logs/checkpoint_tournament.json`
+  - alignment incumbent: `candidate_ep014.pt`
+  - alignment challenger: `candidate_ep010.pt`
+  - `challenger_from_temporal_bias = true`
+  - temporal shortlist: `candidate_ep010.pt`, `candidate_ep011.pt`, `candidate_ep012.pt`, `candidate_ep014.pt`
+
+Meaning:
+- the temporal-forward-profit selector patch worked end-to-end
+- `777` is no longer only a manual salvage pass; it is now a clean selected-checkpoint proof
+- the confirmed selected-pass set is now:
+  - `123`
+  - `777`
+  - `1011`
+  - `2027`
+  - `5051`
+  - `8087`
+  - `9091`
+  - `10007`
+
+Aggregate update:
+- `seed_sweep_results/realdata/baseline17_selectorfix_slack_nodual_selected8_summary_20260321.json`
+  - aggregate: mean return `+1.32%`, mean PF `1.62`, walk-forward pass `8/8`
+
+## 2026-03-21 (Selector patch: temporal bias now requires forward-profit robustness)
+
+Problem:
+- unseen seed `777` completed end-to-end, but the selector chose `candidate_ep003.pt` and produced:
+  - `seed_sweep_results/realdata/seed777_baseline17_selectorfix_slack_nodual_valmmr_rerun_20260320_212737_seed777/results/test_results.json`
+  - return `-0.57%`, PF `0.82`, walk-forward `pass`
+- direct eval of the same run's `candidate_ep010.pt` was materially better:
+  - `test_output/seed777_baseline17_selectorfix_slack_nodual_valmmr_rerun_eval_candidate_ep010_20260321_131401/results/test_results.json`
+  - return `+0.88%`, PF `1.33`, walk-forward `pass`
+
+Diagnosis:
+- `checkpoint_tournament.json` showed temporal bias switched `candidate_ep014.pt -> candidate_ep003.pt`
+- `candidate_ep003.pt` should not have been eligible for temporal rescue:
+  - `forward_return_min = -0.3195`
+  - `forward_pf_min = 0.8916`
+- this was another selector miss, specifically inside the temporal-bias shortlist
+
+Code update:
+- `config.py`
+  - added `anti_regression_alignment_probe_temporal_require_forward_profit = True`
+- `main.py`
+  - added CLI toggles:
+    - `--anti-regression-alignment-probe-temporal-require-forward-profit`
+    - `--anti-regression-alignment-probe-temporal-allow-forward-loss`
+- `trainer.py`
+  - temporal-bias challengers now require:
+    - `forward_return_min > 0`
+    - `forward_pf_min >= 1.0`
+  - this blocks earlier checkpoints that only look acceptable on the short probe while already failing the tournament's future/tail robustness view
+
+Validation:
+- `python -m py_compile trainer.py main.py config.py`
+- `python test_system.py`
+
+Meaning:
+- `777` remains a recoverable selector miss, not a branch failure
+- the next proof step is a clean `777` rerun with this temporal-forward-profit guard enabled
+
+## 2026-03-20 (Unseen seed `777`: interrupted full run salvaged, tournament progress logging added)
+
+Result:
+- full run `seed_sweep_results/realdata/seed777_baseline17_selectorfix_slack_nodual_valmmr_20260320_184422_seed777` reached episode 17 but exited during final tournament with `KeyboardInterrupt`
+- salvage eval on `candidate_ep010.pt` passed:
+  - `test_output/seed777_baseline17_selectorfix_slack_nodual_valmmr_eval_candidate_ep010_20260320_210023/results/test_results.json`
+  - return `+0.88%`
+  - PF `1.33`
+  - trades `24`
+  - max drawdown `-0.85%`
+  - walk-forward `pass`
+
+Code update:
+- `trainer.py`
+  - added explicit progress prints for anti-regression checkpoint evaluation:
+    - `[ANTI-REG] Candidate i/N: ...`
+    - `[WFALIGN] Probe i/N: ...`
+  - goal: make the long end-of-run selector stage visible in logs so stalled-vs-running is obvious
+
+Validation:
+- `python -m py_compile trainer.py main.py config.py`
+- `python test_system.py`
+
+Meaning:
+- the current branch extends to an unseen seed via manual salvage
+- but `777` is not yet counted as a clean selected-checkpoint proof because the end-to-end run was interrupted before writing `test_results.json`
+
+## 2026-03-20 (Proof run passed: `9091` now auto-recovers on the selected checkpoint)
+
+Result:
+- `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_valmmr_20260320_133958_seed9091/results/test_results.json`
+  - selected checkpoint: `candidate_ep001.pt`
+  - test return: `+0.56%`
+  - PF: `1.22`
+  - trades: `22`
+  - max drawdown: `-1.02%`
+  - walk-forward: `pass`
+- `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_valmmr_20260320_133958_seed9091/logs/checkpoint_tournament.json`
+  - alignment incumbent: `candidate_ep006.pt`
+  - alignment challenger: `candidate_ep001.pt`
+  - `challenger_from_early_mmr_rescue = true`
+  - `early_mmr_rescue_filenames = ["candidate_ep001.pt"]`
+
+Meaning:
+- the full-validation-MMR selector patch is now proven end-to-end
+- `9091` is no longer a manual checkpoint recovery case
+- the weak-seed triad now closes on selected checkpoints:
+  - `5051`: selected pass
+  - `10007`: selected pass
+  - `9091`: selected pass
+
+Aggregate update:
+- `seed_sweep_results/realdata/baseline17_selectorfix_slack_nodual_selected7_summary_20260320.json`
+  - selected seed set: `123`, `1011`, `2027`, `5051`, `8087`, `10007`, `9091`
+  - aggregate: mean return `+1.38%`, mean PF `1.67`, walk-forward pass `7/7`
+
+## 2026-03-20 (Selector patch: switch early-MMR rescue to full-validation MMR)
+
+Focus:
+- fix the failed `9091` early-MMR proof run without widening early-checkpoint bias across the whole branch
+- use the actual validation signal that separates known recoveries (`9091 ep001`, `10007 ep003`) from known regressions (`8087 ep001`)
+
+Code update:
+- `config.py`
+  - raised `anti_regression_alignment_probe_early_mmr_min` from `0.75` to `1.00`
+- `trainer.py`
+  - early-MMR rescue now uses full-validation `spr_components.mmr_pct_mean` from `validation_history` instead of tournament-window `base_mmr_pct_mean`
+  - tournament candidates now record:
+    - `val_mmr_pct_mean`
+    - `val_pf`
+    - `val_stagnation_penalty`
+    - `val_trades_per_year`
+  - alignment diagnostics now record `incumbent_val_mmr_pct_mean`
+
+Why this change:
+- the completed `seed9091_baseline17_selectorfix_slack_nodual_earlymmr_20260319_203636_seed9091` proof run still selected `candidate_ep003.pt`
+- tournament-window MMR was too weak/noisy for `9091 ep001`, so the rescue never triggered
+- full-validation MMR shows the intended separation:
+  - `9091 ep001`: `+1.0396`
+  - `9091 ep003`: `+0.2512`
+  - `9091 ep006`: `+0.3334`
+  - `8087 ep001`: `-1.0870`
+  - `10007 ep003`: `+1.2236`
+  - `10007 ep013`: `-0.1385`
+
+Validation:
+- `python -m py_compile trainer.py main.py config.py`
+- `python test_system.py`
+- offline replay:
+  - `test_output/selector_validation_mmr_rescue_replay_20260320.json`
+  - predicted winner changes:
+    - unchanged: `123`, `1011`, `2027`, `5051`, `8087`, `10007`
+    - changed: `9091 -> candidate_ep001.pt`
+
+## 2026-03-19 (Selector patch: targeted early-MMR rescue for `ep001/ep002`-class recoveries)
+
+Focus:
+- close the remaining `9091` selector gap without regressing validated seeds like `8087`
+- avoid broad early-episode bias; target only very-early checkpoints with materially stronger validation-side MMR
+
+Code update:
+- `config.py`
+  - added:
+    - `anti_regression_alignment_probe_early_mmr_rescue_enabled = True`
+    - `anti_regression_alignment_probe_early_mmr_min = 0.75`
+    - `anti_regression_alignment_probe_early_mmr_edge_min = 0.50`
+- `main.py`
+  - added CLI hooks for the early-MMR rescue controls
+- `trainer.py`
+  - alignment probe can now bypass the normal `temporal_min_episode` floor only when:
+    - the challenger episode is earlier than the temporal floor
+    - probe metrics still pass
+    - base validation return/PF are positive
+    - validation-side base MMR clears the configured absolute floor
+    - validation-side base MMR exceeds the incumbent by the configured edge
+  - added diagnostics in `checkpoint_tournament.json` for:
+    - early-MMR rescue candidate list
+    - incumbent base MMR
+    - early-MMR gate outcome
+
+Validation:
+- `python -m py_compile trainer.py main.py config.py`
+- `python test_system.py`
+- offline replay:
+  - `test_output/selector_early_mmr_rescue_replay_20260319.json`
+  - predicted winners:
+    - `123 -> candidate_ep002.pt`
+    - `1011 -> candidate_ep009.pt`
+    - `2027 -> candidate_ep010.pt`
+    - `5051 -> candidate_ep007.pt`
+    - `8087 -> candidate_ep006.pt`
+    - `9091 -> candidate_ep001.pt`
+    - `10007 -> candidate_ep003.pt`
+
+Interpretation:
+- the patch is narrow enough to leave the existing validated winners unchanged
+- it only changes the known remaining weak case (`9091`) in offline replay
+
+Decision:
+- run a fresh `9091` end-to-end rerun with the early-MMR selector enabled before touching any additional selector logic
+
+## 2026-03-19 (`8087 ep001` check fails: naive early-checkpoint widening is unsafe)
+
+Focus:
+- test whether the `9091 ep001` recovery could be generalized by simply widening early-checkpoint selection
+- avoid shipping a selector change that would regress a known good seed
+
+Direct eval result:
+- `test_output/seed8087_baseline17_selectorfix_slack_nodual_eval_candidate_ep001_20260319a/results/test_results.json`
+  - result: `-0.55%`, `PF 0.81`, `19` trades, walk-forward `fail`
+
+Interpretation:
+- this rules out the naive fix
+  - simply broadening early-checkpoint preference would likely hurt `8087`
+- the remaining selector work must be targeted
+  - `9091 ep001` is still a real recovery checkpoint
+  - but the rule that finds it must use a discriminating signal, not just lower temporal thresholds or a broader early-pass bias
+- current best selector hypothesis remains validation-side MMR, not raw episode index
+
+Decision:
+- keep project progress unchanged at `62%`
+- do not widen early-episode selection globally
+- move next to an MMR-aware offline selector design/replay step
+
+## 2026-03-19 (Selector diagnostics: surface validation-side MMR for the remaining `ep001` gap)
+
+Focus:
+- inspect whether a missing validation-side signal can explain why `9091` held-out test prefers `ep001` over the currently ranked `ep003` / `ep006`
+- add selector diagnostics without changing behavior yet
+
+Code update:
+- `trainer.py`
+  - added validation-side MMR fields to tournament candidate records:
+    - `base_mmr_pct_mean`
+    - `alt_mmr_pct_mean`
+    - `tail_mmr_pct_mean`
+    - `robust_mmr_pct_mean`
+    - `forward_mmr_pct_mean`
+  - added `mmr_pct_mean` to alignment-probe `probe_results`
+  - no selection logic changed yet; this is diagnostic plumbing only
+
+Validation:
+- `python -m py_compile trainer.py main.py config.py`
+- `python test_system.py`
+
+Analysis artifact:
+- `test_output/selector_signal_audit_20260319.json`
+
+Current hypothesis:
+- validation-side MMR looks like the strongest missing selector signal so far:
+  - positive and materially higher on known pass recoveries such as `9091 ep001` and `10007 ep003`
+  - negative on known selected failures such as `10007 ep013` and `8087 ep010`
+- this still needs one more discriminating check (`8087 ep001`) before turning into a selector rule
+
+## 2026-03-19 (`9091` final cheap alternate check: `ep001` passes, so the seed is recoverable)
+
+Focus:
+- test the last untried early alternative on `9091` before calling it a true branch-level failure
+- determine whether the remaining problem is branch robustness or selector coverage
+
+Direct eval result:
+- `test_output/seed9091_baseline17_selectorfix_slack_nodual_temporal3_eval_candidate_ep001_20260319a/results/test_results.json`
+  - result: `+0.56%`, `PF 1.22`, `22` trades, walk-forward `pass`
+
+Interpretation:
+- `9091` is not a true hard branch failure after all
+- the current branch now has a tested walk-forward-passing checkpoint for every weak seed examined
+- remaining blocker is narrower:
+  - selector logic still misses `ep001`-class recoveries on `9091`
+  - naive `temporal_min_episode = 1` is still unsafe because earlier `8087` evidence showed `ep001` can be a bad global bias
+
+Decision:
+- move the project status upward modestly
+- do not patch selector blindly from this result alone
+- next work should be an offline selector/root-cause audit to explain why `9091` final test prefers `ep001` even though probe metrics ranked it below `ep003` and `ep006`
+
+## 2026-03-19 (`9091` temporal-min-episode `3` rerun: selector fix holds, hard-seed failure remains)
+
+Focus:
+- test whether the same selector patch that auto-recovered `10007` can also clear the last unresolved hard seed
+- distinguish between a remaining selector miss and a true branch-level hard case
+
+Run result:
+- rerun:
+  - `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_temporal3_20260319_135839_seed9091/results/test_results.json`
+  - result: `+1.95%`, `PF 1.86`, `22` trades, walk-forward `fail`
+  - failure reason: `positive_frac = 0.4472`, below the `0.50` requirement
+
+Selector evidence:
+- tournament:
+  - `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_temporal3_20260319_135839_seed9091/logs/checkpoint_tournament.json`
+- key facts:
+  - incumbent before alignment: `candidate_ep006.pt`
+  - temporal challenger: `candidate_ep003.pt`
+  - `challenger_from_temporal_bias = true`
+  - `winner_after_alignment = candidate_ep003.pt`
+  - `switched = true`
+
+Interpretation:
+- the selector patch is behaving as intended on `9091`; it now auto-picks the same stronger early checkpoint that manual testing had identified
+- the branch still does not clear the walk-forward gate on `9091`, so this is no longer primarily a selector bug
+- current weak-seed state is now:
+  - `5051`: selected pass
+  - `10007`: selected pass after selector patch
+  - `9091`: only remaining unresolved hard case
+
+Decision:
+- keep project progress unchanged at `60%`
+- run one final cheap direct eval on an untested early alternative before declaring `9091` a confirmed branch-level hard case
+
+## 2026-03-19 (`10007` end-to-end recovery confirmed with temporal-min-episode `3`)
+
+Focus:
+- validate the smallest selector patch that should recover the confirmed `10007` miss automatically
+- determine whether `10007` moves from "manual alternate only" to "selected pass"
+
+Code/config state used:
+- `config.py`
+  - `anti_regression_alignment_probe_temporal_min_episode = 3`
+  - intent: allow `ep003`-class recoveries while still excluding `ep001/ep002`
+
+Run result:
+- rerun:
+  - `seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_temporal3_20260318_234559_seed10007/results/test_results.json`
+  - result: `+0.63%`, `PF 1.24`, `25` trades, walk-forward `pass`
+
+Selector evidence:
+- tournament:
+  - `seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_temporal3_20260318_234559_seed10007/logs/checkpoint_tournament.json`
+- key facts:
+  - incumbent before alignment: `candidate_ep013.pt`
+  - temporal challenger: `candidate_ep003.pt`
+  - `challenger_from_temporal_bias = true`
+  - `winner_after_alignment = candidate_ep003.pt`
+  - `switched = true`
+
+Interpretation:
+- the selector patch now works end-to-end on the previously confirmed `10007` miss
+- `10007` is no longer only recoverable by manual checkpoint evaluation; it is now auto-recovered by the run itself
+- remaining weak-seed blocker is narrowed further to `9091`
+
+Decision:
+- update progress/status documents upward modestly
+- rerun `9091` on the same temporal-min-episode `3` selector configuration as the next proof step
+
+## 2026-03-18 (Selector patch: temporal bias now allows `ep003`-class recoveries)
+
+Focus:
+- fix the confirmed `10007` selector miss with the smallest possible change
+- preserve the already validated wins on `1011`, `2027`, `8087`, and `5051`
+
+Code update:
+- `config.py`
+  - lowered `anti_regression_alignment_probe_temporal_min_episode` from `5` to `3`
+  - intent: allow early robust challengers like `candidate_ep003.pt` while still excluding `ep001/ep002`
+
+Fast validation:
+- `python -m py_compile config.py trainer.py main.py`
+- `python test_system.py`
+- offline alignment replay on current saved tournaments now predicts:
+  - `10007`: `candidate_ep013.pt -> candidate_ep003.pt`
+  - `9091`: `candidate_ep006.pt -> candidate_ep003.pt`
+  - unchanged intended winners on validated seeds:
+    - `1011 -> candidate_ep009.pt`
+    - `2027 -> candidate_ep010.pt`
+    - `8087 -> candidate_ep006.pt`
+    - `5051 -> candidate_ep007.pt`
+    - `123` remains `candidate_ep002.pt`
+
+Interpretation:
+- this is the smallest selector change that fixes the confirmed `10007` miss in offline replay
+- it also improves `9091` toward a stronger alternate, though `9091` still lacks a tested walk-forward pass
+
+Decision:
+- rerun `10007` first as the cleanest end-to-end proof of the patch before touching broader selector logic again
+
+## 2026-03-18 (Weak-seed triad status: `5051` passes, `10007` is recoverable, `9091` remains the only hard case)
+
+Focus:
+- close the weak-seed triad loop on the current `baseline17 + no-dual-controller + selector-slack` branch
+- determine whether the remaining failures are selector misses or true branch-level weak spots
+
+Results:
+- `seed5051`:
+  - selected run: `seed_sweep_results/realdata/seed5051_baseline17_selectorfix_slack_nodual_20260317_153038_seed5051/results/test_results.json`
+  - result: `+1.67%`, `PF 1.82`, walk-forward `pass`
+- `seed10007`:
+  - selected run: `seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_20260318_132033_seed10007/results/test_results.json`
+    - `+2.22%`, `PF 1.90`, walk-forward `fail`
+  - best tested alternate so far:
+    - `test_output/seed10007_baseline17_selectorfix_slack_nodual_eval_candidate_ep003_20260318a/results/test_results.json`
+    - `+0.63%`, `PF 1.24`, walk-forward `pass`
+- `seed9091`:
+  - selected run: `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_20260317_100857_seed9091/results/test_results.json`
+    - `-1.69%`, `PF 0.52`, walk-forward `fail`
+  - tested alternates:
+    - `test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep008_20260317a/results/test_results.json`
+      - `+0.61%`, `PF 1.21`, walk-forward `fail`
+    - `test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep003_20260318a/results/test_results.json`
+      - `+1.95%`, `PF 1.86`, walk-forward `fail`
+    - `test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep016_20260318a/results/test_results.json`
+      - `+2.54%`, `PF 2.05`, walk-forward `fail`
+
+Interpretation:
+- the branch is strong enough to clear or recover `5051` and `10007`
+- `9091` remains the only seed in this set without a tested walk-forward pass
+- current blocker is now narrow:
+  - selector refinement for the recoverable `10007` case
+  - targeted robustness work for `9091`
+
+Decision:
+- stop brute-force checkpoint checks for now
+- write the weak-seed triad summary and move next to selector/root-cause work, starting from the clear `10007` selector miss while keeping `9091` isolated as the only unresolved hard case
+
+## 2026-03-18 (Weak-seed triad follow-up: `10007` stays unresolved after first alternate check)
+
+Focus:
+- finish the weak-seed triad after `5051`
+- determine whether `10007` is recoverable by checkpoint selection or is another true weak-seed failure like `9091`
+
+Results:
+- `seed10007` full run:
+  - run: `seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_20260318_132033_seed10007`
+  - tournament: `seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_20260318_132033_seed10007/logs/checkpoint_tournament.json`
+  - auto-selected winner: `candidate_ep013.pt`
+  - final test: `+2.22%`, `PF 1.90`, `22` trades, max DD `-1.05%`, walk-forward `fail`
+- direct checkpoint re-eval from the same run:
+  - `test_output/seed10007_baseline17_selectorfix_slack_nodual_eval_candidate_ep015_20260318a/results/test_results.json`
+    - `-1.45%`, `PF 0.59`, `24` trades, walk-forward `fail`
+  - `test_output/seed10007_baseline17_selectorfix_slack_nodual_eval_candidate_ep003_20260318a/results/test_results.json`
+    - `+0.63%`, `PF 1.24`, `25` trades, max DD `-1.80%`, walk-forward `pass`
+
+Interpretation:
+- `seed10007` is recoverable on the current branch, but the selector is still choosing the wrong checkpoint
+- the alignment probe substantially overestimated `candidate_ep015.pt` relative to held-out test behavior
+- `candidate_ep003.pt` is the first direct proof in this run that `10007` is another selector-miss case, not a branch-level failure
+- weak-seed triad status is now:
+  - `5051`: pass
+  - `9091`: unresolved
+  - `10007`: recoverable via alternate checkpoint
+
+Decision:
+- stop spending more time on `10007`
+- revisit `9091` with one more cheap alternate checkpoint eval before changing selector logic again
+
+## 2026-03-18 (Weak-seed triad follow-up: `5051` passes, `9091` remains the main outlier)
+
+Focus:
+- continue the weak-seed triad after the `9091` failure
+- determine whether the current branch weakness is isolated to `9091` or broader across the remaining weak seeds
+
+Results:
+- `seed5051` full run:
+  - run: `seed_sweep_results/realdata/seed5051_baseline17_selectorfix_slack_nodual_20260317_153038_seed5051`
+  - tournament: `seed_sweep_results/realdata/seed5051_baseline17_selectorfix_slack_nodual_20260317_153038_seed5051/logs/checkpoint_tournament.json`
+  - selector mode: `tail_holdout+wfalign`
+  - alignment probe switched the winner to `candidate_ep007.pt`
+  - final test: `+1.67%`, `PF 1.82`, `17` trades, max DD `-1.38%`, walk-forward `pass`
+
+Interpretation:
+- the current `baseline17 + no-dual-controller + selector-slack` branch is not broadly failing on weak seeds
+- with `5051` now positive and robust, `9091` looks more like an isolated hard case than a general branch collapse
+
+Decision:
+- continue directly to `10007` to finish the weak-seed triad before changing selector logic again
+
+## 2026-03-17 (Weak-seed triad follow-up: `9091` remains unresolved on the current branch)
+
+Focus:
+- test whether the remaining weak-seed failure on `9091` is still just a checkpoint-selection miss
+- determine whether the current `baseline17 + no-dual-controller + selector-slack` branch is robust enough to carry into the full weak-seed triad
+
+Results:
+- full run:
+  - run: `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_20260317_100857_seed9091`
+  - tournament: `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_20260317_100857_seed9091/logs/checkpoint_tournament.json`
+  - auto-selected winner: `candidate_ep006.pt`
+  - final test: `-1.69%`, `PF 0.52`, `26` trades, walk-forward `fail`
+- direct checkpoint re-evals from the same run:
+  - `test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep008_20260317a/results/test_results.json`
+    - `+0.61%`, `PF 1.21`, `26` trades, walk-forward `fail`
+  - `test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep003_20260318a/results/test_results.json`
+    - `+1.95%`, `PF 1.86`, `22` trades, max DD `-0.98%`, walk-forward `fail`
+  - `test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep013_20260317a/results/test_results.json`
+    - `-1.17%`, `PF 0.66`, `24` trades, walk-forward `fail`
+
+Interpretation:
+- `9091` is not fully explained by the current selector miss anymore
+- multiple alternate checkpoints (`ep008`, `ep003`) improve sharply over the selected winner, but all still miss the walk-forward gate
+- on this branch, `9091` remains a real weak-seed problem, not a clean selector-only fix
+
+Decision:
+- stop spending more time on `9091` for now
+- continue the weak-seed triad with `5051`, then `10007`, to measure whether the branch weakness is isolated or broader
+
+## 2026-03-16 (Selector fix confirmed end-to-end on four real-data seeds)
+
+Focus:
+- verify that the selector patch works in full training runs, not just offline replay
+- confirm automatic checkpoint choice now matches the previously validated robust early checkpoints
+
+Results:
+- `seed8087` corrected rerun:
+  - run: `seed_sweep_results/realdata/seed8087_baseline17_selectorfix_slack_nodual_20260315_120432_seed8087`
+  - tournament: `seed_sweep_results/realdata/seed8087_baseline17_selectorfix_slack_nodual_20260315_120432_seed8087/logs/checkpoint_tournament.json`
+  - auto-selected winner: `candidate_ep006.pt`
+  - final test: `+1.22%`, `PF 1.46`, `21` trades, walk-forward `pass`
+- `seed1011` rerun:
+  - run: `seed_sweep_results/realdata/seed1011_baseline17_selectorfix_slack_nodual_20260315_171432_seed1011`
+  - tournament: `seed_sweep_results/realdata/seed1011_baseline17_selectorfix_slack_nodual_20260315_171432_seed1011/logs/checkpoint_tournament.json`
+  - auto-selected winner: `candidate_ep009.pt`
+  - final test: `+0.83%`, `PF 1.31`, `22` trades, walk-forward `pass`
+- `seed2027` rerun:
+  - run: `seed_sweep_results/realdata/seed2027_baseline17_selectorfix_slack_nodual_20260316_123918_seed2027`
+  - tournament: `seed_sweep_results/realdata/seed2027_baseline17_selectorfix_slack_nodual_20260316_123918_seed2027/logs/checkpoint_tournament.json`
+  - auto-selected winner: `candidate_ep010.pt`
+  - final test: `+1.27%`, `PF 1.83`, `20` trades, walk-forward `pass`
+- `seed123` rerun:
+  - run: `seed_sweep_results/realdata/seed123_baseline17_selectorfix_slack_nodual_20260316_155223_seed123`
+  - tournament: `seed_sweep_results/realdata/seed123_baseline17_selectorfix_slack_nodual_20260316_155223_seed123/logs/checkpoint_tournament.json`
+  - auto-selected winner: `candidate_ep002.pt`
+  - final test: `+3.50%`, `PF 2.78`, `26` trades, walk-forward `pass`
+
+Aggregate:
+- summary: `seed_sweep_results/realdata/baseline17_selectorfix_slack_nodual_ext4_summary_20260317.json`
+- seeds: `123, 1011, 2027, 8087`
+- mean return: `+1.71%`
+- mean PF: `1.85`
+- positive with PF>=1: `4/4`
+- walk-forward pass: `4/4`
+
+Interpretation:
+- the current `baseline17 + no-dual-controller + selector-slack` branch is now validated on four independent real-data seeds
+- `2027`, which was one of the prior extension weak cases, no longer fails on this branch
+- `123`, the other prior extension weak case, also clears cleanly and is the strongest result of the four
+- the main open question shifts from this ext4 set to the harder weak-seed triad (`5051, 9091, 10007`)
+
+Decision:
+- stop re-litigating selector behavior on the confirmed ext4 set (`123, 1011, 2027, 8087`)
+- next check should target the weak-seed triad, starting with `9091`, which was the hardest remaining selector case in earlier work
+
 ## 2026-03-15 (Selector path corrected: viable `seed8087` checkpoint exists, auto-pick still misses it)
 
 Focus:

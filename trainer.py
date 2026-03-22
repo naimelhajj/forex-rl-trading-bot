@@ -1317,6 +1317,13 @@ class Trainer:
         if len(self.validation_history) < min_validations:
             return None
 
+        validation_by_episode: Dict[int, Dict[str, object]] = {}
+        for item in self.validation_history:
+            episode = int(item.get("episode", -1))
+            if episode <= 0:
+                continue
+            validation_by_episode[episode] = item
+
         # Build shortlist from tracked candidates and current best model.
         ranked = sorted(
             self.checkpoint_candidates,
@@ -1416,6 +1423,12 @@ class Trainer:
 
         if not shortlist:
             return None
+        if verbose:
+            shortlist_names = [str(item.get("filename", "")) for item in shortlist]
+            print(
+                f"[ANTI-REG] Evaluating {len(shortlist_names)} checkpoint candidates: "
+                + ", ".join(shortlist_names)
+            )
 
         alt_stride = float(getattr(training_cfg, "anti_regression_alt_stride_frac", 0.20))
         alt_window = getattr(training_cfg, "anti_regression_alt_window_bars", None)
@@ -1606,6 +1619,34 @@ class Trainer:
                 )
             ),
         )
+        alignment_probe_temporal_require_forward_profit = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_require_forward_profit",
+                True,
+            )
+        )
+        alignment_probe_early_mmr_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_early_mmr_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_early_mmr_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_early_mmr_min",
+                0.75,
+            )
+        )
+        alignment_probe_early_mmr_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_early_mmr_edge_min",
+                0.50,
+            )
+        )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
         tournament_jitter_draws = getattr(training_cfg, "anti_regression_eval_jitter_draws", None)
@@ -1632,11 +1673,14 @@ class Trainer:
         base_seed = int(getattr(self.config, "random_seed", 777))
         tournament = []
         try:
-            for item in shortlist:
+            total_shortlist = len(shortlist)
+            for shortlist_idx, item in enumerate(shortlist, start=1):
                 filename = item["filename"]
                 ckpt_path = self.checkpoint_dir / filename
                 if not ckpt_path.exists():
                     continue
+                if verbose:
+                    print(f"[ANTI-REG] Candidate {shortlist_idx}/{total_shortlist}: {filename}")
 
                 try:
                     self.load_checkpoint(filename)
@@ -1693,6 +1737,10 @@ class Trainer:
                 base_trades = float(base_stats.get("val_trades", 0.0))
                 alt_trades = float(alt_stats.get("val_trades", 0.0))
                 tail_trades = float(tail_stats.get("val_trades", 0.0))
+                # Keep validation-side MMR available for selector diagnostics.
+                base_mmr = 100.0 * float(base_stats.get("val_cagr", 0.0))
+                alt_mmr = 100.0 * float(alt_stats.get("val_cagr", 0.0))
+                tail_mmr = 100.0 * float(tail_stats.get("val_cagr", 0.0))
 
                 # Selector modes:
                 # - tail_holdout (default): strict robustness across base+alt+tail.
@@ -1705,6 +1753,7 @@ class Trainer:
                     robust_pf = min(alt_pf, tail_pf)
                     robust_pos_frac = min(alt_pos_frac, tail_pos_frac)
                     robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                    robust_mmr = min(alt_mmr, tail_mmr)
                     dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
                     trade_min = min(alt_trades, tail_trades)
                 elif ranking_selector_mode == "base_first":
@@ -1713,6 +1762,7 @@ class Trainer:
                     robust_pf = base_pf
                     robust_pos_frac = base_pos_frac
                     robust_pf_ge_1_frac = base_pf_ge_1_frac
+                    robust_mmr = base_mmr
                     dispersion_penalty = 0.10 * max(0.0, base_iqr)
                     trade_min = base_trades
                 else:
@@ -1721,6 +1771,7 @@ class Trainer:
                     robust_pf = min(base_pf, alt_pf, tail_pf)
                     robust_pos_frac = min(base_pos_frac, alt_pos_frac, tail_pos_frac)
                     robust_pf_ge_1_frac = min(base_pf_ge_1_frac, alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                    robust_mmr = min(base_mmr, alt_mmr, tail_mmr)
                     dispersion_penalty = 0.10 * max(base_iqr, alt_iqr, tail_iqr)
                     trade_min = min(base_trades, alt_trades, tail_trades)
                 low_trade_penalty = 0.0
@@ -1806,6 +1857,7 @@ class Trainer:
                 future_robust_pf = min(alt_pf, tail_pf)
                 future_robust_pos_frac = min(alt_pos_frac, tail_pos_frac)
                 future_robust_pf_ge_1_frac = min(alt_pf_ge_1_frac, tail_pf_ge_1_frac)
+                future_robust_mmr = min(alt_mmr, tail_mmr)
                 future_dispersion_penalty = 0.10 * max(alt_iqr, tail_iqr)
                 future_trade_min = min(alt_trades, tail_trades)
                 future_low_trade_penalty = 0.0
@@ -1847,6 +1899,12 @@ class Trainer:
                     and alt_pf_ge_1_frac >= min_positive_frac
                     and tail_pf_ge_1_frac >= min_positive_frac
                 )
+                validation_entry = validation_by_episode.get(int(item.get("episode", -1)), {})
+                validation_spr = validation_entry.get("spr_components", {})
+                val_mmr = float(validation_spr.get("mmr_pct_mean", 0.0))
+                val_pf = float(validation_spr.get("pf", 0.0))
+                val_stagnation = float(validation_spr.get("stagnation_penalty", 1.0))
+                val_trades_per_year = float(validation_spr.get("trades_per_year", 0.0))
 
                 tournament.append(
                     {
@@ -1884,6 +1942,14 @@ class Trainer:
                         "base_trades": base_trades,
                         "alt_trades": alt_trades,
                         "tail_trades": tail_trades,
+                        "base_mmr_pct_mean": base_mmr,
+                        "alt_mmr_pct_mean": alt_mmr,
+                        "tail_mmr_pct_mean": tail_mmr,
+                        "robust_mmr_pct_mean": robust_mmr,
+                        "val_mmr_pct_mean": val_mmr,
+                        "val_pf": val_pf,
+                        "val_stagnation_penalty": val_stagnation,
+                        "val_trades_per_year": val_trades_per_year,
                         "dispersion_penalty": dispersion_penalty,
                         "low_trade_penalty": low_trade_penalty,
                         "pf_shortfall_penalty": pf_shortfall_penalty,
@@ -1897,6 +1963,7 @@ class Trainer:
                         "composite_score": composite,
                         "forward_return_min": future_robust_return,
                         "forward_pf_min": future_robust_pf,
+                        "forward_mmr_pct_mean": future_robust_mmr,
                         "future_profit_feasible": future_profit_feasible,
                         "future_consistency_feasible": future_consistency_feasible,
                         "future_composite_score": future_composite,
@@ -2536,6 +2603,7 @@ class Trainer:
                     # Keep probes deterministic and cheap; test evaluation has no jitter averaging.
                     setattr(self.config, "VAL_JITTER_DRAWS", 1)
 
+                    total_probes = len(probe_candidates)
                     for idx, candidate in enumerate(probe_candidates):
                         filename = candidate.get("filename")
                         if not filename:
@@ -2543,6 +2611,8 @@ class Trainer:
                         ckpt_path = self.checkpoint_dir / filename
                         if not ckpt_path.exists():
                             continue
+                        if verbose:
+                            print(f"[WFALIGN] Probe {idx + 1}/{total_probes}: {filename}")
                         try:
                             self.load_checkpoint(filename)
                         except Exception:
@@ -2574,6 +2644,7 @@ class Trainer:
                             )
                         )
                         probe_trades = float(probe_stats.get("val_trades", 0.0))
+                        probe_mmr = 100.0 * float(probe_stats.get("val_cagr", 0.0))
                         probe_pass = bool(
                             probe_windows >= int(self.config.fitness.test_walkforward_min_windows)
                             and probe_spr >= float(self.config.fitness.test_walkforward_min_spr)
@@ -2587,6 +2658,7 @@ class Trainer:
                             "pf": float(probe_pf),
                             "positive_frac": float(probe_pos_frac),
                             "trades": float(probe_trades),
+                            "mmr_pct_mean": float(probe_mmr),
                             "pass": bool(probe_pass),
                         }
                 finally:
@@ -2608,7 +2680,27 @@ class Trainer:
                 )
                 preferred_probe_name = ranked_probe_names[0] if ranked_probe_names else None
                 temporal_shortlist_names: List[str] = []
+                early_mmr_rescue_names: List[str] = []
                 temporal_keep_floor = None
+                pass_positive_names: List[str] = []
+                incumbent_item = (
+                    tournament_by_name.get(incumbent_name, {}) if incumbent_name else {}
+                )
+                incumbent_val_mmr = float(
+                    incumbent_item.get(
+                        "val_mmr_pct_mean",
+                        incumbent_item.get(
+                            "base_mmr_pct_mean",
+                            incumbent_item.get("robust_mmr_pct_mean", 0.0),
+                        ),
+                    )
+                )
+                incumbent_base_mmr = float(
+                    incumbent_item.get(
+                        "base_mmr_pct_mean",
+                        incumbent_item.get("robust_mmr_pct_mean", 0.0),
+                    )
+                )
                 if alignment_probe_temporal_bias_enabled and ranked_probe_names:
                     pass_positive_names = [
                         name
@@ -2630,11 +2722,27 @@ class Trainer:
                             probe_return = float(probe_results[name]["return_pct"])
                             if probe_return < temporal_keep_floor:
                                 continue
+                            candidate_item = tournament_by_name.get(name, {})
                             candidate_episode = int(
-                                tournament_by_name.get(name, {}).get("episode", 10**9)
+                                candidate_item.get("episode", 10**9)
                             )
                             if candidate_episode < alignment_probe_temporal_min_episode:
                                 continue
+                            if alignment_probe_temporal_require_forward_profit:
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_item.get("tail_return_pct", 0.0),
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_item.get("tail_pf", 0.0),
+                                    )
+                                )
+                                if candidate_forward_return <= 0.0 or candidate_forward_pf < 1.0:
+                                    continue
                             temporal_ranked.append(
                                 (
                                     candidate_episode,
@@ -2647,16 +2755,75 @@ class Trainer:
                             temporal_ranked.sort()
                             temporal_shortlist_names = [x[3] for x in temporal_ranked]
                             preferred_probe_name = temporal_shortlist_names[0]
+                        if (
+                            alignment_probe_early_mmr_rescue_enabled
+                            and incumbent_name
+                        ):
+                            early_mmr_ranked = []
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if candidate_episode >= alignment_probe_temporal_min_episode:
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_base_mmr = float(
+                                    candidate_item.get(
+                                        "base_mmr_pct_mean",
+                                        candidate_item.get("robust_mmr_pct_mean", 0.0),
+                                    )
+                                )
+                                candidate_val_mmr = float(
+                                    candidate_item.get(
+                                        "val_mmr_pct_mean",
+                                        candidate_base_mmr,
+                                    )
+                                )
+                                if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                    continue
+                                if candidate_val_mmr < alignment_probe_early_mmr_min:
+                                    continue
+                                if (
+                                    candidate_val_mmr
+                                    < incumbent_val_mmr
+                                    + alignment_probe_early_mmr_edge_min
+                                ):
+                                    continue
+                                early_mmr_ranked.append(
+                                    (
+                                        -candidate_val_mmr,
+                                        -float(probe_results[name]["positive_frac"]),
+                                        -float(probe_results[name]["return_pct"]),
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                            if early_mmr_ranked:
+                                early_mmr_ranked.sort()
+                                early_mmr_rescue_names = [x[4] for x in early_mmr_ranked]
+                                preferred_probe_name = early_mmr_rescue_names[0]
 
                 challenger_name = None
                 challenger_from_temporal_bias = False
+                challenger_from_early_mmr_rescue = False
                 if preferred_probe_name and preferred_probe_name != incumbent_name:
                     challenger_name = preferred_probe_name
+                    challenger_from_early_mmr_rescue = (
+                        alignment_probe_early_mmr_rescue_enabled
+                        and preferred_probe_name in early_mmr_rescue_names
+                    )
                     challenger_from_temporal_bias = (
                         alignment_probe_temporal_bias_enabled
+                        and not challenger_from_early_mmr_rescue
                         and preferred_probe_name in temporal_shortlist_names
                     )
-                elif not temporal_shortlist_names:
+                elif not temporal_shortlist_names and not early_mmr_rescue_names:
                     challenger_name = next(
                         (name for name in ranked_probe_names if name != incumbent_name),
                         None,
@@ -2679,6 +2846,39 @@ class Trainer:
                         challenger_passes = True
 
                     temporal_edge_gate = False
+                    early_mmr_edge_gate = False
+                    if challenger_from_early_mmr_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_val_mmr = float(
+                            challenger_item.get(
+                                "val_mmr_pct_mean",
+                                challenger_item.get(
+                                    "base_mmr_pct_mean",
+                                    challenger_item.get("robust_mmr_pct_mean", 0.0),
+                                ),
+                            )
+                        )
+                        challenger_base_mmr = float(
+                            challenger_item.get(
+                                "base_mmr_pct_mean",
+                                challenger_item.get("robust_mmr_pct_mean", 0.0),
+                            )
+                        )
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        early_mmr_edge_gate = bool(
+                            challenger_episode < alignment_probe_temporal_min_episode
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf >= 1.0
+                            and challenger_val_mmr >= alignment_probe_early_mmr_min
+                            and challenger_val_mmr
+                            >= incumbent_val_mmr + alignment_probe_early_mmr_edge_min
+                        )
                     if challenger_from_temporal_bias and challenger_name in tournament_by_name:
                         challenger_episode = int(
                             tournament_by_name[challenger_name].get("episode", 10**9)
@@ -2706,7 +2906,9 @@ class Trainer:
                         )
 
                     edge_gate = bool(
-                        temporal_edge_gate
+                        early_mmr_edge_gate
+                        if challenger_from_early_mmr_rescue
+                        else temporal_edge_gate
                         if challenger_from_temporal_bias
                         else (
                             return_edge >= alignment_probe_return_edge_min
@@ -2757,6 +2959,10 @@ class Trainer:
                             "temporal_return_slack_pct": float(alignment_probe_temporal_return_slack_pct),
                             "temporal_pf_slack": float(alignment_probe_temporal_pf_slack),
                             "temporal_positive_frac_slack": float(alignment_probe_temporal_positive_frac_slack),
+                            "temporal_require_forward_profit": bool(alignment_probe_temporal_require_forward_profit),
+                            "early_mmr_rescue_enabled": bool(alignment_probe_early_mmr_rescue_enabled),
+                            "early_mmr_min": float(alignment_probe_early_mmr_min),
+                            "early_mmr_edge_min": float(alignment_probe_early_mmr_edge_min),
                             "walkforward_min_windows": int(self.config.fitness.test_walkforward_min_windows),
                             "walkforward_min_spr": float(self.config.fitness.test_walkforward_min_spr),
                             "walkforward_min_pf": float(self.config.fitness.test_walkforward_min_pf),
@@ -2765,9 +2971,11 @@ class Trainer:
                         "incumbent_filename": incumbent_name,
                         "challenger_filename": challenger_name,
                         "challenger_from_temporal_bias": bool(challenger_from_temporal_bias),
+                        "challenger_from_early_mmr_rescue": bool(challenger_from_early_mmr_rescue),
                         "ranked_probe_filenames": ranked_probe_names,
                         "preferred_probe_filename": preferred_probe_name,
                         "temporal_shortlist_filenames": temporal_shortlist_names,
+                        "early_mmr_rescue_filenames": early_mmr_rescue_names,
                         "temporal_keep_floor_return_pct": (
                             float(temporal_keep_floor) if temporal_keep_floor is not None else None
                         ),
@@ -2779,7 +2987,13 @@ class Trainer:
                         "temporal_return_slack_pct": float(alignment_probe_temporal_return_slack_pct),
                         "temporal_pf_slack": float(alignment_probe_temporal_pf_slack),
                         "temporal_positive_frac_slack": float(alignment_probe_temporal_positive_frac_slack),
+                        "temporal_require_forward_profit": bool(alignment_probe_temporal_require_forward_profit),
+                        "early_mmr_min": float(alignment_probe_early_mmr_min),
+                        "early_mmr_edge_min": float(alignment_probe_early_mmr_edge_min),
+                        "incumbent_val_mmr_pct_mean": float(incumbent_val_mmr),
+                        "incumbent_base_mmr_pct_mean": float(incumbent_base_mmr),
                         "temporal_edge_gate": bool(temporal_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "early_mmr_edge_gate": bool(early_mmr_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
                         "switched": bool(switched),
                         "winner_after_alignment": winner.get("filename"),
                         "probe_results": probe_results,

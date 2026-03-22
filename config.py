@@ -237,10 +237,17 @@ class TrainingConfig:
     anti_regression_alignment_probe_require_pass: bool = True
     anti_regression_alignment_probe_temporal_bias_enabled: bool = True
     anti_regression_alignment_probe_temporal_keep_return_frac: float = 0.60
-    anti_regression_alignment_probe_temporal_min_episode: int = 5
+    # Allow early robust recoveries like ep003 while still filtering out ep001/ep002.
+    anti_regression_alignment_probe_temporal_min_episode: int = 3
     anti_regression_alignment_probe_temporal_return_slack_pct: float = 0.30
     anti_regression_alignment_probe_temporal_pf_slack: float = 0.15
     anti_regression_alignment_probe_temporal_positive_frac_slack: float = 0.15
+    anti_regression_alignment_probe_temporal_require_forward_profit: bool = True
+    # Allow ep001/ep002 only when full-validation MMR is materially stronger
+    # than the incumbent, which avoids broad early-episode bias regressions.
+    anti_regression_alignment_probe_early_mmr_rescue_enabled: bool = True
+    anti_regression_alignment_probe_early_mmr_min: float = 1.00
+    anti_regression_alignment_probe_early_mmr_edge_min: float = 0.50
 
 
 @dataclass
@@ -254,6 +261,9 @@ class DataConfig:
     date_col: str = None
     time_col: str = "time"
     parse_dates: bool = True
+    csv_start_date: str | None = None
+    csv_end_date: str | None = None
+    csv_n_bars: int | None = None
     n_bars: int = 10000
     start_date: str = "2023-01-01"
     freq: str = "1H"

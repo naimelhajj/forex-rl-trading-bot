@@ -227,6 +227,36 @@ def prepare_data(config: Config):
         for pair, df in pair_dfs.items():
             pair_dfs[pair] = df.sort_index()
         validate_pair_dfs(pair_dfs, require_datetime_index=config.data.parse_dates)
+        csv_start_date = getattr(config.data, "csv_start_date", None)
+        csv_end_date = getattr(config.data, "csv_end_date", None)
+        csv_n_bars = getattr(config.data, "csv_n_bars", None)
+        if csv_start_date or csv_end_date or csv_n_bars is not None:
+            print("\nApplying CSV time slice...")
+            start_ts = pd.Timestamp(csv_start_date) if csv_start_date else None
+            end_ts = pd.Timestamp(csv_end_date) if csv_end_date else None
+            sliced_pair_dfs = {}
+            for pair, df in pair_dfs.items():
+                sliced = df
+                if start_ts is not None:
+                    sliced = sliced.loc[sliced.index >= start_ts]
+                if end_ts is not None:
+                    sliced = sliced.loc[sliced.index <= end_ts]
+                if csv_n_bars is not None:
+                    sliced = sliced.tail(int(csv_n_bars))
+                if sliced.empty:
+                    raise ValueError(
+                        f"CSV slice produced no rows for {pair} "
+                        f"(start={csv_start_date}, end={csv_end_date}, n_bars={csv_n_bars})"
+                    )
+                sliced_pair_dfs[pair] = sliced
+            pair_dfs = sliced_pair_dfs
+            validate_pair_dfs(pair_dfs, require_datetime_index=config.data.parse_dates)
+            sample_pair = "EURUSD" if "EURUSD" in pair_dfs else next(iter(pair_dfs))
+            sample_df = pair_dfs[sample_pair]
+            print(
+                f"  CSV slice rows: {len(sample_df)} | "
+                f"range: {sample_df.index[0]} to {sample_df.index[-1]}"
+            )
         pairs = list(pair_dfs.keys())
     else:
         # Build pair universe
@@ -1017,6 +1047,12 @@ def main():
                        help='Base directory for CSV data files')
     parser.add_argument('--pair-files', type=str, default=None,
                        help='JSON dict or JSON file path: {PAIR: csv_path}')
+    parser.add_argument('--csv-start-date', type=str, default=None,
+                       help='Optional inclusive start date for slicing synchronized CSV data')
+    parser.add_argument('--csv-end-date', type=str, default=None,
+                       help='Optional inclusive end date for slicing synchronized CSV data')
+    parser.add_argument('--csv-n-bars', type=int, default=None,
+                       help='Optional number of trailing bars to keep after CSV date slicing')
     parser.add_argument('--use-symmetry-loss', dest='use_symmetry_loss', action='store_true',
                        help='Enable symmetry loss augmentation')
     parser.add_argument('--no-symmetry-loss', dest='use_symmetry_loss', action='store_false',
@@ -1286,6 +1322,20 @@ def main():
                         help='Allow a temporal-bias challenger to trail incumbent probe PF by up to this amount')
     parser.add_argument('--anti-regression-alignment-probe-temporal-positive-frac-slack', type=float, default=None,
                         help='Allow a temporal-bias challenger to trail incumbent positive-fraction by up to this amount')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-require-forward-profit', dest='anti_regression_alignment_probe_temporal_require_forward_profit', action='store_true',
+                        help='Require temporal-bias challengers to keep positive future/tail return and PF')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-allow-forward-loss', dest='anti_regression_alignment_probe_temporal_require_forward_profit', action='store_false',
+                        help='Allow temporal-bias challengers even when future/tail return or PF is weak')
+    parser.set_defaults(anti_regression_alignment_probe_temporal_require_forward_profit=None)
+    parser.add_argument('--anti-regression-alignment-probe-early-mmr-rescue', dest='anti_regression_alignment_probe_early_mmr_rescue_enabled', action='store_true',
+                        help='Allow ep001/ep002-style rescue only when validation-side MMR is materially stronger than the incumbent')
+    parser.add_argument('--anti-regression-alignment-probe-no-early-mmr-rescue', dest='anti_regression_alignment_probe_early_mmr_rescue_enabled', action='store_false',
+                        help='Disable validation-side MMR rescue for ep001/ep002-style challengers')
+    parser.set_defaults(anti_regression_alignment_probe_early_mmr_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-early-mmr-min', type=float, default=None,
+                        help='Minimum validation-side MMR required before ep001/ep002-style rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-early-mmr-edge-min', type=float, default=None,
+                        help='Required validation-side MMR edge over incumbent before ep001/ep002-style rescue is considered')
     
     args = parser.parse_args()
     
@@ -1331,6 +1381,12 @@ def main():
     if args.pair_files is not None:
         config.data.pair_files = parse_pair_files_arg(args.pair_files)
         config.data.data_mode = "csv"
+    if args.csv_start_date is not None:
+        config.data.csv_start_date = args.csv_start_date
+    if args.csv_end_date is not None:
+        config.data.csv_end_date = args.csv_end_date
+    if args.csv_n_bars is not None:
+        config.data.csv_n_bars = max(100, int(args.csv_n_bars))
     if args.use_symmetry_loss is not None:
         config.agent.use_symmetry_loss = args.use_symmetry_loss
     if args.symmetry_loss_weight is not None:
@@ -1540,6 +1596,22 @@ def main():
         config.training.anti_regression_alignment_probe_temporal_positive_frac_slack = max(
             0.0,
             float(args.anti_regression_alignment_probe_temporal_positive_frac_slack),
+        )
+    if args.anti_regression_alignment_probe_temporal_require_forward_profit is not None:
+        config.training.anti_regression_alignment_probe_temporal_require_forward_profit = bool(
+            args.anti_regression_alignment_probe_temporal_require_forward_profit
+        )
+    if args.anti_regression_alignment_probe_early_mmr_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_early_mmr_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_early_mmr_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_early_mmr_min is not None:
+        config.training.anti_regression_alignment_probe_early_mmr_min = float(
+            args.anti_regression_alignment_probe_early_mmr_min
+        )
+    if args.anti_regression_alignment_probe_early_mmr_edge_min is not None:
+        config.training.anti_regression_alignment_probe_early_mmr_edge_min = float(
+            args.anti_regression_alignment_probe_early_mmr_edge_min
         )
     
     # Override episodes if specified
