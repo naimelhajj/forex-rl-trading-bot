@@ -6,6 +6,2976 @@ include paths to logs/results when applicable.
 
 Note: entries below are reorganized in reverse chronological order for readability.
 
+## 2026-04-16 (selector fix: `allow_later_probe_dominance` unblocks `seed1011` default `costgate4` on `candidate_ep015.pt`)
+
+Problem:
+- `seed1011` default `costgate4` 17-episode run selected `candidate_ep006.pt`, which failed walk-forward: `-1.62%`, PF `0.598`, walk-forward `fail`
+- the alignment probe correctly identified `candidate_ep015.pt` as the temporal bias challenger with overwhelming probe superiority:
+  - ep015: return `+0.87%`, PF `1.455`, positive frac `0.70`, MMR `0.506`, pass `true`
+  - ep006: return `+0.07%`, PF `1.060`, positive frac `0.54`, MMR `0.024`, pass `true`
+- but the temporal edge gate blocked the switch because `challenger_episode (15) < incumbent_episode (6)` was `false`
+- the temporal dominance override also did not fire because ep015 was the only entry in the temporal shortlist
+
+Fix:
+- added `allow_later_probe_dominance` escape in `trainer.py` temporal edge gate
+- allows later-episode challengers when probe return edge >= `0.5`, PF edge >= `0.2`, positive frac edge >= `0.1`, and challenger passes
+- in this case: edges were `+0.80%` return, `+0.40` PF, `+0.16` positive frac — all well above thresholds
+
+Validation:
+- direct eval of `candidate_ep015.pt`: `+1.17%`, PF `1.38`, walk-forward `pass`, positive frac `0.67`
+  - `test_output/seed1011_default_costgate4_eval_candidate_ep015_20260416_1326/results/test_results.json`
+- `python -m py_compile trainer.py` passed
+- `python -m pytest tests/ -v` — 10/10 passed
+
+## 2026-04-10 (`seed1011` default split-gate 17-episode direct `candidate_ep017.pt` eval passed strongly)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_traincg20_evalcg30_train17ep_eval_candidate_ep017_20260410_1710/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep017.pt`
+  - return: `+2.10%`
+  - PF: `1.50`
+  - trades: `56`
+  - max drawdown: `-0.83%`
+  - walk-forward: `pass`
+  - positive fraction: `0.729`
+  - median SPR: `0.481`
+
+Meaning:
+- the 17-episode split-gate branch is viable on the hard default-side `seed1011` case
+- the remaining gap is operational cleanliness: the original 17-episode training run crashed before writing final selected results because of the earlier no-space logging failure
+
+Next action:
+- started a clean rerun here:
+  - `seed_sweep_results/realdata/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805.err.log`
+
+## 2026-04-10 (`seed1011` default 17-episode split-gate checkpoint `candidate_ep017.pt` is now the active proof check)
+
+Update:
+- the stale 17-episode training process from:
+  - `seed_sweep_results/realdata/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_20260410_1636_seed1011`
+  remained alive after the earlier no-space logging failure and was terminated after its checkpoints were already safely written
+
+Reason:
+- the 10-episode split-gate branch is no longer acting like a nearby selector miss after direct failures on:
+  - `candidate_ep001.pt`
+  - `candidate_ep002.pt`
+  - `candidate_ep009.pt`
+- the highest-ROI next check is the strongest checkpoint from the longer 17-episode run
+
+Next action:
+- started direct eval here:
+  - `test_output/seed1011_default_traincg20_evalcg30_train17ep_eval_candidate_ep017_20260410_1710`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_train17ep_eval_candidate_ep017_20260410_1710.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_train17ep_eval_candidate_ep017_20260410_1710.err.log`
+
+## 2026-04-10 (`seed1011` default split-gate direct `candidate_ep009.pt` eval failed; this branch is no longer behaving like a nearby selector miss)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep009_20260410_1626/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+0.12%`
+  - PF: `0.84`
+  - trades: `26`
+  - max drawdown: `-2.57%`
+  - walk-forward: `fail`
+  - positive fraction: `0.492`
+
+Meaning:
+- after direct checks on `candidate_ep001.pt`, `candidate_ep002.pt`, and `candidate_ep009.pt`, the split-gate branch is no longer acting like a nearby selector-only miss on the default `seed1011` case
+- the next useful direction is branch-level calibration again, not more checkpoint brute-force on this run
+
+Next action:
+- started a fresh default-side branch probe here:
+  - `seed_sweep_results/realdata/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_20260410_1636_seed1011`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_20260410_1636.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_20260410_1636.err.log`
+
+## 2026-04-10 (`seed1011` default split-gate direct `candidate_ep002.pt` eval failed; `candidate_ep009.pt` became the next decisive check)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep002_20260410_1608/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep002.pt`
+  - return: `-1.38%`
+  - PF: `0.63`
+  - trades: `25`
+  - max drawdown: `-2.60%`
+  - walk-forward: `fail`
+  - positive fraction: `0.487`
+
+Meaning:
+- `candidate_ep002.pt` is not the recovery checkpoint for the split-gate branch
+- the strongest remaining candidate is now `candidate_ep009.pt`, which still has the cleanest positive forward structure and validation MMR in the same tournament
+
+Next action:
+- started direct eval here:
+  - `test_output/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep009_20260410_1626`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep009_20260410_1626.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep009_20260410_1626.err.log`
+
+## 2026-04-10 (`seed1011` default split-gate direct `candidate_ep001.pt` eval failed; `candidate_ep002.pt` became the next high-ROI recovery check)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep001_20260409_2302/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `+0.32%`
+  - PF: `1.09`
+  - trades: `40`
+  - max drawdown: `-1.70%`
+  - walk-forward: `fail`
+  - positive fraction: `0.380`
+  - median PF: `0.989`
+
+Meaning:
+- the selected split-gate checkpoint is not good enough
+- this keeps `seed1011` default unresolved, but the run still looks recoverable because `candidate_ep002.pt` has the best remaining positive forward/validation structure in the same tournament
+
+Next action:
+- started direct eval of the strongest remaining conservative candidate here:
+  - `test_output/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep002_20260410_1608`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep002_20260410_1608.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep002_20260410_1608.err.log`
+
+## 2026-04-09 (`seed1011` default split-gate proof selected `candidate_ep001.pt`, but the run did not write final results)
+
+Result:
+- split-gate training run completed here:
+  - `seed_sweep_results/realdata/seed1011_default_traincg20_evalcg30_atrabs817_train10ep_absatrrescue_20260409_1627_seed1011`
+- selector output:
+  - `seed_sweep_results/realdata/seed1011_default_traincg20_evalcg30_atrabs817_train10ep_absatrrescue_20260409_1627_seed1011/logs/checkpoint_tournament.json`
+  - winner after alignment: `candidate_ep001.pt`
+  - selector mode: `tail_holdout+wfalign`
+  - selection pool included `candidate_ep008.pt`, `candidate_ep002.pt`, `candidate_ep009.pt`, `candidate_ep010.pt`, and others
+
+Limitation:
+- the run did not write `results/test_results.json`
+- `logs/seed1011_default_traincg20_evalcg30_atrabs817_train10ep_absatrrescue_20260409_1627.err.log` ended with repeated logging errors after training completion
+- so this is not yet a clean selected-checkpoint proof
+
+Next action:
+- started direct eval of the selected checkpoint here:
+  - `test_output/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep001_20260409_2302`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep001_20260409_2302.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_eval_candidate_ep001_20260409_2302.err.log`
+
+## 2026-04-09 (added separate train vs validation/test ATR gates and launched the first split-gate proof on `seed1011` default)
+
+Change:
+- added validation/test-only ATR gate overrides in:
+  - `config.py`
+  - `main.py`
+- new knobs:
+  - `eval_min_atr_cost_ratio`
+  - `eval_min_atr_pips_absolute`
+- environment construction now keeps the training gate on `train_env` and applies the eval overrides only on `val_env` / `test_env`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py environment.py`
+- `python test_system.py`
+
+Reason:
+- `seed1011` default evidence now says `costgate3.0 + atr_floor 8.1714` works as an evaluation gate on the known good `costgate2` checkpoint, but the branch trained under that stricter gate still produces weak checkpoints
+- that points to training-time calibration, so the next useful branch test is train with the looser default gate and validate/test with the stricter bridge gate
+
+Run started:
+- output:
+  - `seed_sweep_results/realdata/seed1011_default_traincg20_evalcg30_atrabs817_train10ep_absatrrescue_20260409_1627_seed1011`
+- logs:
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_train10ep_absatrrescue_20260409_1627.out.log`
+  - `logs/seed1011_default_traincg20_evalcg30_atrabs817_train10ep_absatrrescue_20260409_1627.err.log`
+
+## 2026-04-08 (`seed1011` default `costgate2.0 + atr_floor 8.1714` selected `candidate_ep009.pt` was only a thin pass)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate20_atrabs817_eval_candidate_ep009_20260408_1348/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+0.20%`
+  - PF: `0.89`
+  - trades: `25`
+  - max drawdown: `-1.57%`
+  - walk-forward: `pass`
+  - positive fraction: `0.618`
+  - median PF: `1.324`
+
+Meaning:
+- the selected checkpoint is technically viable on robustness, but still economically weak
+- this is not enough to count as a clean default-side proof for the hybrid branch
+
+Next action:
+- started direct eval of the stronger economic challenger here:
+  - `test_output/seed1011_default_costgate20_atrabs817_eval_candidate_ep010_20260408_1352`
+- logs:
+  - `logs/seed1011_default_costgate20_atrabs817_eval_candidate_ep010_20260408_1352.out.log`
+  - `logs/seed1011_default_costgate20_atrabs817_eval_candidate_ep010_20260408_1352.err.log`
+
+## 2026-04-08 (`seed1011` default `costgate2.0 + atr_floor 8.1714` training probe completed selector stage but still needs direct selected-checkpoint proof)
+
+Result:
+- training probe completed here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate20_atrabs817_train10ep_absatrrescue_20260407_1650_seed1011`
+- selector output:
+  - `seed_sweep_results/realdata/seed1011_default_costgate20_atrabs817_train10ep_absatrrescue_20260407_1650_seed1011/logs/checkpoint_tournament.json`
+  - winner after selection: `candidate_ep009.pt`
+  - selector mode stayed `tail_holdout`
+  - alignment did not switch
+
+Limitation:
+- this run did not write `results/test_results.json`, so it is not yet a clean selected-checkpoint proof
+
+Next action:
+- started direct eval of the selected checkpoint here:
+  - `test_output/seed1011_default_costgate20_atrabs817_eval_candidate_ep009_20260408_1348`
+- logs:
+  - `logs/seed1011_default_costgate20_atrabs817_eval_candidate_ep009_20260408_1348.out.log`
+  - `logs/seed1011_default_costgate20_atrabs817_eval_candidate_ep009_20260408_1348.err.log`
+
+## 2026-04-07 (`seed1011` default current-branch `candidate_ep010.pt` still failed under the looser `costgate2` gate)
+
+Result:
+- reverse compatibility eval finished here:
+  - `test_output/seed1011_default_costgate30_ckpt_ep010_eval_costgate2_20260407_1638/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep010.pt`
+  - return: `+1.28%`
+  - PF: `1.24`
+  - trades: `19`
+  - max drawdown: `-1.62%`
+  - walk-forward: `fail`
+  - positive fraction: `0.367`
+  - median PF: `0.710`
+
+Meaning:
+- relaxing the evaluation gate back to `costgate2` does not rescue the current branch's best economic checkpoint
+- that shifts the default-side `seed1011` problem decisively toward training-time calibration, not evaluation-gate incompatibility
+
+Next action:
+- started a direct training probe on the hybrid branch here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate20_atrabs817_train10ep_absatrrescue_20260407_1650_seed1011`
+- logs:
+  - `logs/seed1011_default_costgate20_atrabs817_train10ep_absatrrescue_20260407_1650.out.log`
+  - `logs/seed1011_default_costgate20_atrabs817_train10ep_absatrrescue_20260407_1650.err.log`
+
+## 2026-04-07 (`seed1011` default `costgate2` checkpoint stayed viable under `costgate3.0 + atr_floor 8.1714`, pointing back to training-time calibration)
+
+Result:
+- direct compatibility eval finished here:
+  - `test_output/seed1011_default_costgate2_ckpt_ep005_eval_costgate30_atrabs817_20260407_1624/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt`
+  - return: `+0.04%`
+  - PF: `1.02`
+  - trades: `44`
+  - max drawdown: `-1.64%`
+  - walk-forward: `pass`
+  - positive fraction: `0.553`
+  - median PF: `1.306`
+
+Meaning:
+- the current `costgate3.0 + atr_floor 8.1714` evaluation gate does not kill the previously known good default-side checkpoint
+- that shifts the default `seed1011` issue away from pure eval-gate incompatibility and toward training-time branch calibration
+
+Next action:
+- started reverse compatibility eval of the current branch's best economic checkpoint under the looser default gate:
+  - `test_output/seed1011_default_costgate30_ckpt_ep010_eval_costgate2_20260407_1638`
+- logs:
+  - `logs/seed1011_default_costgate30_ckpt_ep010_eval_costgate2_20260407_1638.out.log`
+  - `logs/seed1011_default_costgate30_ckpt_ep010_eval_costgate2_20260407_1638.err.log`
+
+## 2026-04-07 (`seed1011` default `costgate3.0 + atr_floor 8.1714` direct `candidate_ep001.pt` eval still failed walk-forward)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep001_20260407_1608/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `+0.73%`
+  - PF: `1.28`
+  - trades: `25`
+  - max drawdown: `-1.47%`
+  - walk-forward: `fail`
+  - positive fraction: `0.432`
+  - median PF: `1.121`
+
+Meaning:
+- after direct checks on `candidate_ep009.pt`, `candidate_ep010.pt`, `candidate_ep008.pt`, and `candidate_ep001.pt`, the default-side `seed1011` case is no longer behaving like an easy selector-only miss
+- the next useful question is whether the current gate is the problem, or whether the branch is failing during training
+
+Next action:
+- started a compatibility eval of the previously known good default-side checkpoint here:
+  - `test_output/seed1011_default_costgate2_ckpt_ep005_eval_costgate30_atrabs817_20260407_1624`
+- logs:
+  - `logs/seed1011_default_costgate2_ckpt_ep005_eval_costgate30_atrabs817_20260407_1624.out.log`
+  - `logs/seed1011_default_costgate2_ckpt_ep005_eval_costgate30_atrabs817_20260407_1624.err.log`
+
+## 2026-04-07 (`seed1011` default `costgate3.0 + atr_floor 8.1714` direct `candidate_ep008.pt` eval still failed robustness)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep008_20260407_1246/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep008.pt`
+  - return: `+0.82%`
+  - PF: `1.26`
+  - trades: `25`
+  - max drawdown: `-1.01%`
+  - walk-forward: `fail`
+  - positive fraction: `0.417`
+  - median PF: `0.970`
+
+Meaning:
+- `candidate_ep008.pt` improves over the weak selected `candidate_ep009.pt` on PF, but it still does not close robustness
+- this keeps the default-side `seed1011` case unresolved
+
+Next action:
+- started direct eval of the strongest remaining validation-led conservative candidate here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep001_20260407_1608`
+- logs:
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep001_20260407_1608.out.log`
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep001_20260407_1608.err.log`
+
+## 2026-04-07 (`seed1011` default `costgate3.0 + atr_floor 8.1714` direct `candidate_ep010.pt` eval improved economics but failed robustness)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep010_20260407_1118/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep010.pt`
+  - return: `+0.75%`
+  - PF: `1.15`
+  - trades: `18`
+  - max drawdown: `-1.73%`
+  - walk-forward: `fail`
+  - positive fraction: `0.357`
+
+Meaning:
+- `candidate_ep010.pt` improves economics over the selected `candidate_ep009.pt`
+- but it still fails walk-forward robustness, so the default-side `seed1011` case remains unresolved
+
+Next action:
+- started direct eval of the next plausible later candidate here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep008_20260407_1246`
+- logs:
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep008_20260407_1246.out.log`
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep008_20260407_1246.err.log`
+
+## 2026-04-07 (`seed1011` default `costgate3.0 + atr_floor 8.1714` direct `candidate_ep009.pt` eval was only a thin pass)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep009_20260407_1056/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+0.20%`
+  - PF: `0.89`
+  - trades: `25`
+  - max drawdown: `-1.57%`
+  - walk-forward: `pass`
+  - positive fraction: `0.618`
+
+Meaning:
+- the selected checkpoint is technically viable on robustness, but still economically weak
+- this is not enough to count as a clean default-side proof for the branch
+
+Next action:
+- started direct eval of the alignment challenger here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep010_20260407_1118`
+- logs:
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep010_20260407_1118.out.log`
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep010_20260407_1118.err.log`
+
+## 2026-04-07 (`seed1011` default `costgate3.0 + atr_floor 8.1714` rerun selected `candidate_ep009.pt`, but still needs direct eval proof)
+
+Result:
+- rerun completed here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate30_atrabs817_train10ep_absatrrescue_20260407_1024_seed1011`
+- selector output:
+  - `seed_sweep_results/realdata/seed1011_default_costgate30_atrabs817_train10ep_absatrrescue_20260407_1024_seed1011/logs/checkpoint_tournament.json`
+  - winner after selection: `candidate_ep009.pt`
+  - selector mode stayed `tail_holdout`
+  - alignment challenger was `candidate_ep010.pt`, but `switched = false`
+
+Limitation:
+- this run did not write `results/test_results.json`, so it is not yet a clean selected-checkpoint proof
+
+Next action:
+- started direct eval of the selected checkpoint here:
+  - `test_output/seed1011_default_costgate30_atrabs817_eval_candidate_ep009_20260407_1056`
+- logs:
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep009_20260407_1056.out.log`
+  - `logs/seed1011_default_costgate30_atrabs817_eval_candidate_ep009_20260407_1056.err.log`
+
+## 2026-04-07 (`candidate_ep008.pt` direct eval confirmed the `abs_atr_late_rescue` selection on `seed2027` / `regimeB`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep008_20260407_0012/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep008.pt`
+  - source run: `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescuefix_20260406_183009_seed2027`
+  - return: `+0.93%`
+  - PF: `1.48`
+  - trades: `14`
+  - max drawdown: `-1.41%`
+  - walk-forward: `pass`
+  - positive fraction: `0.589`
+
+Meaning:
+- the absolute-ATR late rescue is selecting the correct recovery checkpoint on the hard `seed2027` / `2013-2017` case
+- this is now verified as a selector fix on the `costgate3.0 + atr_floor 8.1714` branch
+- next step is a default-side training proof on `seed1011`, not more checkpoint brute-force on `seed2027`
+
+## 2026-04-07 (`abs_atr_late_rescue` rerun selected `candidate_ep008.pt`, but still needs direct eval proof)
+
+Result:
+- rerun completed here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescuefix_20260406_183009_seed2027`
+- selector output:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescuefix_20260406_183009_seed2027/logs/checkpoint_tournament.json`
+  - winner after alignment: `candidate_ep008.pt`
+  - `challenger_from_abs_atr_late_rescue = true`
+  - `abs_atr_late_edge_gate = true`
+  - `switched = true`
+
+Limitation:
+- this run did not write `results/test_results.json`, so it is not yet a clean selected-checkpoint proof
+
+Next action:
+- started direct eval of the selected checkpoint here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep008_20260407_0012`
+- logs:
+  - `logs/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep008_20260407_0012.out.log`
+  - `logs/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep008_20260407_0012.err.log`
+
+## 2026-04-06 (`abs_atr_late_rescue` proof rerun crashed, fixed, and restarted)
+
+Issue:
+- first proof rerun crashed before writing final results:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescue_20260406_182253_seed2027`
+  - error log: `logs/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescue_20260406_182253_seed2027.err.log`
+  - exception: `NameError: name 'min_atr_pips_absolute' is not defined`
+
+Fix:
+- patched `trainer.py` to bind `min_atr_cost_ratio` and `min_atr_pips_absolute` from `self.config.environment` before the new rescue gate uses them
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py environment.py`
+- `python test_system.py`
+
+Restart:
+- restarted proof run here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescuefix_20260406_183009_seed2027`
+- logs:
+  - `logs/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescuefix_20260406_183009_seed2027.out.log`
+  - `logs/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescuefix_20260406_183009_seed2027.err.log`
+
+## 2026-04-06 (`abs_atr_late_rescue` added for the `costgate3.0 + atr_floor 8.1714` selector miss)
+
+Change:
+- added a narrow absolute-ATR late rescue path in:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+- intent:
+  - only activate when `min_atr_pips_absolute` is on and `min_atr_cost_ratio <= 3.0`
+  - allow a later checkpoint to beat a weak-validation incumbent when base/alt structure and validation MMR are materially stronger, even if the cheap probe is slightly worse
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py environment.py`
+- `python test_system.py`
+
+Preview:
+- wrote offline preview to:
+  - `test_output/costgate30_atrabs817_abs_atr_late_rescue_preview_20260406.json`
+- target behavior:
+  - `seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027`
+  - expected selector flip: `candidate_ep007.pt -> candidate_ep008.pt`
+- checked control:
+  - `seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027`
+  - rescue remains inactive there
+
+Proof run:
+- started rerun here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescue_20260406_182253_seed2027`
+- logs:
+  - `logs/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescue_20260406_182253_seed2027.out.log`
+  - `logs/seed2027_regimeB_costgate30_atrabs817_train10ep_absatrrescue_20260406_182253_seed2027.err.log`
+
+## 2026-04-06 (`candidate_ep008.pt` recovered the `costgate3.0 + atr_floor 8.1714` `seed2027` `regimeB` probe)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep008_20260406_174606/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep008.pt` from `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027`
+  - return: `+0.93%`
+  - PF: `1.48`
+  - trades: `14`
+  - max drawdown: `-1.41%`
+  - walk-forward: `pass`
+  - positive fraction: `0.589`
+
+Meaning:
+- the `costgate3.0 + atr_floor 8.1714` older-slice training probe is viable on `seed2027`
+- this is another selector miss, not a dead branch
+- next step is selector calibration for this branch, not more checkpoint brute-force
+
+## 2026-04-06 (`candidate_ep003.pt` also failed on the `costgate3.0 + atr_floor 8.1714` `seed2027` `regimeB` probe)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep003_20260406_173625/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep003.pt` from `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027`
+  - return: `-1.57%`
+  - PF: `0.21`
+  - trades: `13`
+  - max drawdown: `-1.95%`
+  - walk-forward: `fail`
+  - positive fraction: `0.339`
+
+Meaning:
+- the strongest remaining q25-style candidate is not the recovery either
+- the next worthwhile check is `candidate_ep008.pt`, because it is the only remaining later checkpoint in this run with clearly positive base and alternate return/PF plus positive validation MMR
+
+## 2026-04-06 (`candidate_ep005.pt` also failed on the `costgate3.0 + atr_floor 8.1714` `seed2027` `regimeB` probe)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep005_20260406_171037/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027`
+  - return: `-2.04%`
+  - PF: `0.11`
+  - trades: `12`
+  - max drawdown: `-2.06%`
+  - walk-forward: `fail`
+  - positive fraction: `0.250`
+
+Meaning:
+- the pre-alignment incumbent is not the recovery checkpoint either
+- the next discriminating check is the early `candidate_ep003.pt`, because it is the strongest remaining candidate on validation q25 structure while still keeping positive base/alt return and PF
+
+## 2026-04-06 (`candidate_ep007.pt` failed on the `costgate3.0 + atr_floor 8.1714` `seed2027` `regimeB` probe)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_eval_candidate_ep007_20260406_165641/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep007.pt` from `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027`
+  - return: `-0.11%`
+  - PF: `0.94`
+  - trades: `15`
+  - max drawdown: `-2.10%`
+  - walk-forward: `fail`
+  - positive fraction: `0.357`
+
+Meaning:
+- the first training-time `costgate3.0 + atr_floor 8.1714` older-slice probe is not closing on the selector winner
+- next step is the pre-alignment incumbent `candidate_ep005.pt`, because it has the cleanest validation PF/q25 structure from the same run and is the highest-ROI selector cross-check
+
+## 2026-04-06 (`costgate3.0 + atr_floor 8.1714` training-time probe on `seed2027` `regimeB` did not produce a clean proof)
+
+Result:
+- short training probe finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027`
+- but no final selected-checkpoint test artifact was written:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027/results/test_results.json`
+- selector output is available here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate30_atrabs817_train10ep_autorescue_20260406_135820_seed2027/logs/checkpoint_tournament.json`
+
+Checkpoint selection:
+- selected checkpoint: `candidate_ep007.pt`
+- selector mode: `tail_holdout+wfalign` (requested `auto_rescue`)
+- selected tournament profile:
+  - robust return: `-0.24%`
+  - robust PF: `0.91`
+  - validation MMR: `-0.82%`
+  - validation PF: `0.78`
+- alignment switched from incumbent `candidate_ep005.pt` to `candidate_ep007.pt`
+
+Meaning:
+- training-time adaptation at `costgate3.0 + atr_floor 8.1714` is not yet a clean branch win on the hard older-slice case
+- because the final test artifact is missing, the next useful step is direct evaluation of the selected checkpoint before judging the branch
+
+## 2026-04-06 (`min_atr_pips_absolute = 8.3657` still failed on `seed2027` `regimeB`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs836_ckpt_ep009_eval_20260406_1335/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-1.22%`
+  - PF: `0.73`
+  - trades: `36`
+  - max drawdown: `-1.97%`
+  - walk-forward: `pass`
+  - positive fraction: `0.607`
+
+Meaning:
+- raising the absolute ATR floor from `8.1714` to `8.3657` still does not preserve the hard older-slice case
+- the absolute-ATR bridge is not showing a narrow overlap band so far
+- next step is to stop more eval-only threshold guessing and test training-time adaptation on the older slice with the most compatible bridge found so far
+
+## 2026-04-06 (`costgate3.0 + atr_floor 8.1714 + deep-low-vol uplift` still failed on `seed2027` `regimeB`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_lowvol35_vol24zneg166_ckpt_ep009_eval_20260406_1326/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-0.72%`
+  - PF: `0.82`
+  - trades: `35`
+  - max drawdown: `-1.96%`
+  - walk-forward: `pass`
+  - positive fraction: `0.643`
+
+Meaning:
+- adding the best deep-low-vol uplift on top of the viable default-side ATR floor did not recover the hard older-slice case
+- the next useful question is no longer trigger tuning; it is whether a higher absolute ATR floor can recover the older slice strongly enough to reveal a narrow overlap band
+
+## 2026-04-06 (`min_atr_pips_absolute = 8.1714` still failed on `seed2027` `regimeB`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_atrabs817_ckpt_ep009_eval_20260406_1309/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-1.20%`
+  - PF: `0.73`
+  - trades: `36`
+  - max drawdown: `-1.97%`
+  - walk-forward: `pass`
+  - positive fraction: `0.607`
+
+Meaning:
+- the first absolute-ATR floor that preserves the default-side hard case still does not preserve the hard older-slice case
+- pure `costgate3.0 + atr_floor` is not enough as a branch-level bridge
+- next step is a hybrid direct check: keep the working `atr_floor` and add the narrow deep-low-vol uplift that came closest on the default side
+
+## 2026-04-06 (`min_atr_pips_absolute = 8.1714` recovered the default `seed1011` checkpoint)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_atrabs817_ckpt_ep005_eval_20260406_1214/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `+0.04%`
+  - PF: `1.02`
+  - trades: `44`
+  - max drawdown: `-1.64%`
+  - walk-forward: `pass`
+  - positive fraction: `0.553`
+
+Meaning:
+- this is the first absolute-ATR-floor setting that keeps the default-side hard checkpoint viable
+- it is still economically thin, so it is evidence of compatibility, not a branch promotion
+- next step is the symmetric older-slice check on the known good `seed2027` checkpoint under the same `costgate3.0 + atr_floor 8.1714` setup
+
+## 2026-04-06 (`min_atr_pips_absolute = 8.3657` failed on default `seed1011`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_atrabs836_ckpt_ep005_eval_20260406_1200/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.47%`
+  - PF: `0.91`
+  - trades: `44`
+  - max drawdown: `-1.64%`
+  - walk-forward: `fail`
+  - positive fraction: `0.492`
+
+Meaning:
+- the first absolute-ATR-floor probe is too strict on the default-side hard case
+- absolute ATR gating is still viable enough to continue, but it now needs a lower boundary test rather than immediate branch promotion
+- next step is a lower absolute ATR floor probe derived from the same search band
+
+## 2026-04-06 (`min_atr_pips_absolute` added for absolute-volatility gate testing)
+
+Change:
+- added `min_atr_pips_absolute` in:
+  - `config.py`
+  - `main.py`
+  - `environment.py`
+- new CLI hook:
+  - `--min-atr-pips-absolute`
+
+Evidence:
+- validation passed:
+  - `python -m py_compile config.py main.py trainer.py environment.py`
+  - `python test_system.py`
+- motivating search artifacts:
+  - `test_output/conditional_costgate_feature_search_20260406.json`
+  - `test_output/conditional_costgate_feature_search_strict_20260406.json`
+- those searches ranked raw `atr` thresholds as the clearest remaining separator between:
+  - default-side marginal bars in `[3.0, 3.375)`
+  - older-slice viable bars in `[3.375, 3.5)`
+
+Meaning:
+- trigger-only low-vol uplift tuning is close to exhausted
+- the next defensible branch-level test is an absolute ATR floor layered on top of the cost-ratio gate
+
+## 2026-04-06 (`realized_vol_24h_z <= -1.6622` improved default-side conditional uplift but still did not close)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol35_vol24zneg166_ckpt_ep005_eval_20260406_1121/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.06%`
+  - PF: `0.99`
+  - trades: `44`
+  - max drawdown: `-1.64%`
+  - walk-forward: `pass`
+  - positive fraction: `0.558`
+
+Meaning:
+- this is the best default-side result so far for the `3.0 -> 3.5` conditional uplift direction
+- but it is still economically negative, so it does not justify a branch move by itself
+- next step is the symmetric older-slice check on the known good `seed2027` checkpoint with the same deep-low-vol trigger
+
+## 2026-04-06 (`3.0 -> 3.375` conditional uplift with `realized_vol_max_z <= 0.0` failed on `seed2027` `regimeB`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_lowvol3375_volmaxz0_ckpt_ep009_eval_20260405_1936/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-1.40%`
+  - PF: `0.69`
+  - trades: `36`
+  - max drawdown: `-2.00%`
+  - walk-forward: `pass`
+  - positive fraction: `0.607`
+
+Meaning:
+- the softer conditional uplift target also fails on the older-slice hard case
+- this materially weakens the `3.0 -> uplift` direction as a branch-level solution
+- next step is targeted trigger search rather than more blind uplift variants
+
+## 2026-04-06 (`strict conditional trigger search left only one plausible deep-low-vol candidate`)
+
+Evidence:
+- search artifact:
+  - `test_output/conditional_costgate_feature_search_strict_20260406.json`
+- best remaining candidate under a strong penalty for default-side activation was:
+  - `realized_vol_24h_z <= -1.6622472126450094`
+  - default capture on `[3.0, 3.375)`: `0.0437`
+  - `regimeB` capture on `[3.375, 3.5)`: `0.1379`
+
+Meaning:
+- most conditional triggers are now too broad or too weak to justify more work
+- one last deep-low-vol trigger remains plausible enough to test directly before abandoning conditional uplift tuning
+
+## 2026-04-05 (`3.0 -> 3.375` conditional uplift with `realized_vol_max_z <= 0.0` still failed on default `seed1011`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol3375_volmaxz0_ckpt_ep005_eval_20260405_1913/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.47%`
+  - PF: `0.91`
+  - trades: `44`
+  - max drawdown: `-1.64%`
+  - walk-forward: `pass`
+  - positive fraction: `0.523`
+
+Meaning:
+- softening the uplift target from `3.5` to `3.375` did not recover the default-side hard case
+- this keeps conditional uplift alive only if it still preserves the older-slice hard case materially better than the failed default-side result
+- next step is the symmetric `seed2027` / `2013-2017` checkpoint check under the same conditional gate
+
+## 2026-04-05 (`realized_vol_min_z <= -1.0` low-vol trigger failed on default `seed1011`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol35_volminzneg1_ckpt_ep005_eval_20260405_1821/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.38%`
+  - PF: `0.92`
+  - trades: `44`
+  - max drawdown: `-1.81%`
+  - walk-forward: `pass`
+  - positive fraction: `0.518`
+
+Meaning:
+- the last high-signal trigger candidate still fails on the default-side hard case
+- conditional `3.0 -> 3.5` uplift via trigger tuning is no longer the leading path
+- next step is to test a softer uplift target (`3.375` instead of `3.5`) with the best joint low-vol trigger before abandoning conditional gating entirely
+
+## 2026-04-05 (`realized_vol_min_z` alias added after banded trigger search)
+
+Change:
+- added `realized_vol_min_z` as a supported low-vol uplift signal in:
+  - `environment.py`
+  - `main.py`
+
+Evidence:
+- banded trigger search artifact:
+  - `test_output/conditional_costgate_band_trigger_search_20260405.json`
+- top-ranked remaining candidate for the critical gap was:
+  - `vmin_le_neg1p0`
+  - strong capture on `regimeB` bars in `[3.375, 3.5)` with lower capture on default bars in `[3.0, 3.375)`
+
+Meaning:
+- simpler trigger variants have failed
+- the next reasonable direct test is the stricter `realized_vol_min_z <= -1.0` trigger before giving up on conditional uplift tuning
+
+## 2026-04-05 (`realized_vol_max_z <= -0.5` low-vol trigger failed on default `seed1011`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol35_volmaxzneg05_ckpt_ep005_eval_20260405_1328/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-1.62%`
+  - PF: `0.67`
+  - trades: `44`
+  - max drawdown: `-2.59%`
+  - walk-forward: `pass`
+  - positive fraction: `0.523`
+
+Meaning:
+- the stricter joint low-vol trigger is also not compatible with the default-side hard case
+- trigger-only tuning on the `3.0 -> 3.5` conditional uplift is no longer the leading path
+- next step is to re-open the threshold boundary directly on the older-slice known-good checkpoint at `3.375` before deciding whether a softer uplift target can still bridge both sides
+
+## 2026-04-05 (`realized_vol_96h_z` low-vol trigger also failed on `seed2027` `regimeB`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_lowvol35_vol96z0_ckpt_ep009_eval_20260405_1035/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-0.72%`
+  - PF: `0.82`
+  - trades: `35`
+  - max drawdown: `-1.96%`
+  - walk-forward: `pass`
+  - positive fraction: `0.643`
+
+Meaning:
+- the `realized_vol_96h_z <= 0.0` trigger is not compatible with the older-slice hard case either
+- both single-signal low-vol triggers are now rejected for the conditional `3.0 -> 3.5` uplift:
+  - `24h` failed on default
+  - `96h` failed on default and older slice
+- next step is one last joint low-vol trigger check (`realized_vol_max_z`) at a stricter threshold before dropping trigger-tuning as the main path
+
+## 2026-04-05 (`realized_vol_max_z` alias added for conditional cost-gate trigger search)
+
+Change:
+- added `realized_vol_max_z` as a supported low-vol uplift signal in:
+  - `config.py`
+  - `main.py`
+  - `environment.py`
+- semantics:
+  - `realized_vol_max_z <= threshold` means both `realized_vol_24h_z` and `realized_vol_96h_z` are at or below the threshold
+
+Evidence:
+- trigger search artifact:
+  - `test_output/conditional_costgate_trigger_search_20260405.json`
+- best-ranked simple candidate on marginal `ATR/cost` bars `[3.0, 3.5)` was:
+  - `vol24<=0 & vol96<=0`
+  - marginal capture: default `0.406` vs `regimeB` `0.570`
+
+Meaning:
+- single-signal `24h` and `96h` triggers both failed the compatibility check
+- the next defensible trigger candidate is the stricter joint low-vol condition, now exposed through `realized_vol_max_z`
+- next step is direct checkpoint validation on the default-side hard case under `base 3.0 + low-vol 3.5 + realized_vol_max_z <= 0.0`
+
+## 2026-04-05 (`realized_vol_96h_z` low-vol trigger still failed on default `seed1011`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol35_vol96z0_ckpt_ep005_eval_20260404_1946/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.38%`
+  - PF: `0.92`
+  - trades: `44`
+  - max drawdown: `-1.81%`
+  - walk-forward: `pass`
+  - positive fraction: `0.533`
+
+Meaning:
+- switching the low-vol uplift signal from `realized_vol_24h_z` to `realized_vol_96h_z` did not recover the default-side hard case
+- it is slightly less bad than the `24h` trigger at `z<=0.0`, but still economically negative
+- next step is the symmetric older-slice check with the same `96h` signal to decide whether this signal is at least preserving the hard `2013-2017` case or should be rejected entirely
+
+## 2026-04-04 (`realized_vol_96h_z` exposed as configurable low-vol gate signal)
+
+Change:
+- added configurable low-vol ATR/cost uplift signal in:
+  - `config.py`
+  - `main.py`
+  - `environment.py`
+- new CLI/config hook:
+  - `min_atr_cost_ratio_low_vol_signal`
+  - `--min-atr-cost-ratio-low-vol-signal`
+
+Evidence:
+- signal audit written here:
+  - `test_output/conditional_costgate_signal_audit_20260404.json`
+- key read:
+  - on marginal `ATR/cost` bars in `[3.0, 3.5)`, `realized_vol_96h_z <= 0.0` captures fewer default-side bars than `realized_vol_24h_z <= 0.0`
+  - default `seed1011`: marginal capture drops from `0.700` to `0.565`
+  - `regimeB` `seed2027`: marginal capture drops from `0.816` to `0.715`
+
+Meaning:
+- `24h` low-vol gating is affecting too many default-side marginal bars
+- `96h` low-vol gating is the next defensible trigger candidate because it reduces default-side exposure more than older-slice exposure
+- next step is direct checkpoint validation with `--min-atr-cost-ratio-low-vol-signal realized_vol_96h_z`
+
+## 2026-04-04 (`seed1011` default known good checkpoint failed under conditional `costgate3.0 + low-vol->3.5 @ z<=-0.5`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol35zneg05_ckpt_ep005_eval_20260404_1905/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-1.62%`
+  - PF: `0.67`
+  - trades: `44`
+  - max drawdown: `-2.59%`
+  - walk-forward: `pass`
+  - positive fraction: `0.538`
+
+Meaning:
+- tightening the low-vol trigger from `z<=0.0` to `z<=-0.5` did not help the default-side hard case; it made it worse
+- this makes low-vol trigger tuning look less promising as the unification axis by itself
+- next step is the symmetric older-slice check at `z<=-0.5` to determine whether the conditional branch itself is only working in a narrow trigger band or whether the real problem is default-side compatibility
+
+## 2026-04-04 (`seed1011` default known good checkpoint failed under conditional `costgate3.0 + low-vol->3.5 @ z<=0.0`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate30_lowvol35z0_ckpt_ep005_eval_real2_20260404_1846/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.47%`
+  - PF: `0.90`
+  - trades: `44`
+  - max drawdown: `-1.81%`
+  - walk-forward: `pass`
+  - positive fraction: `0.538`
+
+Meaning:
+- the first conditional gate is still too aggressive on the default-side hard case
+- current conditional picture is:
+  - `seed2027` `regimeB`: base `3.0` + low-vol uplift to `3.5` at `z<=0.0` passes on the known good checkpoint
+  - `seed1011` default: the same conditional gate fails on the known good checkpoint
+- next step is trigger calibration, not threshold calibration: reduce low-vol uplift activation on the default side and test whether a stricter trigger can preserve both cases
+
+## 2026-04-04 (`seed2027` `regimeB` known good checkpoint recovered under conditional `costgate3.0 + low-vol->3.5`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate30_lowvol35z0_ckpt_ep009_eval_20260404_1638/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `+0.37%`
+  - PF: `1.12`
+  - trades: `23`
+  - max drawdown: `-1.85%`
+  - walk-forward: `pass`
+  - positive fraction: `0.625`
+
+Meaning:
+- a conditional gate now has a concrete viable older-slice shape:
+  - base `min_atr_cost_ratio = 3.0`
+  - low-vol uplift to `3.5`
+  - trigger `realized_vol_24h_z <= 0.0`
+- this preserves the hard `seed2027` / `2013-2017` checkpoint that failed under flat `3.0` and `3.25`
+- next step is the symmetric default-side compatibility check on the known good `seed1011` `costgate2` checkpoint
+
+## 2026-04-04 (`seed1011` default known good `costgate2` checkpoint failed under `costgate3.375`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate2_ckpt_ep005_eval_costgate3375_20260404_1602/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `+2.23%`
+  - PF: `2.29`
+  - trades: `23`
+  - max drawdown: `-1.21%`
+  - walk-forward: `fail`
+  - positive fraction: `0.482`
+
+Meaning:
+- there is no clean single-threshold overlap at `3.375`
+- current boundary picture is now:
+  - `seed2027` `regimeB`: `3.0` fail, `3.25` fail, `3.5` pass
+  - `seed1011` default: `3.0` pass, `3.375` fail, `3.5` fail
+- next step is conditional gating, not more single-threshold guessing
+
+## 2026-04-04 (`seed2027` `regimeB` known good `costgate4` checkpoint failed under `costgate3.25`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate4_ckpt_ep009_eval_costgate325_20260404_1548/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-0.50%`
+  - PF: `0.84`
+  - trades: `25`
+  - max drawdown: `-1.85%`
+  - walk-forward: `pass`
+  - positive fraction: `0.661`
+
+Meaning:
+- older-slice viability is still not recovered at `costgate3.25`
+- current boundary picture is:
+  - `seed2027` `regimeB`: `3.0` fail, `3.25` fail, `3.5` pass
+  - `seed1011` default: `3.0` pass, `3.5` fail
+- next step is a direct `costgate3.375` check on the default-side known-good checkpoint to test whether a narrow overlap exists before moving to conditional gating
+
+## 2026-04-04 (`seed1011` default known good `costgate2` checkpoint recovered under `costgate3`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate2_ckpt_ep005_eval_costgate3_20260404_1142/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `+2.23%`
+  - PF: `2.29`
+  - trades: `23`
+  - max drawdown: `-1.21%`
+  - walk-forward: `pass`
+  - positive fraction: `0.528`
+
+Meaning:
+- the default-side viability boundary for this seed is now between `3.0` and `3.5`
+- combined with the earlier `seed2027` `regimeB` boundary (`3.0` failed, `3.5` passed), this points toward either:
+  - a narrow compromise threshold near `3.25`, or
+  - a conditional gate rather than one global threshold
+- next step is a cheap boundary test at `3.25` on the hard older-slice case before changing branch logic again
+
+## 2026-04-04 (`seed1011` default known good `costgate2` checkpoint failed when re-evaluated under `costgate3.5`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate2_ckpt_ep005_eval_costgate35_20260404_0946/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt` from the known good `costgate2` run
+  - return: `-0.59%`
+  - PF: `0.76`
+  - trades: `22`
+  - max drawdown: `-1.85%`
+  - walk-forward: `pass`
+  - positive fraction: `0.513`
+
+Meaning:
+- this is strong evidence that `costgate3.5` is too strict for the default `seed1011` split
+- next step is boundary calibration on the default side, starting with a direct `costgate3.0` re-evaluation of the same known good checkpoint
+
+## 2026-04-04 (`seed1011` default `costgate3.5` direct `candidate_ep006.pt` improved economics but still failed walk-forward)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate35_eval_candidate_ep006_20260403_2030/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep006.pt`
+  - return: `+2.58%`
+  - PF: `3.15`
+  - trades: `24`
+  - max drawdown: `-0.77%`
+  - walk-forward: `fail`
+  - positive fraction: `0.392`
+
+Meaning:
+- `seed1011` default `costgate3.5` still does not close through the strongest balanced alternate checkpoints
+- after `candidate_ep001.pt`, `candidate_ep009.pt`, `candidate_ep003.pt`, and `candidate_ep006.pt`, this now looks less like a nearby selector miss and more like a branch-level gate calibration issue
+- next cheap discriminating check is to re-evaluate the known good `costgate2` `candidate_ep005.pt` checkpoint under `costgate3.5`
+
+## 2026-04-03 (`seed1011` default `costgate3.5` direct `candidate_ep003.pt` improved economics but still failed walk-forward)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate35_eval_candidate_ep003_20260403_2015/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep003.pt`
+  - return: `+1.08%`
+  - PF: `1.42`
+  - trades: `25`
+  - max drawdown: `-1.54%`
+  - walk-forward: `fail`
+  - positive fraction: `0.432`
+
+Meaning:
+- `seed1011` default `costgate3.5` remains unresolved after direct checks on `candidate_ep009.pt` and `candidate_ep003.pt`
+- the next cheap discriminating check is `candidate_ep006.pt`, which is the strongest remaining balanced checkpoint with positive base/forward structure
+
+## 2026-04-03 (`seed1011` default `costgate3.5` direct `candidate_ep009.pt` eval also failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed1011_default_costgate35_eval_candidate_ep009_20260403_1457/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `-1.42%`
+  - PF: `0.55`
+  - trades: `27`
+  - max drawdown: `-1.60%`
+  - walk-forward: `pass`
+  - positive fraction: `0.769`
+
+Meaning:
+- the strongest pre-alignment incumbent is not the fix on this run
+- `seed1011` default `costgate3.5` is still unresolved
+- next cheap discriminating check is `candidate_ep003.pt`, which has the strongest remaining all-positive base/alt/tail/forward structure on this run
+
+## 2026-04-03 (`seed1011` default `costgate3.5` selected result failed after alignment switched to `candidate_ep001.pt`)
+
+Result:
+- proof run finished here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate35_train10ep_hightail_20260403_1220_seed1011/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `+0.34%`
+  - PF: `1.13`
+  - trades: `25`
+  - max drawdown: `-1.57%`
+  - walk-forward: `fail`
+  - positive fraction: `0.467`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed1011_default_costgate35_train10ep_hightail_20260403_1220_seed1011/logs/checkpoint_tournament.json`
+- alignment switched:
+  - incumbent: `candidate_ep009.pt`
+  - challenger: `candidate_ep001.pt`
+  - `switched = true`
+  - `challenger_from_high_cost_tail_rescue = false`
+
+Meaning:
+- this is not evidence against `costgate3.5` yet because the strongest pre-alignment incumbent on this run is still `candidate_ep009.pt`
+- next cheap discriminating check is direct eval of `candidate_ep009.pt`
+
+## 2026-04-03 (`seed2027` `regimeB` `costgate3.5` high-cost tail rescue proof passed on the selected checkpoint)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate35_train10ep_hightailfix_20260403_2108_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep008.pt`
+  - return: `+2.21%`
+  - PF: `3.21`
+  - trades: `24`
+  - max drawdown: `-0.59%`
+  - walk-forward: `pass`
+  - positive fraction: `0.571`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate35_train10ep_hightailfix_20260403_2108_seed2027/logs/checkpoint_tournament.json`
+- alignment switched correctly:
+  - incumbent: `candidate_ep004.pt`
+  - challenger: `candidate_ep008.pt`
+  - `challenger_from_high_cost_tail_rescue = true`
+  - `high_cost_tail_edge_gate = true`
+  - `switched = true`
+
+Meaning:
+- `costgate3.5` is now a viable older-slice branch on the hard `seed2027` case
+- next proof priority is default-side cross-check on `seed1011`, because that is the most discriminating default-split branch-unification case
+
+## 2026-04-03 (`costgate3.5` high-cost tail proof rerun crashed on uninitialized rescue list; fixed and restarted)
+
+Issue:
+- the first proof rerun here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate35_train10ep_hightail_20260403_1033_seed2027`
+- stopped before writing `results/test_results.json`
+- error:
+  - `logs/seed2027_regimeB_costgate35_train10ep_hightail_20260403_1033.err.log`
+  - `UnboundLocalError: cannot access local variable 'low_vol_tail_rescue_ranked'`
+
+Fix:
+- initialized `low_vol_tail_rescue_ranked` and `high_cost_tail_rescue_ranked` before their conditional blocks in `trainer.py`
+- re-ran validation:
+  - `python -m py_compile config.py main.py trainer.py environment.py`
+  - `python test_system.py`
+
+Meaning:
+- this was a runtime bug in the new selector path, not a trading result
+- proof rerun must be repeated on a fresh output directory before drawing any conclusion
+
+## 2026-04-03 (`costgate3.5` high-cost tail rescue added for older-slice late-tail checkpoint misses)
+
+Change:
+- added a conservative high-cost tail rescue path in:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+- intent:
+  - when `min_atr_cost_ratio >= 3.5`, allow a later checkpoint with materially stronger tail PF/return to rescue a modest-tail incumbent
+  - keep it narrow with minimum tail PF, tail PF edge, tail return edge, base PF, forward PF, validation PF q25, and probe positive-fraction checks
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py environment.py`
+- `python test_system.py`
+
+Preview:
+- `test_output/costgate35_high_cost_tail_rescue_preview_20260403.json`
+- expected behavior:
+  - target flips `seed2027` `regimeB` `costgate3.5` from `candidate_ep004.pt` to `candidate_ep008.pt`
+  - checked `costgate4` controls stay unchanged
+
+Meaning:
+- this directly targets the blocked `candidate_ep008.pt` recovery on the first `costgate3.5` proof run
+- next step is an end-to-end rerun on the same `seed2027` `regimeB` `costgate3.5` branch
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate3.5` proof rerun selected `candidate_ep004.pt` and still failed economically)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate35_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260402_1840_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep004.pt`
+  - return: `-0.55%`
+  - PF: `0.56`
+  - trades: `15`
+  - max drawdown: `-1.33%`
+  - walk-forward: `pass`
+  - positive fraction: `0.679`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate35_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260402_1840_seed2027/logs/checkpoint_tournament.json`
+- alignment stayed on the incumbent:
+  - incumbent: `candidate_ep004.pt`
+  - challenger: `candidate_ep008.pt`
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = false`
+  - `switched = false`
+
+Meaning:
+- `costgate3.5` is promising at the raw gate boundary level, but the first full rerun still did not close on the selected checkpoint
+- next cheap discriminating check is direct eval of `candidate_ep008.pt`, the blocked alignment challenger with the strongest tail structure on this run
+
+## 2026-04-02 (`seed2027` `regimeB` known good `costgate4` checkpoint recovered under `costgate3.5`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate4_ckpt_ep009_eval_costgate35_20260402_1652/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `+0.37%`
+  - PF: `1.12`
+  - trades: `23`
+  - max drawdown: `-1.85%`
+  - walk-forward: `pass`
+  - positive fraction: `0.625`
+
+Meaning:
+- the practical viability boundary on `seed2027` `regimeB` is between `3.0` and `3.5`
+- `costgate3.5` is now the best compromise candidate: looser than `costgate4`, but no longer collapsing to the `costgate2/3` failure mode
+- next step is a real proof rerun on the `costgate3.5` branch, not more direct checkpoint evaluations
+
+## 2026-04-02 (`seed2027` `regimeB` known good `costgate4` checkpoint still failed under `costgate3`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate4_ckpt_ep009_eval_costgate3_20260402_1632/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-0.77%`
+  - PF: `0.78`
+  - trades: `25`
+  - max drawdown: `-2.08%`
+  - walk-forward: `pass`
+  - positive fraction: `0.661`
+
+Meaning:
+- `costgate3` is still too loose for this seed/slice; it behaves effectively the same as `costgate2` on the known good `costgate4` checkpoint
+- this strengthens the case that the practical boundary on `seed2027` `regimeB` is closer to `costgate4` than to `costgate2/3`
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate4` recovery checkpoint failed when re-evaluated under `costgate2`)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate4_ckpt_ep009_eval_costgate2_20260402_1620/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt` from the known good `costgate4` run
+  - return: `-0.77%`
+  - PF: `0.78`
+  - trades: `25`
+  - max drawdown: `-2.08%`
+  - walk-forward: `pass`
+  - positive fraction: `0.607`
+
+Meaning:
+- this is strong evidence that `costgate4` is not only helping selection/training; it is structurally important at evaluation time on `seed2027` `regimeB`
+- the next step is threshold-boundary search, starting with a cheap `costgate3` re-evaluation of the same known good checkpoint
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol `z<=0.5` direct `candidate_ep001.pt` eval failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4z05_eval_candidate_ep001_20260402_1610/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `-1.94%`
+  - PF: `0.53`
+  - trades: `22`
+  - max drawdown: `-3.42%`
+  - walk-forward: `pass`
+  - positive fraction: `0.500`
+
+Meaning:
+- `z<=0.5` is no longer behaving like a nearby selector-only miss
+- after selected `candidate_ep002.pt` failed and direct checks on `candidate_ep004.pt`, `candidate_ep003.pt`, and `candidate_ep001.pt` all failed, this branch should be treated as a branch-level calibration failure on this seed/slice
+- next step is branch comparison and trigger redesign, not more checkpoint brute-force on `z<=0.5`
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol `z<=0.5` direct `candidate_ep003.pt` eval improved economics but still failed walk-forward)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4z05_eval_candidate_ep003_20260402_1605/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep003.pt`
+  - return: `+1.76%`
+  - PF: `2.34`
+  - trades: `17`
+  - max drawdown: `-1.14%`
+  - walk-forward: `fail`
+  - positive fraction: `0.518`
+  - median PF: `0.953`
+
+Meaning:
+- `z<=0.5` is not a clean selector recovery through the strongest base/tail challenger
+- next highest-ROI check is `candidate_ep001.pt`, which still has the cleanest remaining forward-return / forward-PF structure on this run
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol `z<=0.5` direct `candidate_ep004.pt` eval failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4z05_eval_candidate_ep004_20260402_1237/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep004.pt`
+  - return: `+0.50%`
+  - PF: `1.19`
+  - trades: `24`
+  - max drawdown: `-1.27%`
+  - walk-forward: `fail`
+  - positive fraction: `0.446`
+
+Meaning:
+- the intermediate low-vol uplift branch is still not closing robustness through the most obvious alignment challenger
+- next cheap discriminating check is `candidate_ep003.pt`, which has the strongest remaining base/tail structure on this run
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol `z<=0.5` uplift selected result failed)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4z05_train10ep_tailrescue_20260402_1219_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep002.pt`
+  - return: `-0.72%`
+  - PF: `0.56`
+  - trades: `21`
+  - max drawdown: `-1.31%`
+  - walk-forward: `fail`
+  - positive fraction: `0.482`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4z05_train10ep_tailrescue_20260402_1219_seed2027/logs/checkpoint_tournament.json`
+- alignment stayed on the incumbent:
+  - incumbent: `candidate_ep002.pt`
+  - challenger: `candidate_ep004.pt`
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = false`
+  - `switched = false`
+
+Meaning:
+- intermediate widening from `z<=0.0` to `z<=0.5` did not improve this seed/slice
+- next cheap discriminating check is direct eval of `candidate_ep004.pt` to decide whether `z<=0.5` is still a selector case or should be dropped as a branch candidate
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol `z<=1.0` direct `candidate_ep001.pt` eval also failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4z1_eval_candidate_ep001_20260402_113154/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `+1.01%`
+  - PF: `1.67`
+  - trades: `22`
+  - max drawdown: `-0.85%`
+  - walk-forward: `fail`
+  - positive fraction: `0.304`
+
+Comparison:
+- branch comparison artifact:
+  - `test_output/seed2027_regimeB_costgate_branch_compare_20260402.json`
+- important read:
+  - `costgate4` remains the better `seed2027` `regimeB` branch reference (`+0.31%`, `PF 1.11`, walk-forward `pass`)
+  - `costgate2` low-vol uplift with `z<=1.0` is worse than both `costgate4` and the narrower low-vol branch
+
+Meaning:
+- the widened low-vol trigger is not a viable fix on this seed/slice
+- this is no longer a checkpoint-hunting problem on the `z<=1.0` branch
+- next step is branch-level calibration, starting with an intermediate uplift trigger (`z<=0.5`) rather than more selector tweaks
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol `z<=1.0` uplift selected result failed)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4z1_train10ep_tailrescue_20260402_104327_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep006.pt`
+  - return: `-1.41%`
+  - PF: `0.52`
+  - trades: `25`
+  - max drawdown: `-1.46%`
+  - walk-forward: `pass`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4z1_train10ep_tailrescue_20260402_104327_seed2027/logs/checkpoint_tournament.json`
+- alignment preferred `candidate_ep003.pt`, but the switch did not fire:
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = true`
+  - `switched = false`
+
+Meaning:
+- broadening the low-vol uplift trigger from `z<=0.0` to `z<=1.0` made the branch materially worse on this seed/slice
+- the next cheap discriminating check is a direct eval of `candidate_ep001.pt`, which is the cleanest remaining candidate on validation q25 metrics
+
+## 2026-04-02 (`seed2027` `regimeB` `costgate2` low-vol tail-rescue rerun selected `candidate_ep009.pt` but still failed walk-forward)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4_train10ep_tailrescuefix_20260331_152611_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+1.24%`
+  - PF: `1.90`
+  - trades: `24`
+  - max drawdown: `-0.78%`
+  - walk-forward: `fail`
+  - walk-forward positive fraction: `0.4286`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4_train10ep_tailrescuefix_20260331_152611_seed2027/logs/checkpoint_tournament.json`
+- the new low-vol late-tail rescue fired as intended:
+  - `challenger_from_low_vol_tail_rescue = true`
+  - `low_vol_tail_edge_gate = true`
+  - `winner_after_alignment = candidate_ep009.pt`
+
+Meaning:
+- selector calibration is no longer the bottleneck on this low-vol uplift branch for `seed2027`
+- the branch still misses robustness even on the best known checkpoint from this run
+- next step is branch-level low-vol gate calibration, not more checkpoint brute-force
+
+## 2026-03-31 (`costgate2` low-vol late-tail rescue proof rerun crashed, fixed, and restarted)
+
+Issue:
+- the first proof rerun ended before writing `results/test_results.json`
+- error log:
+  - `logs/seed2027_regimeB_costgate2_lowvol4_train10ep_tailrescue_20260331_151612.err.log`
+- root cause:
+  - `UnboundLocalError` on `late_mmr_rescue_ranked` inside `trainer.py`
+
+Fix:
+- initialized `late_mmr_rescue_ranked` before the conditional branch so the new low-vol rescue path cannot leave it undefined
+- re-validated:
+  - `python -m py_compile config.py main.py trainer.py environment.py`
+  - `python test_system.py`
+
+Rerun:
+- restarted proof run here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4_train10ep_tailrescuefix_20260331_152611_seed2027`
+
+## 2026-03-31 (`costgate2` low-vol late-tail rescue added for selector calibration)
+
+Selector patch:
+- added a low-vol-specific late-tail rescue path in the alignment probe so a later checkpoint can beat an early incumbent when:
+  - low-vol ATR/cost uplift is active
+  - base/alt/tail return structure stays close to the incumbent
+  - tail PF remains healthy
+  - probe pass stays intact
+- files changed:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+- preview artifact:
+  - `test_output/costgate2_lowvol_tail_rescue_preview_20260331.json`
+  - target case flips `seed2027` `regimeB` `costgate2_lowvol4` from `candidate_ep004.pt` to `candidate_ep009.pt`
+  - checked default-side control stays unchanged
+- validation:
+  - `python -m py_compile config.py main.py trainer.py environment.py`
+  - `python test_system.py`
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` low-vol uplift direct `candidate_ep009.pt` eval was profitable but still failed walk-forward)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4_eval_candidate_ep009_20260331_145841/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+1.24%`
+  - PF: `1.90`
+  - trades: `24`
+  - max drawdown: `-0.78%`
+  - walk-forward: `fail`
+
+Meaning:
+- the low-vol uplift branch was still economically promising on `seed2027` `regimeB`, but it did not close robustness
+- at the time this still looked like a selector-calibration miss:
+  - selected `candidate_ep004.pt` failed
+  - direct `candidate_ep003.pt` failed
+  - direct `candidate_ep010.pt` failed
+  - direct `candidate_ep009.pt` was the strongest candidate, though still below the walk-forward gate
+- later rerun evidence showed the selector could be made to choose `candidate_ep009.pt`, but the branch still failed walk-forward on that selected checkpoint
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` low-vol uplift direct `candidate_ep010.pt` eval failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4_eval_candidate_ep010_20260331_144512/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep010.pt`
+  - return: `-0.35%`
+  - PF: `0.88`
+  - trades: `23`
+  - max drawdown: `-2.17%`
+  - walk-forward: `fail`
+
+Meaning:
+- the low-vol uplift branch is still unresolved after direct checks on both the alignment-preferred challenger (`candidate_ep003.pt`) and the strongest remaining all-positive base/forward candidate (`candidate_ep010.pt`)
+- the next cheap discriminating check is `candidate_ep009.pt`, which has the strongest remaining positive base/alt/tail return structure among the untested candidates
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` low-vol uplift direct `candidate_ep003.pt` eval failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_lowvol4_eval_candidate_ep003_20260331_143020/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep003.pt`
+  - return: `-1.70%`
+  - PF: `0.30`
+  - trades: `22`
+  - max drawdown: `-1.80%`
+  - walk-forward: `fail`
+
+Meaning:
+- the low-vol uplift branch is not a nearby selector-only miss through the alignment-preferred challenger
+- `candidate_ep003.pt` was materially worse than the selected `candidate_ep004.pt`
+- the next cheap discriminating check is a direct eval of `candidate_ep010.pt`, which has the strongest remaining all-positive base/forward structure on this run
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` low-vol uplift selected result failed)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260331_120006_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep004.pt`
+  - return: `-0.54%`
+  - PF: `0.82`
+  - trades: `26`
+  - max drawdown: `-1.50%`
+  - walk-forward: `fail`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260331_120006_seed2027/logs/checkpoint_tournament.json`
+- alignment preferred `candidate_ep003.pt`, but the switch did not fire:
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = false`
+  - `switched = false`
+
+Meaning:
+- the low-vol uplift alone is not enough to close this seed on the selected checkpoint
+- the next cheap check is direct evaluation of `candidate_ep003.pt`
+
+## 2026-03-31 (`costgate2` low-vol ATR/cost uplift added for branch-level calibration)
+
+Selector/branch patch:
+- added a branch-level low-vol ATR/cost uplift so the environment can apply a stronger trade gate when `realized_vol_24h_z` is low, instead of hard-forking between static `costgate2` and `costgate4`
+- new environment/config/CLI controls:
+  - `min_atr_cost_ratio_low_vol_value`
+  - `min_atr_cost_ratio_low_vol_z_threshold`
+- wired through:
+  - `config.py`
+  - `main.py`
+  - `environment.py`
+
+Validation:
+- `python -m py_compile config.py main.py environment.py trainer.py`
+- `python test_system.py`
+
+Proof run started:
+- `seed_sweep_results/realdata/seed2027_regimeB_costgate2_lowvol4_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260331_120006_seed2027`
+- log:
+  - `logs/seed2027_regimeB_costgate2_lowvol4_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260331_120006.out.log`
+
+Rationale:
+- `costgate2` is viable on the default split but unresolved on `seed2027` `2013-2017`
+- `costgate4` already selected-passes on that same seed/slice
+- the uplift is meant to keep the lower base gate while tightening only in low-vol conditions, which is the specific weakness exposed by the branch-gap audit
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` direct `candidate_ep007.pt` eval failed; stopping checkpoint hunt)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_eval_candidate_ep007_20260331_100831/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep007.pt`
+  - return: `-0.93%`
+  - PF: `0.69`
+  - trades: `19`
+  - max drawdown: `-1.73%`
+  - walk-forward: `fail`
+
+Meaning:
+- after direct checks on `candidate_ep006.pt`, `candidate_ep009.pt`, and `candidate_ep007.pt`, `seed2027` on the older-slice `costgate2` branch is no longer behaving like a nearby selector-only miss
+- I wrote the branch-gap summary here:
+  - `test_output/seed2027_regimeB_costgate2_gap_audit_20260331.json`
+- next work should be branch-level costgate calibration, not more checkpoint brute-force on this seed
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` direct `candidate_ep009.pt` eval failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_eval_candidate_ep009_20260331_100114/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `-0.30%`
+  - PF: `0.91`
+  - trades: `23`
+  - max drawdown: `-1.35%`
+  - walk-forward: `fail`
+
+Meaning:
+- `candidate_ep009.pt` is not the older-slice recovery checkpoint for `seed2027` on the `costgate2` branch
+- after direct checks on `candidate_ep006.pt` and `candidate_ep009.pt`, the branch still looks unresolved on this seed
+- the next cheap discriminating check is `candidate_ep007.pt`, which has the strongest remaining validation MMR with still-positive future metrics
+
+## 2026-03-31 (`seed2027` `regimeB` `costgate2` direct `candidate_ep006.pt` eval failed)
+
+Result:
+- direct eval finished here:
+  - `test_output/seed2027_regimeB_costgate2_eval_candidate_ep006_20260330_192007/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep006.pt`
+  - return: `+1.47%`
+  - PF: `1.68`
+  - trades: `22`
+  - max drawdown: `-0.79%`
+  - walk-forward: `fail`
+
+Meaning:
+- `seed2027` on the older-slice `costgate2` branch is still not a clean selector recovery
+- the result is economically stronger than the selected checkpoint, but the walk-forward gate still misses (`positive_frac = 0.4643`)
+- the next cheap check is direct evaluation of `candidate_ep009.pt`
+
+## 2026-03-30 (`seed2027` `regimeB` `costgate2 + temporal-q25-fallback` selected result failed)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_174557_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `+0.34%`
+  - PF: `1.25`
+  - trades: `22`
+  - max drawdown: `-1.15%`
+  - walk-forward: `fail`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_174557_seed2027/logs/checkpoint_tournament.json`
+- alignment probe preferred `candidate_ep006.pt`, but the switch did not fire:
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = true`
+  - `switched = false`
+
+Meaning:
+- the `costgate2` branch is still unresolved on a second older-slice seed
+- the next cheap check is direct evaluation of `candidate_ep006.pt`
+
+## 2026-03-30 (`seed8087` default-split `costgate2` temporal-q25-fallback proof passed on the selected checkpoint)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_133913_seed8087/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep008.pt`
+  - return: `+1.27%`
+  - PF: `1.48`
+  - trades: `27`
+  - max drawdown: `-1.19%`
+  - walk-forward: `pass`
+
+Selector proof:
+- tournament file:
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_133913_seed8087/logs/checkpoint_tournament.json`
+- selector switched `candidate_ep006.pt -> candidate_ep008.pt`
+- the new fallback fired exactly as intended:
+  - `challenger_from_temporal_q25_fallback = true`
+  - `temporal_q25_guard_passed = true`
+  - `switched = true`
+
+Meaning:
+- `costgate2` is now selected-pass on:
+  - `1011` default split
+  - `8087` default split
+  - `8087` `2013-2017`
+- the next proof should be a second cross-seed older-slice check on the same branch
+
+## 2026-03-30 (`costgate2` temporal-q25-fallback patch added for default-side `8087`)
+
+Selector patch:
+- added a targeted temporal-q25 fallback so if the strongest temporal challenger is q25-fragile, a nearby later temporal candidate can win when it:
+  - keeps positive validation q25 return/PF
+  - improves validation PF over the incumbent
+  - improves probe-side MMR over the incumbent
+  - stays close enough on probe return/PF and positive-fraction
+- wired the new controls through:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py`
+
+Preview:
+- wrote preview audit:
+  - `test_output/costgate2_temporal_q25_fallback_preview_20260330.json`
+- expected behavior:
+  - target case switches `seed8087` default `costgate2` from temporal-fragile `candidate_ep007.pt` / selected `candidate_ep006.pt` to `candidate_ep008.pt`
+  - checked non-regression cases do not gain new fallback challengers
+
+## 2026-03-30 (`seed8087` default-split `costgate2 + late-MMR-rescue` selected result failed)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260330_101419_seed8087/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep006.pt`
+  - return: `+0.88%`
+  - PF: `1.33`
+  - trades: `24`
+  - max drawdown: `-1.55%`
+  - walk-forward: `fail`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260330_101419_seed8087/logs/checkpoint_tournament.json`
+- alignment probe preferred the stronger temporal challenger `candidate_ep007.pt`
+- the q25 guard blocked that switch:
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = false`
+  - `switched = false`
+
+Meaning:
+- `costgate2` is still not validated as a unified default+older-slice branch
+- the next cheap check is direct evaluation of the strongest conservative alternate from the same run (`candidate_ep008.pt`)
+
+## 2026-03-30 (`seed8087` `regimeB` `costgate2 + late-MMR-rescue` proof passed on the selected checkpoint)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260329_215507_seed8087/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+1.07%`
+  - PF: `1.40`
+  - trades: `25`
+  - max drawdown: `-1.37%`
+  - walk-forward: `pass`
+
+Selector proof:
+- tournament file:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260329_215507_seed8087/logs/checkpoint_tournament.json`
+- selector switched `candidate_ep003.pt -> candidate_ep009.pt`
+- the new rescue fired exactly as intended:
+  - `challenger_from_late_mmr_rescue = true`
+  - `late_mmr_edge_gate = true`
+  - final selector path: `tail_holdout+wfalign`
+
+Meaning:
+- the late-MMR rescue is now proven end-to-end on the older-slice `costgate2` miss
+- `costgate2` now has selected-pass proofs on the default split (`1011`) and the older `2013-2017` slice (`8087`)
+
+## 2026-03-29 (`costgate2` late-MMR rescue patch added for older-slice `8087`)
+
+Selector patch:
+- added a later validation-MMR rescue path so a later checkpoint can beat a weak-validation-PF incumbent when:
+  - incumbent validation PF is weak
+  - challenger validation MMR is materially stronger
+  - challenger still keeps positive base and forward structure
+  - challenger stays close enough on probe positive-fraction
+- wired the new controls through:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py`
+
+Preview:
+- wrote preview audit:
+  - `test_output/costgate2_late_mmr_rescue_preview_20260329.json`
+- expected behavior:
+  - target case switches `seed8087` `regimeB` `costgate2` from `candidate_ep003.pt` to `candidate_ep009.pt`
+  - checked non-regressions stay unchanged
+
+## 2026-03-29 (`seed8087` `regimeB` `costgate2` direct `ep008` recovery stayed profitable but failed robustness)
+
+Result:
+- direct evaluation finished here:
+  - `test_output/seed8087_regimeB_costgate2_eval_candidate_ep008_20260329_213408/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep008.pt`
+  - return: `+2.84%`
+  - PF: `2.02`
+  - trades: `22`
+  - max drawdown: `-1.40%`
+  - walk-forward: `fail`
+
+Meaning:
+- the blocked temporal challenger was economically strong, but it still did not close robustness on the older slice
+- this suggests the q25 guard may not be the only issue here
+- the next cheap check is the more conservative all-positive `candidate_ep009.pt`
+
+## 2026-03-29 (`seed8087` `regimeB` `costgate2 + temporal-q25-guard` selected result failed)
+
+Result:
+- proof run finished here:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_202206_seed8087/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep003.pt`
+  - return: `-0.72%`
+  - PF: `0.78`
+  - trades: `27`
+  - max drawdown: `-1.07%`
+  - walk-forward: `fail`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_202206_seed8087/logs/checkpoint_tournament.json`
+- pre-alignment incumbent stayed `candidate_ep003.pt`
+- temporal-bias challenger was `candidate_ep008.pt`
+- the new q25 guard blocked that temporal switch (`temporal_q25_guard_passed = false`)
+
+Meaning:
+- `costgate2` is not yet validated on the older slice
+- the immediate next step is a cheap direct eval of `candidate_ep008.pt` to determine whether the q25 guard blocked a real recovery or correctly filtered a bad challenger
+
+## 2026-03-29 (`seed1011` default-split `costgate2 + temporal-q25-guard` proof passed on the selected checkpoint)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt`
+  - return: `+2.14%`
+  - PF: `2.18`
+  - trades: `24`
+  - max drawdown: `-1.21%`
+  - walk-forward: `pass`
+
+Selector proof:
+- tournament file:
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011/logs/checkpoint_tournament.json`
+- selector kept the incumbent `candidate_ep005.pt`
+- temporal bias challenger `candidate_ep004.pt` was blocked because:
+  - `challenger_from_temporal_bias = true`
+  - `temporal_q25_guard_passed = false`
+  - `switched = false`
+
+Meaning:
+- the temporal q25 guard is now proven end-to-end on the `1011` default-side `costgate2` miss
+- the next step is cross-seed and cross-regime validation of `costgate2`, not more work on this specific seed
+
+## 2026-03-29 (`costgate2` temporal-q25 guard patch added for default-side `1011`)
+
+Selector patch:
+- added a temporal q25 guard so temporal bias cannot override an incumbent that is already robust on validation lower-quartile return/PF unless the challenger stays close on those same q25 metrics
+- wired the new controls through:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py`
+
+Preview:
+- wrote preview audit:
+  - `test_output/costgate2_temporal_q25_guard_preview_20260329.json`
+- expected behavior:
+  - target case switches `seed1011` default `costgate2` from `candidate_ep004.pt` back to `candidate_ep005.pt`
+  - checked non-regressions stay unchanged
+
+Execution:
+- started the proof rerun:
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011`
+  - log: `logs/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139.out.log`
+
+## 2026-03-29 (`seed1011` default-split `costgate2` direct `ep005` recovery passed)
+
+Result:
+- direct evaluation finished here:
+  - `test_output/seed1011_default_costgate2_eval_candidate_ep005_20260329_163110/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt`
+  - return: `+2.14%`
+  - PF: `2.18`
+  - trades: `24`
+  - max drawdown: `-1.21%`
+  - walk-forward: `pass`
+
+Meaning:
+- `costgate2` is viable on the default-side `1011` split
+- the remaining problem is selector calibration, not threshold viability: the full run selected `candidate_ep004.pt`, but `candidate_ep005.pt` is the actual recovery checkpoint
+- next step moves back to selector-gap analysis rather than another threshold change
+
+## 2026-03-29 (`seed1011` default-split `costgate2 + late-val-rescue` selected result stayed thin and failed walk-forward)
+
+Result:
+- branch-calibration probe finished here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_lateval_20260329_134803_seed1011/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep004.pt`
+  - return: `+0.23%`
+  - PF: `1.08`
+  - trades: `23`
+  - max drawdown: `-1.72%`
+  - walk-forward: `fail`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_lateval_20260329_134803_seed1011/logs/checkpoint_tournament.json`
+- selector switched `candidate_ep005.pt -> candidate_ep004.pt`
+- the switch came from temporal bias, not from a rescue path
+
+Meaning:
+- loosening the gate to `2.0` improved robustness metrics versus `costgate3/4`, but it still did not close `1011`
+- the highest-ROI next check is the pre-alignment incumbent `candidate_ep005.pt`
+
+## 2026-03-29 (`seed1011` default-split `costgate3` direct `ep001` recovery stayed positive but failed robustness)
+
+Result:
+- direct evaluation finished here:
+  - `test_output/seed1011_default_costgate3_eval_candidate_ep001_20260329_133109/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `+0.73%`
+  - PF: `1.30`
+  - trades: `21`
+  - max drawdown: `-1.94%`
+  - walk-forward: `fail`
+
+Meaning:
+- `candidate_ep001.pt` improves on the weak `costgate4` alternates, but it still does not close robustness on the default-side `1011` split
+- after the selected `costgate3` run and the direct `ep001` check both failed robustness, the next step shifts to threshold calibration rather than selector-only work
+
+## 2026-03-29 (`seed1011` default-split `costgate3 + late-val-rescue` selected result is positive but not robust)
+
+Result:
+- branch-calibration probe finished here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate3_train10ep_pfmmr_mmrguard_lateval_20260329_112348_seed1011/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep003.pt`
+  - return: `+1.66%`
+  - PF: `1.69`
+  - trades: `24`
+  - max drawdown: `-1.04%`
+  - walk-forward: `fail`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed1011_default_costgate3_train10ep_pfmmr_mmrguard_lateval_20260329_112348_seed1011/logs/checkpoint_tournament.json`
+- selector switched `candidate_ep001.pt -> candidate_ep003.pt` via the generic alignment path, not via any named rescue
+- `candidate_ep003.pt` won on strong probe metrics despite negative base/future structure
+
+Meaning:
+- `costgate3` improved economics versus the weak `costgate4` selected run, but it still did not close robustness
+- the next cheap discriminating check is the pre-alignment incumbent `candidate_ep001.pt`
+
+## 2026-03-29 (`seed1011` default-split `costgate4` direct `ep001` recovery failed)
+
+Result:
+- direct evaluation finished here:
+  - `test_output/seed1011_default_costgate4_eval_candidate_ep001_20260329_111220/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep001.pt`
+  - return: `-0.14%`
+  - PF: `0.94`
+  - trades: `20`
+  - max drawdown: `-1.06%`
+  - walk-forward: `fail`
+
+Meaning:
+- after direct `ep005`, `ep004`, and `ep001` failures, the weak default-side `1011` `costgate4` run is no longer behaving like a simple selector miss
+- next step shifts to branch-level calibration rather than more checkpoint hunting on this run
+
+## 2026-03-29 (`seed1011` default-split `costgate4` direct `ep004` recovery failed)
+
+Result:
+- direct evaluation finished here:
+  - `test_output/seed1011_default_costgate4_eval_candidate_ep004_20260328_203334/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep004.pt`
+  - return: `-1.07%`
+  - PF: `0.64`
+  - trades: `23`
+  - max drawdown: `-2.12%`
+  - walk-forward: `fail`
+
+Meaning:
+- `candidate_ep004.pt` is also not the recovery checkpoint for the weak default-side `1011` run
+- the next cheap check is the more conservative alternate `candidate_ep001.pt`
+
+## 2026-03-28 (`seed1011` default-split `costgate4` direct `ep005` recovery failed)
+
+Result:
+- direct evaluation finished here:
+  - `test_output/seed1011_default_costgate4_eval_candidate_ep005_20260328_195753/results/test_results.json`
+- checkpoint metrics:
+  - checkpoint: `candidate_ep005.pt`
+  - return: `-1.02%`
+  - PF: `0.54`
+  - trades: `24`
+  - max drawdown: `-1.62%`
+  - walk-forward: `fail`
+
+Meaning:
+- `candidate_ep005.pt` is not the recovery checkpoint for the weak default-side `1011` run
+- the next cheap check is the stronger balanced alternate `candidate_ep004.pt`
+
+## 2026-03-28 (`seed1011` default-split `costgate4 + late-val-rescue` selected result was weak)
+
+Result:
+- proof run finished here:
+  - `seed_sweep_results/realdata/seed1011_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_174343_seed1011/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep010.pt`
+  - return: `-0.27%`
+  - PF: `0.89`
+  - trades: `26`
+  - max drawdown: `-1.47%`
+  - walk-forward: `pass`
+
+Selector read:
+- tournament file:
+  - `seed_sweep_results/realdata/seed1011_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_174343_seed1011/logs/checkpoint_tournament.json`
+- selector stayed on `candidate_ep010.pt` with no alignment challenger
+- this is not yet enough to classify the branch as failing on `1011`; the next step is a cheap direct eval of the strongest non-selected alternate
+
+## 2026-03-28 (`seed2027` default-split `costgate4 + late-val-rescue` proof passed on the selected checkpoint)
+
+Result:
+- proof rerun finished here:
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_141828_seed2027/results/test_results.json`
+- selected checkpoint metrics:
+  - checkpoint: `candidate_ep010.pt`
+  - return: `+0.35%`
+  - PF: `1.14`
+  - trades: `22`
+  - max drawdown: `-1.08%`
+  - walk-forward: `pass`
+
+Selector proof:
+- tournament file:
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_141828_seed2027/logs/checkpoint_tournament.json`
+- the new late-validation rescue fired exactly as intended:
+  - incumbent: `candidate_ep007.pt`
+  - challenger: `candidate_ep010.pt`
+  - `challenger_from_late_val_rescue = true`
+  - `late_val_edge_gate = true`
+  - final selector path: `tail_holdout+wfalign`
+
+Meaning:
+- the default-side `2027` miss was a selector-calibration problem, not a dead `costgate4` branch
+- `costgate4` now has selected-pass proofs on `8087` and `2027` across both the default split and the `2013-2017` older slice
+
+## 2026-03-28 (`costgate4` late-validation rescue patch added for default-side `2027`)
+
+Selector patch:
+- added a late-validation rescue path so a later checkpoint can beat a validation-fragile incumbent when:
+  - incumbent validation MMR is materially negative
+  - challenger validation MMR is non-negative
+  - challenger validation PF and tail PF hold a clear edge
+  - challenger keeps acceptable probe positive-fraction behavior
+- wired the new controls through:
+  - `config.py`
+  - `main.py`
+  - `trainer.py`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py`
+
+Preview:
+- wrote offline replay preview:
+  - `test_output/late_val_rescue_preview_20260328.json`
+- expected behavior from the preview:
+  - target case switches `seed2027` default `costgate4` from `candidate_ep007.pt` to `candidate_ep010.pt`
+  - checked non-regressions stay unchanged: `seed8087` default `costgate4`, `seed8087` regimeB `costgate4`, `seed2027` regimeB `costgate4`, `seed777`, `seed123`
+
+Execution:
+- started the proof rerun:
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_141828_seed2027`
+  - log: `logs/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_141828.out.log`
+
+## 2026-03-28 (`seed2027` default-split `costgate4` direct `ep010` recovery passed)
+
+Result:
+- directly evaluated the strongest higher-upside alternate from the failed default-split `costgate4 + pf_mmr + temporal-mmr-guard` run:
+  - `test_output/seed2027_default_costgate4_eval_candidate_ep010_20260328_134921/results/test_results.json`
+  - checkpoint: `candidate_ep010.pt`
+  - return: `+0.35%`
+  - PF: `1.14`
+  - trades: `22`
+  - max drawdown: `-1.08%`
+  - walk-forward: `pass`
+
+Selector diagnosis:
+- wrote audit:
+  - `test_output/seed2027_default_costgate4_selector_gap_20260328.json`
+- current default-side pattern on `seed2027`:
+  - selected `candidate_ep007.pt`: `-0.84%`, `PF 0.68`, walk-forward `fail`
+  - direct `candidate_ep001.pt`: `-0.04%`, `PF 0.98`, walk-forward `pass`
+  - direct `candidate_ep010.pt`: `+0.35%`, `PF 1.14`, walk-forward `pass`
+
+Meaning:
+- the default-split `2027` miss is a selector-calibration issue, not a dead `costgate4` branch
+- the next move is selector calibration toward later viable positive-val-MMR candidates on the default split, not more threshold guessing
+
+## 2026-03-28 (`seed2027` default-split `costgate4` direct `ep001` recovery passed but stayed economically thin)
+
+Result:
+- directly evaluated the strongest non-selected conservative checkpoint from the failed default-split `costgate4 + pf_mmr + temporal-mmr-guard` run:
+  - `test_output/seed2027_default_costgate4_eval_candidate_ep001_20260328_133536/results/test_results.json`
+  - checkpoint: `candidate_ep001.pt`
+  - return: `-0.04%`
+  - PF: `0.98`
+  - trades: `26`
+  - max drawdown: `-1.64%`
+  - walk-forward: `pass`
+
+Meaning:
+- this keeps the default-side `seed2027` miss in the selector-calibration bucket rather than the dead-branch bucket
+- but the recovery is still too thin economically to count as a clean unified-branch proof
+- the next cheap check should target the strongest higher-upside alternate from the same run, not another full retrain
+
+## 2026-03-28 (`seed2027` default-split `costgate4 + pf_mmr + temporal-mmr-guard` proof failed on the selected checkpoint)
+
+Result:
+- ran the first paired default-split proof on the same `2027` seed with the new `costgate4 + pf_mmr + temporal-mmr-guard` branch:
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_20260328_095230_seed2027/results/test_results.json`
+  - selected checkpoint: `candidate_ep007.pt`
+  - return: `-0.84%`
+  - PF: `0.68`
+  - trades: `22`
+  - max drawdown: `-1.49%`
+  - walk-forward: `fail`
+
+Selector details:
+- `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_20260328_095230_seed2027/logs/checkpoint_tournament.json`
+- requested mode: `auto_rescue`
+- final mode: `tail_holdout`
+- winner stayed `candidate_ep007.pt`
+- alignment did not switch anything
+
+Meaning:
+- the leading `costgate4` branch is still not proven as a unified default+older-slice configuration on a second seed
+- this does not kill the branch yet, because the next question is whether `seed2027` is another selector miss on the default split
+- the next cheap check is a direct eval of the strongest non-selected conservative checkpoint from this same run, not another full retrain
+
+## 2026-03-28 (`seed2027` `regimeB` `costgate4 + pf_mmr + temporal-mmr-guard` proof passed on the selected checkpoint)
+
+Result:
+- completed the targeted proof rerun with the new temporal MMR guard:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027/results/test_results.json`
+  - selected checkpoint: `candidate_ep009.pt`
+  - return: `+0.31%`
+  - PF: `1.11`
+  - trades: `21`
+  - max drawdown: `-1.63%`
+  - walk-forward: `pass`
+
+Selector proof:
+- `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027/logs/checkpoint_tournament.json`
+- requested mode: `auto_rescue`
+- final mode: `future_first`
+- pre-alignment incumbent stayed `candidate_ep009.pt`
+- temporal challenger `candidate_ep003.pt` no longer switched because `mmr_edge = -0.0125`
+- `alignment_probe.switched = false`
+
+Meaning:
+- the temporal MMR guard is now proven end-to-end on the exact `seed2027` alignment miss
+- `costgate4` is no longer just viable on one older-slice proof seed; it now has selected-pass `2013-2017` proofs on both `8087` and `2027`
+- the next step is broader branch-unification proof on the default split, not more checkpoint brute force on the older slice
+
+## 2026-03-27 (Added temporal MMR guard for `costgate4` alignment overrides)
+
+Change:
+- patched `config.py`, `main.py`, and `trainer.py` so temporal-bias challengers cannot override a later viable incumbent when their probe-side MMR is weaker
+- added config/CLI control:
+  - `anti_regression_alignment_probe_temporal_mmr_slack`
+  - `--anti-regression-alignment-probe-temporal-mmr-slack`
+- alignment logs now also record `mmr_edge` and `temporal_mmr_slack`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py`
+
+Preview:
+- `test_output/costgate4_temporal_mmr_guard_preview_20260327.json`
+- expected effect:
+  - `seed2027` `regimeB` `costgate4 + pf_mmr` keeps incumbent `candidate_ep009.pt` instead of switching to `candidate_ep003.pt`
+  - non-regression on checked cases: `seed8087` `costgate4 + pf_mmr`, `seed777` temporal guard, `seed123` regimeB gatefix
+
+## 2026-03-27 (`seed2027` `regimeB` `costgate4` direct `ep009` recovery passed and exposed an alignment bug pattern)
+
+Result:
+- directly evaluated the strongest remaining future-robust checkpoint from the same `costgate4 + pf_mmr` proof run:
+  - `test_output/seed2027_regimeB_costgate4_eval_candidate_ep009_20260327_180552/results/test_results.json`
+  - checkpoint: `candidate_ep009.pt`
+  - return: `+0.31%`
+  - PF: `1.11`
+  - trades: `21`
+  - max drawdown: `-1.63%`
+  - walk-forward: `pass`
+
+Selector diagnosis:
+- `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/logs/checkpoint_tournament.json`
+- the pre-alignment incumbent was already `candidate_ep009.pt`
+- alignment then switched to earlier `candidate_ep003.pt` through temporal bias
+- this means the branch is still viable on `seed2027`; the real issue is alignment overriding a later viable incumbent with only a small probe edge
+- wrote combined audit:
+  - `test_output/costgate4_temporal_alignment_gap_20260327.json`
+
+Meaning:
+- the `costgate4` older-slice branch is back to being a selector-calibration problem, not a threshold/dead-branch problem
+- the next move is temporal-bias calibration on the `costgate4` branch, not more checkpoint brute force on `seed2027`
+
+## 2026-03-27 (`seed2027` `regimeB` `costgate4` direct `ep006` recovery stayed economically positive but still failed robustness)
+
+Result:
+- directly evaluated the strongest remaining balanced middle-episode checkpoint from the same `costgate4 + pf_mmr` proof run:
+  - `test_output/seed2027_regimeB_costgate4_eval_candidate_ep006_20260327_175557/results/test_results.json`
+  - checkpoint: `candidate_ep006.pt`
+  - return: `+1.25%`
+  - PF: `1.56`
+  - trades: `19`
+  - max drawdown: `-1.29%`
+  - walk-forward: `fail`
+
+Meaning:
+- `candidate_ep006.pt` is better economically than the selected `candidate_ep003.pt`, but it still misses the walk-forward gate on the same weak positive-fraction profile
+- with `ep010`, `ep002`, and now `ep006` all failing to close the seed cleanly, `seed2027` is increasingly looking like a branch-threshold/regime-fit issue rather than a nearby selector miss
+- the next cheap check should move to the strongest remaining future-robust candidate from the same run, not another full retrain
+
+## 2026-03-27 (`seed2027` `regimeB` `costgate4` direct `ep002` recovery also failed)
+
+Result:
+- directly evaluated the strongest remaining all-positive checkpoint from the same `costgate4 + pf_mmr` proof run:
+  - `test_output/seed2027_regimeB_costgate4_eval_candidate_ep002_20260327_174056/results/test_results.json`
+  - checkpoint: `candidate_ep002.pt`
+  - return: `-0.64%`
+  - PF: `0.80`
+  - trades: `24`
+  - max drawdown: `-1.63%`
+  - walk-forward: `fail`
+
+Meaning:
+- `seed2027` on the older `2013-2017` `costgate4` branch is not rescued by the strongest remaining conservative all-positive alternate either
+- after both `ep010` and `ep002` failed, this seed is looking less like a nearby selector miss and more like a branch-threshold or regime-fit issue
+- the next cheap check should move to `candidate_ep006.pt`, which is the strongest remaining balanced middle-episode alternate from the same run
+
+## 2026-03-27 (`seed2027` `regimeB` `costgate4` direct `ep010` recovery failed economically)
+
+Result:
+- directly evaluated the strongest conservative non-selected checkpoint from the failed `costgate4 + pf_mmr` proof run:
+  - `test_output/seed2027_regimeB_costgate4_eval_candidate_ep010_20260327_172733/results/test_results.json`
+  - checkpoint: `candidate_ep010.pt`
+  - return: `-1.35%`
+  - PF: `0.67`
+  - trades: `23`
+  - max drawdown: `-2.70%`
+  - walk-forward: `pass`
+
+Meaning:
+- `seed2027` on the older `2013-2017` `costgate4` branch is not rescued by the most conservative positive-structure alternate
+- this makes the current `2027` miss look less like a simple selector issue and more like a branch-threshold or calibration issue
+- the next cheap check should move to the strongest remaining all-positive candidate from the same run rather than another full retrain
+
+## 2026-03-27 (`seed2027` `regimeB` `costgate4 + pf_mmr` proof did not close on the selected checkpoint)
+
+Result:
+- completed the second older-slice proof run for the `costgate4 + pf_mmr` selector branch:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/results/test_results.json`
+  - selected checkpoint: `candidate_ep003.pt`
+  - return: `+2.38%`
+  - PF: `2.29`
+  - trades: `24`
+  - max drawdown: `-1.56%`
+  - walk-forward: `fail` (`positive_frac = 0.3929`)
+
+Selector details:
+- `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/logs/checkpoint_tournament.json`
+- requested mode: `auto_rescue`
+- final mode: `future_first+wfalign`
+- winner after alignment: `candidate_ep003.pt`
+- PF/MMR rescue did not trigger on this seed (`pf_mmr_rescue_filenames = []`)
+
+Meaning:
+- the new rescue path is real, but it is not yet a generalized fix for the older-slice `costgate4` branch
+- this run is not a dead branch signal because the selected checkpoint is economically strong; the failure is specifically on walk-forward consistency
+- the next step is a cheap alternate-checkpoint eval from this same run, starting with the strongest conservative non-selected candidate rather than another full retrain
+
+## 2026-03-27 (PF/MMR rescue proof rerun passed on `seed8087` `regimeB` `costgate4`)
+
+Result:
+- completed the proof rerun for the new PF/MMR rescue path:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep008.pt`
+  - return: `+0.44%`
+  - PF: `1.24`
+  - trades: `17`
+  - max drawdown: `-1.52%`
+  - walk-forward: `pass`
+
+Selector proof:
+- `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087/logs/checkpoint_tournament.json`
+- requested mode: `auto_rescue`
+- final mode: `tail_holdout+wfalign`
+- `alignment_probe.challenger_from_pf_mmr_rescue = true`
+- `alignment_probe.pf_mmr_rescue_filenames = ["candidate_ep008.pt"]`
+- `alignment_probe.pf_mmr_edge_gate = true`
+- `alignment_probe.switched = true`
+
+Meaning:
+- the new PF/MMR rescue path is now proven end-to-end on the exact older-slice `costgate4` selector miss it was designed to fix
+- this keeps `costgate4` viable as the leading branch-unification candidate
+- the next proof should be a second older-slice `costgate4 + pf_mmr` run on another seed, rather than more alternate-checkpoint brute force on `8087`
+
+## 2026-03-27 (Added PF/MMR rescue for `costgate4` older-slice selector misses)
+
+Change:
+- patched `config.py`, `main.py`, and `trainer.py` to add a conservative alignment-probe PF/MMR rescue path
+- the rescue only activates when:
+  - incumbent validation-side MMR is materially weak
+  - challenger still passes the cheap probe
+  - challenger has materially stronger base/forward PF structure
+  - challenger also has a probe-side MMR edge
+- wrote offline preview:
+  - `test_output/costgate4_pf_mmr_rescue_preview_20260327.json`
+
+Preview result:
+- flips only the target `costgate4` older-slice miss:
+  - `seed8087_regimeB_costgate4_train10ep_autorescue_alignq25_20260326_223012_seed8087`
+  - `candidate_ep003.pt -> candidate_ep008.pt`
+- leaves the checked non-regression cases unchanged:
+  - default `costgate4` `seed8087`
+  - `regimeB` `costgate6` `seed5051`
+  - `regimeB` `costgate6` `seed3141`
+  - baseline selector-fixed `seed8087`
+  - baseline selector-fixed `seed1011`
+
+Validation:
+- `python -m py_compile config.py main.py trainer.py`
+- `python test_system.py`
+
+## 2026-03-27 (`seed8087` `regimeB` `costgate4` direct `ep008` recovery passed)
+
+Result:
+- directly evaluated the last strong untested alternate from the same paired `regimeB` `costgate4` run:
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep008_20260327a/results/test_results.json`
+  - checkpoint: `candidate_ep008.pt`
+  - return: `+0.44%`
+  - PF: `1.24`
+  - trades: `17`
+  - max drawdown: `-1.52%`
+  - walk-forward: `pass`
+
+Meaning:
+- `costgate4` on the older `2013-2017` slice is still viable; the `seed8087` miss is not a dead branch
+- but the branch is still not auto-selecting the right checkpoint on this slice, so the bottleneck returns to selector calibration rather than threshold search
+- the next move is offline selector-gap analysis and a conservative patch before any more long reruns
+
+## 2026-03-27 (`seed8087` `regimeB` `costgate4` direct `ep002` recovery also failed)
+
+Result:
+- directly evaluated the strongest remaining walk-forward-positive alternative from the same paired `regimeB` `costgate4` run:
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep002_20260327a/results/test_results.json`
+  - checkpoint: `candidate_ep002.pt`
+  - return: `-0.67%`
+  - PF: `0.73`
+  - trades: `17`
+  - max drawdown: `-1.70%`
+  - walk-forward: `fail`
+
+Meaning:
+- `candidate_ep002.pt` does not rescue the older-slice `costgate4` miss either
+- after both `ep006` and `ep002` failed on direct test, the `seed8087` `regimeB` `costgate4` issue now looks more like a threshold/branch limitation than a near-miss selector bug
+- the next cheap discriminating check is `candidate_ep008.pt`, which remains the strongest untested high-score alternate from the same tournament
+
+## 2026-03-27 (`seed8087` `regimeB` `costgate4` direct `ep006` recovery failed)
+
+Result:
+- directly evaluated the strongest conservative non-selected alternative from the paired `regimeB` `costgate4` run:
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep006_20260327a/results/test_results.json`
+  - checkpoint: `candidate_ep006.pt`
+  - return: `-1.15%`
+  - PF: `0.66`
+  - trades: `13`
+  - max drawdown: `-2.59%`
+  - walk-forward: `fail`
+
+Meaning:
+- the first `regimeB` `costgate4` miss is not recoverable by the most conservative obvious alternate
+- this makes `costgate4` on the older slice look less like a simple selector miss and more like a threshold/branch question
+- the next cheap check is `candidate_ep002.pt`, which had the strongest remaining walk-forward positive-fraction profile in the same tournament
+
+## 2026-03-27 (Paired `regimeB` `costgate4` probe on `seed8087` missed on the selected checkpoint)
+
+Result:
+- ran the paired `2013-2017` probe for the new default-split `costgate4` candidate:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_autorescue_alignq25_20260326_223012_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep003.pt`
+  - return: `+0.33%`
+  - PF: `1.14`
+  - trades: `25`
+  - max drawdown: `-0.91%`
+  - walk-forward: `fail`
+- selector details:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_autorescue_alignq25_20260326_223012_seed8087/logs/checkpoint_tournament.json`
+  - `selector_mode_requested = auto_rescue`
+  - final mode stayed `tail_holdout`
+  - winner: `candidate_ep003.pt`
+  - stronger probe alternatives remained in-pool (`candidate_ep002.pt`, `candidate_ep006.pt`, `candidate_ep008.pt`)
+
+Meaning:
+- `min_atr_cost_ratio = 4.0` is still the leading default-split unification candidate, but it is not yet proven on the older `2013-2017` slice
+- the next highest-ROI check is a direct eval of the strongest non-selected conservative alternative from this same run before committing to another long retrain
+
+## 2026-03-26 (Default-split `costgate4` probe is the new leading unification candidate)
+
+Result:
+- ran a faster default-split compromise-threshold probe on the strong `seed8087` case:
+  - `seed_sweep_results/realdata/seed8087_default_costgate4_train10ep_autorescue_alignq25_20260326_171631_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep009.pt`
+  - return: `+2.15%`
+  - PF: `2.34`
+  - trades: `19`
+  - max drawdown: `-0.89%`
+  - walk-forward: `pass`
+- selector details:
+  - `seed_sweep_results/realdata/seed8087_default_costgate4_train10ep_autorescue_alignq25_20260326_171631_seed8087/logs/checkpoint_tournament.json`
+  - `selector_mode_requested = auto_rescue`
+  - final mode stayed `tail_holdout`
+  - winner: `candidate_ep009.pt`
+  - alignment probe evaluated but did not need to switch
+
+Meaning:
+- `min_atr_cost_ratio = 4.0` is now the leading unification candidate
+- `costgate6` looks too aggressive for the default split, but the project does not yet have enough evidence to promote `costgate4` into the main branch
+- the next paired proof is the matching `2013-2017` `regimeB` probe on `seed8087`
+
+## 2026-03-26 (Corrected default-split unification rerun still failed on `seed8087`)
+
+Result:
+- reran the default-split proof with the full selector stack enabled explicitly:
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_autorescue_alignq25_20260326_130145_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep004.pt`
+  - return: `-0.16%`
+  - PF: `0.85`
+  - trades: `9`
+  - max drawdown: `-1.07%`
+  - walk-forward: `pass`
+- selector details:
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_autorescue_alignq25_20260326_130145_seed8087/logs/checkpoint_tournament.json`
+  - `selector_mode_requested = auto_rescue`
+  - final mode became `tail_holdout+wfalign`
+  - alignment probe switched the winner to `candidate_ep004.pt`
+- prior direct alternate still failed:
+  - `test_output/seed8087_default_costgate6_train17ep_q25rescue_eval_candidate_ep008_20260326_124835/results/test_results.json`
+  - `candidate_ep008.pt`: `-1.29%`, `PF 0.10`, walk-forward `fail`
+
+Meaning:
+- this closes the configuration-drift question: `costgate6` is still hurting the default split even when the full `auto_rescue + alignment_probe + q25_rescue` stack is enabled correctly
+- the current state is two partially validated configurations, not one unified main branch
+- the next move is cost-gate calibration on the default split, starting with a faster compromise-threshold probe instead of another full 17-episode rerun
+
+## 2026-03-26 (Default-split branch-unification proof failed economically on `seed8087`)
+
+Result:
+- tested whether the newer `costgate6 + q25-rescue` branch preserves the default split on a known strong seed:
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_q25rescue_20260326_105022_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep015.pt`
+  - return: `-0.23%`
+  - PF: `0.77`
+  - trades: `11`
+  - max drawdown: `-0.72%`
+  - walk-forward: `pass`
+- selector details:
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_q25rescue_20260326_105022_seed8087/logs/checkpoint_tournament.json`
+  - selection pool narrowed to `candidate_ep015.pt` and `candidate_ep008.pt`
+  - winner stayed `candidate_ep015.pt`
+  - alignment probe was disabled in this run (`selector_mode = tail_holdout`)
+- direct alternate check:
+  - `test_output/seed8087_default_costgate6_train17ep_q25rescue_eval_candidate_ep008_20260326_124835/results/test_results.json`
+  - checkpoint: `candidate_ep008.pt`
+  - return: `-1.29%`
+  - PF: `0.10`
+  - walk-forward: `fail`
+
+Meaning:
+- the older-slice recovery branch is not yet unified with the default split
+- this negative result is real for the `tail_holdout` cost-aware configuration, but it is not yet the definitive q25-rescue branch proof because the run was launched without `auto_rescue + alignment_probe`
+- this does not invalidate the older-slice proofs or the earlier default-split pass set, but it means one shared production configuration is still not established
+- the next move is a corrected default-split rerun with explicit `auto_rescue + alignment_probe + q25_rescue` flags
+
+## 2026-03-26 (RegimeB fresh-seed proof passed: `seed3141` now closes on the selected checkpoint)
+
+Result:
+- the fresh `seed3141` full-length `2013-2017` cost-aware q25-rescue proof passed on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed3141_regimeB_costgate6_train17ep_q25rescue_20260325_204512_seed3141/results/test_results.json`
+  - selected checkpoint: `candidate_ep002.pt`
+  - return: `+0.99%`
+  - PF: `2.92`
+  - trades: `10`
+  - max drawdown: `-0.40%`
+  - walk-forward: `pass`
+- selector behavior:
+  - `seed_sweep_results/realdata/seed3141_regimeB_costgate6_train17ep_q25rescue_20260325_204512_seed3141/logs/checkpoint_tournament.json`
+  - selector kept `candidate_ep002.pt`
+  - temporal challenger `candidate_ep014.pt` did not switch; no rescue path was required
+- refreshed summaries:
+  - `seed_sweep_results/realdata/regime_validation_summary_20260322.json`
+  - `seed_sweep_results/realdata/regimeB_costgate6_selected6_summary_20260326.json`
+
+Meaning:
+- the `2013-2017` slice now has full-length selected passes on six proof seeds: `123`, `8087`, `2027`, `1011`, `5051`, and `3141`
+- q25-rescue is no longer a one-off fix for `5051`; the cost-aware older-slice branch now also holds on a second fresh seed
+- the next milestone is branch unification: confirm the newer `costgate6 + q25-rescue` branch does not regress the default split
+
+## 2026-03-25 (RegimeB q25-rescue proof passed: `seed5051` now auto-selects `candidate_ep004.pt`)
+
+Result:
+- reran the fresh `seed5051` cost-aware older-slice proof with the new q25-rescue selector logic:
+  - `seed_sweep_results/realdata/seed5051_regimeB_costgate6_train17ep_q25rescue_20260325_194236_seed5051/results/test_results.json`
+  - selected checkpoint: `candidate_ep004.pt`
+  - return: `+0.71%`
+  - PF: `1.83`
+  - trades: `10`
+  - max drawdown: `-0.49%`
+  - walk-forward: `pass`
+- selector proof:
+  - `seed_sweep_results/realdata/seed5051_regimeB_costgate6_train17ep_q25rescue_20260325_194236_seed5051/logs/checkpoint_tournament.json`
+  - alignment probe switched `candidate_ep007.pt -> candidate_ep004.pt`
+  - `challenger_from_q25_rescue = true`
+  - `q25_edge_gate = true`
+- refreshed regime summary:
+  - `seed_sweep_results/realdata/regimeB_costgate6_selected5_summary_20260325.json`
+
+Meaning:
+- the q25-rescue patch is now proven end-to-end on the fresh `seed5051` regimeB miss
+- the older `2013-2017` slice now has full-length selected passes on five proof seeds: `123`, `8087`, `2027`, `1011`, and `5051`
+- the next milestone is one more fresh regimeB seed outside the current proof set to confirm the selector patch generalizes beyond the calibration case
+
+## 2026-03-25 (RegimeB selector patch: add q25 rescue for fragile incumbents on cost-aware older-slice runs)
+
+Change:
+- patched `trainer.py`, `config.py`, and `main.py` to add a conservative validation-q25 rescue path inside the alignment probe
+- the new rescue only activates when:
+  - the incumbent is validation-fragile (`return_q25 <= 0`, `pf_q25 <= 0.75`)
+  - an earlier checkpoint still passes the probe
+  - that challenger has materially better validation lower-quartile return and PF
+  - and the challenger still keeps positive future metrics
+
+Evidence:
+- non-regression preview:
+  - `test_output/regimeB_q25_rescue_preview_20260325.json`
+  - unchanged: `123`, `8087`, `2027`, `1011`
+  - changed: `5051` would switch `candidate_ep007.pt -> candidate_ep004.pt`
+- selector-gap audit used for calibration:
+  - `test_output/seed5051_regimeB_selector_gap_20260325.json`
+- validation:
+  - `python -m py_compile config.py main.py trainer.py`
+  - `python test_system.py`
+
+Meaning:
+- the next proof is not another blind seed; it is a rerun of `seed5051` on the same cost-aware `2013-2017` setup
+- if the rerun now auto-selects `candidate_ep004.pt` and passes, selector reliability on fresh regimeB seeds improves materially
+
+## 2026-03-25 (RegimeB cost-aware training: fresh `seed5051` is a selector miss, not a branch failure)
+
+Result:
+- the fresh `seed5051` full-length regimeB cost-aware training run did not pass economically on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed5051_regimeB_costgate6_train17ep_20260325_135042_seed5051/results/test_results.json`
+  - selected checkpoint: `candidate_ep007.pt`
+  - return: `-0.10%`
+  - PF: `0.93`
+  - trades: `9`
+  - max drawdown: `-1.07%`
+  - walk-forward: `pass`
+- direct eval of the strongest non-selected alternate recovered the seed:
+  - `test_output/seed5051_regimeB_eval_candidate_ep004_20260325a/results/test_results.json`
+  - checkpoint: `candidate_ep004.pt`
+  - return: `+0.71%`
+  - PF: `1.83`
+  - trades: `10`
+  - max drawdown: `-0.49%`
+  - walk-forward: `pass`
+- selector-gap audit:
+  - `test_output/seed5051_regimeB_selector_gap_20260325.json`
+  - the tournament preferred `candidate_ep007.pt`, but held-out final test preferred `candidate_ep004.pt`
+
+Meaning:
+- the cost-aware regimeB branch is still viable on `seed5051`; this is not a fresh-seed branch failure
+- but selected-checkpoint reliability on fresh older-slice seeds is still imperfect
+- the next step is selector calibration on the cost-aware regimeB branch, not another blind long rerun
+
+## 2026-03-25 (RegimeB cost-aware training: fresh `seed1011` also passes at full run length)
+
+Result:
+- ran the first regimeB proof outside the cost-aware calibration seeds:
+  - `seed_sweep_results/realdata/seed1011_regimeB_costgate6_train17ep_20260325_105515_seed1011/results/test_results.json`
+  - selected checkpoint return: `+0.02%`
+  - PF: `1.01`
+  - trades: `11`
+  - max drawdown: `-0.63%`
+  - walk-forward: `pass`
+- selector result:
+  - `seed_sweep_results/realdata/seed1011_regimeB_costgate6_train17ep_20260325_105515_seed1011/logs/checkpoint_tournament.json`
+  - selector mode: `tail_holdout`
+  - final winner: `candidate_ep011.pt`
+  - no alignment switch was needed
+
+Meaning:
+- the cost-aware older-slice recovery now holds on a fresh regimeB seed outside the original proof set
+- the result is economically thin, so this improves confidence in generalization more than it improves expected edge
+- the next step is another fresh regimeB seed to see whether this older-slice recovery is broadly stable or only barely passing
+
+## 2026-03-25 (RegimeB cost-aware training: `seed2027` 17-episode proof is also a selected pass)
+
+Result:
+- extended the older-slice cost-aware training probe to the full `17`-episode run length on the second hard seed:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate6_train17ep_20260324_224513_seed2027/results/test_results.json`
+  - selected checkpoint return: `+0.61%`
+  - PF: `1.69`
+  - trades: `13`
+  - max drawdown: `-0.55%`
+  - walk-forward: `pass`
+- selector result:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate6_train17ep_20260324_224513_seed2027/logs/checkpoint_tournament.json`
+  - selector mode: `tail_holdout+wfalign`
+  - incumbent `candidate_ep016.pt` was replaced by alignment
+  - final winner: `candidate_ep005.pt`
+
+Meaning:
+- the older `2013-2017` slice now has full-length selected passes on all three proof seeds used so far: `123`, `8087`, and `2027`
+- this materially upgrades confidence that cost-aware training is the right direction for older-regime recovery
+- the next test should be a fresh regimeB seed outside this calibration set to check whether the fix generalizes cleanly
+
+## 2026-03-24 (RegimeB cost-aware training: `seed8087` 17-episode proof is a strong selected pass)
+
+Result:
+- extended the older-slice cost-aware training probe to the full `17`-episode run length:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate6_train17ep_20260324_184226_seed8087/results/test_results.json`
+  - selected checkpoint return: `+2.63%`
+  - PF: `7.11`
+  - trades: `12`
+  - max drawdown: `-0.45%`
+  - walk-forward: `pass`
+- selector result:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate6_train17ep_20260324_184226_seed8087/logs/checkpoint_tournament.json`
+  - selector mode: `tail_holdout+wfalign`
+  - incumbent `candidate_ep013.pt` failed the probe
+  - alignment switched to `candidate_ep010.pt`, which became the final winner
+
+Meaning:
+- this is the first strong full-length proof that the older `2013-2017` weakness can be fixed by training-time friction control, not just by short probes
+- regimeB confidence improves materially, but it is still not closed until the same cost-aware setup is replicated on `seed2027` at the same `17`-episode length
+
+## 2026-03-24 (RegimeB cost-aware training: `seed2027` 10-episode proof also turns into a selected pass)
+
+Result:
+- replicated the older-slice cost-aware training probe on the second hard seed:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate6_train10ep_20260324_150834_seed2027/results/test_results.json`
+  - selected checkpoint return: `+0.00%`
+  - PF: `1.00`
+  - trades: `9`
+  - max drawdown: `-0.47%`
+  - walk-forward: `pass`
+- selector result:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate6_train10ep_20260324_150834_seed2027/logs/checkpoint_tournament.json`
+  - winner: `candidate_ep001.pt`
+  - selector mode: `tail_holdout`
+  - no alignment switch was required
+
+Meaning:
+- the older `2013-2017` slice now has selected-pass short cost-aware training proofs on both hard seeds (`8087`, `2027`)
+- this is enough to say the older-slice weakness is responsive to cost-aware training, not just selector changes
+- the evidence is still economically thin on `2027`, so the next proof must be a fuller `17`-episode rerun before restoring broader regime confidence
+
+## 2026-03-24 (RegimeB cost-aware training: `seed8087` 10-episode proof turns into a selected pass)
+
+Result:
+- trained directly on the older `2013-2017` slice with `min_atr_cost_ratio = 6.0`:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate6_train10ep_20260324_134939_seed8087/results/test_results.json`
+  - selected checkpoint return: `+0.50%`
+  - PF: `1.44`
+  - trades: `15`
+  - max drawdown: `-0.61%`
+  - walk-forward: `pass`
+- selector result:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate6_train10ep_20260324_134939_seed8087/logs/checkpoint_tournament.json`
+  - winner: `candidate_ep004.pt`
+  - selector mode: `tail_holdout`
+  - no alignment switch was required
+
+Meaning:
+- this is the first clean evidence that the older-slice weakness responds to cost-aware training, not just selector repair
+- the next check is replication on the second hard older-slice seed (`2027`) before moving project progress back up
+
+## 2026-03-24 (RegimeB cost-gate probes: evaluation-only gating is not enough)
+
+Result:
+- tested stricter evaluation-time ATR-cost gating on the best known `seed8087` regimeB recovery checkpoint (`candidate_ep006.pt`)
+- `min_atr_cost_ratio = 8.0`:
+  - `test_output/seed8087_regimeB_eval_candidate_ep006_costgate8_20260324_132311/results/test_results.json`
+  - return: `+0.27%`
+  - trades: `1`
+  - walk-forward: `fail`
+- `min_atr_cost_ratio = 6.0`:
+  - `test_output/seed8087_regimeB_eval_candidate_ep006_costgate6_20260324_133325/results/test_results.json`
+  - return: `-0.12%`
+  - PF: `0.85`
+  - walk-forward: `fail`
+
+Supporting audit:
+- `test_output/regime_slice_feature_audit_20260324.json`
+- `test_output/regimeB_cost_gate_audit_20260324.json`
+- older slice test bars have materially worse ATR-to-cost conditions than `2018-2022`
+  - `2013-2017` median ATR/cost: about `8.29`
+  - `2018-2022` median ATR/cost: about `11.61`
+
+Meaning:
+- friction is part of the older-slice problem
+- but simply tightening the gate at evaluation time does not solve it
+- the next experiment should test cost-aware training on regimeB, not more evaluation-only gating
+
+## 2026-03-24 (RegimeB follow-up: `seed2027` only recovers marginally via manual `candidate_ep007.pt`)
+
+Result:
+- direct eval of the strongest non-selected `seed2027` regimeB alternate:
+  - `test_output/seed2027_regimeB_eval_candidate_ep007_20260324_125039/results/test_results.json`
+  - checkpoint: `candidate_ep007.pt`
+  - return: `+0.25%`
+  - PF: `1.11`
+  - walk-forward: `pass`
+- selected checkpoint from the full run still failed:
+  - `seed_sweep_results/realdata/seed2027_baseline17_regimeB_2013_2017_gatefix_20260324_095327_seed2027/results/test_results.json`
+  - selected checkpoint: `candidate_ep011.pt`
+  - return: `+0.61%`
+  - PF: `1.35`
+  - walk-forward: `fail`
+
+Meaning:
+- `seed2027` on `2013-2017` is not completely dead, but the best tested recovery is only marginal economically
+- together with `seed8087` on the same slice, this points to a real older-regime weakness, not just a simple selector bug
+- next step is offline regime-gap analysis, not more blind reruns
+
+## 2026-03-24 (RegimeB breadth check: `seed2027` also fails on the selected checkpoint)
+
+Result:
+- `seed_sweep_results/realdata/seed2027_baseline17_regimeB_2013_2017_gatefix_20260324_095327_seed2027/results/test_results.json`
+  - selected checkpoint: `candidate_ep011.pt`
+  - return: `+0.61%`
+  - PF: `1.35`
+  - walk-forward: `fail`
+  - walk-forward positive fraction: `0.286`
+- selector evidence:
+  - `seed_sweep_results/realdata/seed2027_baseline17_regimeB_2013_2017_gatefix_20260324_095327_seed2027/logs/checkpoint_tournament.json`
+  - selector mode stayed `tail_holdout`
+  - alignment probe did not switch away from `candidate_ep011.pt`
+
+Meaning:
+- the `2013-2017` slice is now failing on selected checkpoints for two strong seeds (`8087`, `2027`)
+- this is broader than a single-seed `8087` problem
+- the next step is a cheap alternate-checkpoint eval on `seed2027`, not another long rerun
+
+## 2026-03-24 (RegimeB rerun: `seed8087` still fails on the selected checkpoint)
+
+Result:
+- reran `seed8087` on the `2013-2017` slice with the corrected regimeB selector gate fix:
+  - `seed_sweep_results/realdata/seed8087_baseline17_regimeB_2013_2017_gatefix_20260323_191104_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep013.pt`
+  - return: `-1.43%`
+  - PF: `0.58`
+  - walk-forward: `fail`
+- selector evidence:
+  - `seed_sweep_results/realdata/seed8087_baseline17_regimeB_2013_2017_gatefix_20260323_191104_seed8087/logs/checkpoint_tournament.json`
+  - alignment probe did include `candidate_ep006.pt`
+  - but `candidate_ep013.pt` still remained the incumbent and final winner
+  - no alignment switch occurred
+
+Meaning:
+- the regimeB gate-fix patch is real and already proved on `seed123`, but it does not solve the older-slice `seed8087` case
+- `seed8087` on `2013-2017` remains only marginally recoverable via manual `candidate_ep006.pt`
+- the next step is not more selector forcing on `8087`; it is another regimeB proof seed to determine whether this older-slice weakness is seed-specific or broader
+
+## 2026-03-23 (RegimeB gate fix proved end-to-end: `seed123` now auto-selects `candidate_ep005.pt`)
+
+Change:
+- fixed a selector gate bug in `trainer.py` after the first `regimeB` proof rerun showed the right challenger (`candidate_ep005.pt`) but still refused to switch
+- the temporal-dominance override can now switch to a later checkpoint when it is explicitly the preferred probe challenger
+
+Evidence:
+- first proof rerun exposed the bug:
+  - `seed_sweep_results/realdata/seed123_baseline17_regimeB_2013_2017_selectorpatch_20260323_130654_seed123/results/test_results.json`
+  - still selected `candidate_ep004.pt`
+  - return: `-0.04%`
+  - PF: `0.99`
+  - walk-forward: `fail`
+- gate-fix preview:
+  - `test_output/regimeB_selector_gatefix_preview_20260323.json`
+  - shows `candidate_ep005.pt` would switch over `candidate_ep004.pt`
+- corrected proof rerun passed:
+  - `seed_sweep_results/realdata/seed123_baseline17_regimeB_2013_2017_gatefix_20260323_152644_seed123/results/test_results.json`
+  - selected checkpoint: `candidate_ep005.pt`
+  - return: `+2.05%`
+  - PF: `2.15`
+  - walk-forward: `pass`
+- selector proof:
+  - `seed_sweep_results/realdata/seed123_baseline17_regimeB_2013_2017_gatefix_20260323_152644_seed123/logs/checkpoint_tournament.json`
+  - `preferred_probe_filename`: `candidate_ep005.pt`
+  - `temporal_dominance_override_filename`: `candidate_ep005.pt`
+  - `winner_after_alignment`: `candidate_ep005.pt`
+  - `switched`: `true`
+
+Meaning:
+- the older `2013-2017` slice is now proven recoverable by automatic selection on `seed123`, not just by manual checkpoint eval
+- this validates the regimeB selector patch path on one full rerun
+- progress does not move yet; the remaining proof is whether the same corrected logic also improves `seed8087` on the older slice
+
+## 2026-03-23 (RegimeB selector patch: soften temporal bias and surface low-base/high-future candidates)
+
+Change:
+- patched `trainer.py`, `config.py`, and `main.py` to address the two older-slice miss patterns seen on `2013-2017`
+- temporal shortlist no longer always locks to the earliest candidate; a slightly later temporal candidate can now take priority when the probe shows a clear return/PF edge
+- alignment probe now adds one low-base/high-future early candidate to the probe pool, so cases like `seed8087 regimeB ep006` are no longer invisible to alignment
+
+Evidence:
+- preview artifact: `test_output/regimeB_selector_patch_preview_20260323.json`
+  - `123`: preferred probe would switch `candidate_ep004.pt -> candidate_ep005.pt`
+  - `8087`: probe pool would now include `candidate_ep006.pt`
+- code validation:
+  - `python -m py_compile config.py main.py trainer.py`
+  - `python test_system.py`
+
+Meaning:
+- this is a conservative selector patch aimed specifically at the older-slice miss pattern
+- project progress does not move yet; it still needs an end-to-end rerun proof on `regimeB`
+
+## 2026-03-23 (RegimeB result: older 2013-2017 slice remains a selector problem, but `8087` only recovers weakly)
+
+Result:
+- selected `8087` run failed:
+  - `seed_sweep_results/realdata/seed8087_baseline17_regimeB_2013_2017_20260322_122135_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep013.pt`
+  - return: `-1.43%`
+  - PF: `0.58`
+  - walk-forward: `fail`
+- strongest `8087` alternate also failed the robustness gate:
+  - `test_output/seed8087_regimeB_eval_candidate_ep017_20260322_165031/results/test_results.json`
+  - return: `+1.32%`
+  - PF: `1.55`
+  - walk-forward: `fail`
+- conservative `8087` alternate also failed:
+  - `test_output/seed8087_regimeB_eval_candidate_ep005_20260322_174018/results/test_results.json`
+  - return: `-0.16%`
+  - PF: `0.95`
+  - walk-forward: `fail`
+- `8087` alternate with stronger walk-forward consistency still lost money:
+  - `test_output/seed8087_regimeB_eval_candidate_ep003_20260322_194238/results/test_results.json`
+  - checkpoint: `candidate_ep003.pt`
+  - return: `-0.89%`
+  - PF: `0.77`
+  - walk-forward: `pass`
+- `8087` alternate that is both profitable and robust only recovers weakly:
+  - `test_output/seed8087_regimeB_eval_candidate_ep006_20260322_212629/results/test_results.json`
+  - checkpoint: `candidate_ep006.pt`
+  - return: `+0.21%`
+  - PF: `1.06`
+  - walk-forward: `pass`
+- second strong seed (`123`) also failed on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed123_baseline17_regimeB_2013_2017_20260322_175139_seed123/results/test_results.json`
+  - selected checkpoint: `candidate_ep004.pt`
+  - return: `-0.04%`
+  - PF: `0.99`
+  - walk-forward: `fail`
+  - walk-forward positive fraction: `0.446`
+- strongest non-selected `123` follow-up passed:
+  - `test_output/seed123_regimeB_eval_candidate_ep005_20260322_193120/results/test_results.json`
+  - checkpoint: `candidate_ep005.pt`
+  - return: `+2.05%`
+  - PF: `2.15`
+  - walk-forward: `pass`
+
+Meaning:
+- the older `2013-2017` slice is not a regime-wide branch failure, because both tested seeds are recoverable via alternate checkpoints
+- but selector reliability on that slice is weak:
+  - `123` needs `ep005` instead of selected `ep004`
+  - `8087` only recovers to a marginal pass with `ep006`
+- regime validation is now mixed:
+  - `2018-2022`: pass
+  - `2013-2017`: recoverable on tested seeds, but not yet with reliable automatic selection
+- next step is to stop brute-force checkpoint checks and do selector-gap analysis on the two older-slice misses (`8087`, `123`), then patch selection logic before launching another long regime rerun
+
+## 2026-03-22 (Regime proof passed: `8087` survives the 2018-2022 slice)
+
+Result:
+- `seed_sweep_results/realdata/seed8087_baseline17_regimeA_2018_2022_20260322_100957_seed8087/results/test_results.json`
+  - selected checkpoint: `candidate_ep015.pt`
+  - test return: `+1.69%`
+  - PF: `2.09`
+  - trades: `27`
+  - max drawdown: `-0.69%`
+  - walk-forward: `pass`
+- `seed_sweep_results/realdata/seed8087_baseline17_regimeA_2018_2022_20260322_100957_seed8087/logs/checkpoint_tournament.json`
+  - selector mode: `tail_holdout`
+  - incumbent remained `candidate_ep015.pt`
+  - no alignment challenger was required
+
+Meaning:
+- the current branch now has its first clean alternate-regime proof, not just seed robustness on the default split
+- this is the first direct evidence that the branch can hold on a materially different historical slice (`2018-01-01` to `2022-12-31`)
+- the next validation target is broader regime coverage, not more default-split seed grinding
+
 ## 2026-03-22 (Regime-validation tooling: explicit CSV time-slice controls)
 
 Focus:

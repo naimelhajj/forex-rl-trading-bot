@@ -16,7 +16,7 @@ def test_atr_rsi_percentile_lr():
     highs = closes + 0.0005 + 0.0002 * np.random.rand(n)
     lows = closes - 0.0005 - 0.0002 * np.random.rand(n)
     opens = closes + 0.0001 * np.random.randn(n)
-    times = pd.date_range('2024-01-01', periods=n, freq='H')
+    times = pd.date_range('2024-01-01', periods=n, freq='h')
 
     df = pd.DataFrame({'time': times, 'open': opens, 'high': highs, 'low': lows, 'close': closes}, index=times)
     fe = FeatureEngineer(atr_period=5, rsi_period=5, lr_window=5, fractal_window=5)
@@ -56,15 +56,15 @@ def test_fractals_detection():
     lows = prices - 0.0005
     opens = prices + 0.0001
     closes = prices
-    times = pd.date_range('2024-01-01', periods=n, freq='H')
+    times = pd.date_range('2024-01-01', periods=n, freq='h')
 
     df = pd.DataFrame({'time': times, 'open': opens, 'high': highs, 'low': lows, 'close': closes}, index=times)
     fe = FeatureEngineer(fractal_window=5)
     fdf = fe.compute_all_features(df)
 
     # There should be some non-null fractal values
-    assert fdf['top_fractal'].notna().any()
-    assert fdf['bottom_fractal'].notna().any()
+    assert fdf['top_fractal_confirmed'].notna().any()
+    assert fdf['bottom_fractal_confirmed'].notna().any()
 
     print('Fractal detection tests passed')
 
@@ -72,7 +72,7 @@ def test_fractals_detection():
 def test_currency_strength():
     # Create two pair dfs: EURUSD and EURJPY where EUR is strengthening
     n = 40
-    times = pd.date_range('2024-01-01', periods=n, freq='H')
+    times = pd.date_range('2024-01-01', periods=n, freq='h')
 
     # EURUSD rises
     eurusd_close = 1.10 + np.linspace(0, 0.01, n)

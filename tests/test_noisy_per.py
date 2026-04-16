@@ -51,7 +51,7 @@ def test_prioritized_replay():
 
     # sample
     batch_size = 16
-    states, actions, rewards, next_states, dones, indices, weights = buf.sample(batch_size, beta=0.4)
+    states, actions, rewards, next_states, dones, n_steps, indices, weights = buf.sample(batch_size, beta=0.4)
     assert states.shape[0] == batch_size
     assert len(indices) == batch_size
     assert weights.shape[0] == batch_size

@@ -1442,7 +1442,7 @@ class Trainer:
         trade_floor = float(getattr(self.config, "VAL_MIN_HALF_TRADES", 0))
         min_positive_frac = float(getattr(training_cfg, "anti_regression_min_positive_frac", 0.50))
         selector_mode = str(getattr(training_cfg, "anti_regression_selector_mode", "tail_holdout")).strip().lower()
-        if selector_mode not in ("tail_holdout", "future_first", "auto_rescue", "base_first"):
+        if selector_mode not in ("tail_holdout", "future_first", "auto_rescue", "base_first", "align_priority"):
             selector_mode = "tail_holdout"
         ranking_selector_mode = "tail_holdout" if selector_mode == "auto_rescue" else selector_mode
         base_return_floor = float(getattr(training_cfg, "anti_regression_base_return_floor", 0.0))
@@ -1619,6 +1619,109 @@ class Trainer:
                 )
             ),
         )
+        alignment_probe_temporal_mmr_slack = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_mmr_slack",
+                0.0,
+            )
+        )
+        alignment_probe_temporal_q25_guard_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_guard_enabled",
+                True,
+            )
+        )
+        alignment_probe_temporal_q25_return_slack = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_return_slack",
+                0.20,
+            )
+        )
+        alignment_probe_temporal_q25_pf_slack = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_pf_slack",
+                0.05,
+            )
+        )
+        alignment_probe_temporal_q25_fallback_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_fallback_enabled",
+                True,
+            )
+        )
+        alignment_probe_temporal_q25_fallback_return_slack_pct = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_q25_fallback_return_slack_pct",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_temporal_q25_fallback_pf_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_q25_fallback_pf_slack",
+                    0.05,
+                )
+            ),
+        )
+        alignment_probe_temporal_q25_fallback_probe_mmr_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_fallback_probe_mmr_edge_min",
+                0.05,
+            )
+        )
+        alignment_probe_temporal_q25_fallback_val_pf_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_fallback_val_pf_edge_min",
+                0.20,
+            )
+        )
+        alignment_probe_temporal_q25_fallback_min_val_return_q25 = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_fallback_min_val_return_q25",
+                0.0,
+            )
+        )
+        alignment_probe_temporal_q25_fallback_min_val_pf_q25 = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_temporal_q25_fallback_min_val_pf_q25",
+                1.0,
+            )
+        )
+        alignment_probe_temporal_dominance_return_edge_min = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_dominance_return_edge_min",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_temporal_dominance_pf_edge_min = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_temporal_dominance_pf_edge_min",
+                    0.10,
+                )
+            ),
+        )
         alignment_probe_temporal_require_forward_profit = bool(
             getattr(
                 training_cfg,
@@ -1646,6 +1749,554 @@ class Trainer:
                 "anti_regression_alignment_probe_early_mmr_edge_min",
                 0.50,
             )
+        )
+        alignment_probe_q25_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_q25_rescue_enabled",
+                False,
+            )
+        )
+        alignment_probe_q25_incumbent_return_q25_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_q25_incumbent_return_q25_max",
+                0.0,
+            )
+        )
+        alignment_probe_q25_incumbent_pf_q25_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_q25_incumbent_pf_q25_max",
+                0.75,
+            )
+        )
+        alignment_probe_q25_return_q25_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_q25_return_q25_edge_min",
+                0.50,
+            )
+        )
+        alignment_probe_q25_pf_q25_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_q25_pf_q25_edge_min",
+                0.10,
+            )
+        )
+        alignment_probe_q25_max_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_q25_max_episode",
+                    8,
+                )
+            ),
+        )
+        alignment_probe_pf_mmr_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_pf_mmr_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_align_priority_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_align_priority_enabled",
+                selector_mode == "align_priority",
+            )
+        )
+        alignment_probe_align_priority_min_pos_frac = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_align_priority_min_pos_frac",
+                0.60,
+            )
+        )
+        alignment_probe_align_priority_min_return = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_align_priority_min_return",
+                0.10,
+            )
+        )
+        alignment_probe_pf_mmr_incumbent_val_mmr_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_pf_mmr_incumbent_val_mmr_max",
+                -0.25,
+            )
+        )
+        alignment_probe_pf_mmr_probe_mmr_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_pf_mmr_probe_mmr_edge_min",
+                0.03,
+            )
+        )
+        alignment_probe_pf_mmr_base_pf_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_pf_mmr_base_pf_edge_min",
+                0.50,
+            )
+        )
+        alignment_probe_pf_mmr_forward_pf_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_pf_mmr_forward_pf_edge_min",
+                0.25,
+            )
+        )
+        alignment_probe_pf_mmr_positive_frac_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_pf_mmr_positive_frac_slack",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_pf_mmr_max_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_pf_mmr_max_episode",
+                    10,
+                )
+            ),
+        )
+        alignment_probe_late_val_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_val_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_late_val_incumbent_val_mmr_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_val_incumbent_val_mmr_max",
+                -0.50,
+            )
+        )
+        alignment_probe_late_val_challenger_val_mmr_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_val_challenger_val_mmr_min",
+                0.0,
+            )
+        )
+        alignment_probe_late_val_val_pf_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_val_val_pf_edge_min",
+                0.50,
+            )
+        )
+        alignment_probe_late_val_tail_pf_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_val_tail_pf_edge_min",
+                0.20,
+            )
+        )
+        alignment_probe_late_val_positive_frac_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_late_val_positive_frac_slack",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_late_val_max_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_late_val_max_episode",
+                    12,
+                )
+            ),
+        )
+        alignment_probe_late_mmr_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_mmr_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_late_mmr_incumbent_val_pf_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_mmr_incumbent_val_pf_max",
+                1.0,
+            )
+        )
+        alignment_probe_late_mmr_challenger_val_mmr_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_mmr_challenger_val_mmr_edge_min",
+                0.75,
+            )
+        )
+        alignment_probe_late_mmr_challenger_forward_pf_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_late_mmr_challenger_forward_pf_min",
+                1.10,
+            )
+        )
+        alignment_probe_late_mmr_positive_frac_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_late_mmr_positive_frac_slack",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_late_mmr_max_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_late_mmr_max_episode",
+                    12,
+                )
+            ),
+        )
+        alignment_probe_low_vol_tail_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_low_vol_tail_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_low_vol_tail_rescue_max_episode = max(
+            alignment_probe_temporal_min_episode,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_low_vol_tail_rescue_max_episode",
+                    12,
+                )
+            ),
+        )
+        alignment_probe_low_vol_tail_rescue_base_return_slack_pct = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_low_vol_tail_rescue_base_return_slack_pct",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_low_vol_tail_rescue_alt_return_slack_pct = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_low_vol_tail_rescue_alt_return_slack_pct",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_low_vol_tail_rescue_tail_return_slack_pct = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_low_vol_tail_rescue_tail_return_slack_pct",
+                    0.05,
+                )
+            ),
+        )
+        alignment_probe_low_vol_tail_rescue_min_tail_pf = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_low_vol_tail_rescue_min_tail_pf",
+                1.30,
+            )
+        )
+        alignment_probe_low_vol_tail_rescue_positive_frac_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_low_vol_tail_rescue_positive_frac_slack",
+                    0.10,
+                )
+            ),
+        )
+        alignment_probe_high_cost_tail_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_min_costgate = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_high_cost_tail_rescue_min_costgate",
+                    3.5,
+                )
+            ),
+        )
+        alignment_probe_high_cost_tail_rescue_max_episode = max(
+            alignment_probe_temporal_min_episode,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_high_cost_tail_rescue_max_episode",
+                    12,
+                )
+            ),
+        )
+        alignment_probe_high_cost_tail_rescue_min_tail_pf = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_min_tail_pf",
+                1.60,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_tail_pf_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_tail_pf_edge_min",
+                0.35,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_tail_return_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_tail_return_edge_min",
+                0.20,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_forward_pf_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_forward_pf_min",
+                1.15,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_base_pf_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_base_pf_min",
+                1.25,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_val_pf_q25_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_high_cost_tail_rescue_val_pf_q25_min",
+                1.05,
+            )
+        )
+        alignment_probe_high_cost_tail_rescue_positive_frac_slack = max(
+            0.0,
+            float(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_high_cost_tail_rescue_positive_frac_slack",
+                    0.10,
+                )
+            ),
+        )
+        low_vol_tail_rescue_active = bool(
+            float(
+                getattr(
+                    self.config.environment,
+                    "min_atr_cost_ratio_low_vol_value",
+                    0.0,
+                )
+            )
+            > float(getattr(self.config.environment, "min_atr_cost_ratio", 0.0))
+        )
+        high_cost_tail_rescue_active = bool(
+            float(getattr(self.config.environment, "min_atr_cost_ratio", 0.0))
+            >= alignment_probe_high_cost_tail_rescue_min_costgate
+        )
+        min_atr_cost_ratio = float(
+            getattr(self.config.environment, "min_atr_cost_ratio", 0.0)
+        )
+        min_atr_pips_absolute = float(
+            getattr(self.config.environment, "min_atr_pips_absolute", 0.0)
+        )
+        alignment_probe_abs_atr_late_rescue_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_enabled",
+                True,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute",
+                8.0,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_max_costgate = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_max_costgate",
+                3.0,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max",
+                1.0,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_max_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_abs_atr_late_rescue_max_episode",
+                    10,
+                )
+            ),
+        )
+        alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min",
+                0.25,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min",
+                0.20,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_base_return_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_base_return_edge_min",
+                0.25,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_alt_return_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_alt_return_edge_min",
+                0.25,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_base_pf_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_base_pf_min",
+                1.15,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_alt_pf_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_alt_pf_min",
+                1.15,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_forward_return_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_forward_return_min",
+                -0.60,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_forward_pf_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_forward_pf_min",
+                0.75,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_probe_return_slack_pct = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_probe_return_slack_pct",
+                0.40,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_probe_pf_slack = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_probe_pf_slack",
+                0.10,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min",
+                0.05,
+            )
+        )
+        alignment_probe_abs_atr_late_rescue_positive_frac_slack = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_abs_atr_late_rescue_positive_frac_slack",
+                0.10,
+            )
+        )
+        abs_atr_late_rescue_active = bool(
+            min_atr_pips_absolute
+            >= alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute
+            and min_atr_cost_ratio <= alignment_probe_abs_atr_late_rescue_max_costgate
+        )
+        alignment_probe_future_divergence_anchor_enabled = bool(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_future_divergence_anchor_enabled",
+                True,
+            )
+        )
+        alignment_probe_future_divergence_composite_max = float(
+            getattr(
+                training_cfg,
+                "anti_regression_alignment_probe_future_divergence_composite_max",
+                0.0,
+            )
+        )
+        alignment_probe_future_divergence_max_episode = max(
+            1,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_future_divergence_max_episode",
+                    8,
+                )
+            ),
+        )
+        alignment_probe_future_divergence_max_candidates = max(
+            0,
+            int(
+                getattr(
+                    training_cfg,
+                    "anti_regression_alignment_probe_future_divergence_max_candidates",
+                    1,
+                )
+            ),
         )
         tournament_min_k = getattr(training_cfg, "anti_regression_eval_min_k", None)
         tournament_max_k = getattr(training_cfg, "anti_regression_eval_max_k", None)
@@ -1832,6 +2483,16 @@ class Trainer:
                         and base_pos_frac >= min_positive_frac
                         and base_pf_ge_1_frac >= min_positive_frac
                     )
+                elif ranking_selector_mode == "align_priority":
+                    # Very lenient to allow candidates into the alignment probe phase
+                    profit_feasible = bool(
+                        base_return > 0.0
+                        and base_pf >= 1.0
+                    )
+                    consistency_feasible = bool(
+                        profit_feasible
+                        and base_pos_frac >= min_positive_frac - 0.05
+                    )
                 else:
                     profit_feasible = bool(
                         base_return > 0.0
@@ -1905,6 +2566,18 @@ class Trainer:
                 val_pf = float(validation_spr.get("pf", 0.0))
                 val_stagnation = float(validation_spr.get("stagnation_penalty", 1.0))
                 val_trades_per_year = float(validation_spr.get("trades_per_year", 0.0))
+                val_return_q25 = float(
+                    validation_entry.get(
+                        "val_return_q25_pct",
+                        validation_entry.get("return_pct_q25", 0.0),
+                    )
+                )
+                val_pf_q25 = float(
+                    validation_entry.get(
+                        "val_pf_q25",
+                        validation_entry.get("pf_q25", 0.0),
+                    )
+                )
 
                 tournament.append(
                     {
@@ -1948,6 +2621,8 @@ class Trainer:
                         "robust_mmr_pct_mean": robust_mmr,
                         "val_mmr_pct_mean": val_mmr,
                         "val_pf": val_pf,
+                        "val_return_q25_pct": val_return_q25,
+                        "val_pf_q25": val_pf_q25,
                         "val_stagnation_penalty": val_stagnation,
                         "val_trades_per_year": val_trades_per_year,
                         "dispersion_penalty": dispersion_penalty,
@@ -2577,6 +3252,41 @@ class Trainer:
                         if added >= metric_anchor_budget:
                             break
 
+                if (
+                    alignment_probe_future_divergence_anchor_enabled
+                    and alignment_probe_future_divergence_max_candidates > 0
+                ):
+                    divergence_candidates = [
+                        candidate
+                        for candidate in tournament_ranked
+                        if int(candidate.get("episode", 10**9))
+                        >= alignment_probe_temporal_min_episode
+                        and int(candidate.get("episode", 10**9))
+                        <= alignment_probe_future_divergence_max_episode
+                        and float(candidate.get("composite_score", 0.0))
+                        <= alignment_probe_future_divergence_composite_max
+                        and bool(candidate.get("future_consistency_feasible", False))
+                        and float(candidate.get("forward_return_min", 0.0)) > 0.0
+                        and float(candidate.get("forward_pf_min", 0.0)) >= 1.0
+                    ]
+                    divergence_candidates.sort(
+                        key=lambda x: (
+                            x.get("future_composite_score", -1e9),
+                            x.get("forward_return_min", -1e9),
+                            x.get("forward_pf_min", -1e9),
+                            -int(x.get("episode", 10**9)),
+                        ),
+                        reverse=True,
+                    )
+                    added = 0
+                    for candidate in divergence_candidates:
+                        before = len(probe_candidates)
+                        _append_probe_candidate(candidate)
+                        if len(probe_candidates) > before:
+                            added += 1
+                        if added >= alignment_probe_future_divergence_max_candidates:
+                            break
+
             if (
                 incumbent_name
                 and all(x.get("filename") != incumbent_name for x in probe_candidates)
@@ -2680,9 +3390,18 @@ class Trainer:
                 )
                 preferred_probe_name = ranked_probe_names[0] if ranked_probe_names else None
                 temporal_shortlist_names: List[str] = []
+                temporal_q25_fallback_names: List[str] = []
                 early_mmr_rescue_names: List[str] = []
+                q25_rescue_names: List[str] = []
+                pf_mmr_rescue_names: List[str] = []
+                late_val_rescue_names: List[str] = []
+                late_mmr_rescue_names: List[str] = []
+                low_vol_tail_rescue_names: List[str] = []
+                high_cost_tail_rescue_names: List[str] = []
+                abs_atr_late_rescue_names: List[str] = []
                 temporal_keep_floor = None
                 pass_positive_names: List[str] = []
+                temporal_dominance_override_name = None
                 incumbent_item = (
                     tournament_by_name.get(incumbent_name, {}) if incumbent_name else {}
                 )
@@ -2700,6 +3419,27 @@ class Trainer:
                         "base_mmr_pct_mean",
                         incumbent_item.get("robust_mmr_pct_mean", 0.0),
                     )
+                )
+                incumbent_val_return_q25 = float(
+                    incumbent_item.get("val_return_q25_pct", 0.0)
+                )
+                incumbent_val_pf_q25 = float(
+                    incumbent_item.get("val_pf_q25", 0.0)
+                )
+                incumbent_forward_pf = float(
+                    incumbent_item.get(
+                        "forward_pf_min",
+                        incumbent_item.get("tail_pf", 0.0),
+                    )
+                )
+                incumbent_tail_pf = float(incumbent_item.get("tail_pf", incumbent_forward_pf))
+                incumbent_val_pf = float(incumbent_item.get("val_pf", 0.0))
+                incumbent_probe_item = probe_results.get(incumbent_name, {})
+                incumbent_probe_mmr = float(
+                    incumbent_probe_item.get("mmr_pct_mean", 0.0)
+                )
+                incumbent_probe_pos_frac = float(
+                    incumbent_probe_item.get("positive_frac", 0.0)
                 )
                 if alignment_probe_temporal_bias_enabled and ranked_probe_names:
                     pass_positive_names = [
@@ -2755,6 +3495,181 @@ class Trainer:
                             temporal_ranked.sort()
                             temporal_shortlist_names = [x[3] for x in temporal_ranked]
                             preferred_probe_name = temporal_shortlist_names[0]
+                            anchor_name = temporal_shortlist_names[0]
+                            anchor_probe = probe_results.get(anchor_name, {})
+                            anchor_return = float(anchor_probe.get("return_pct", 0.0))
+                            anchor_pf = float(anchor_probe.get("pf", 0.0))
+                            anchor_pos_frac = float(
+                                anchor_probe.get("positive_frac", 0.0)
+                            )
+                            for name in temporal_shortlist_names[1:]:
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_return = float(
+                                    candidate_probe.get("return_pct", 0.0)
+                                )
+                                candidate_pf = float(candidate_probe.get("pf", 0.0))
+                                candidate_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if (
+                                    candidate_return
+                                    >= anchor_return
+                                    + alignment_probe_temporal_dominance_return_edge_min
+                                    and candidate_pf
+                                    >= anchor_pf
+                                    + alignment_probe_temporal_dominance_pf_edge_min
+                                    and candidate_pos_frac
+                                    + alignment_probe_temporal_positive_frac_slack
+                                    >= anchor_pos_frac
+                                ):
+                                    preferred_probe_name = name
+                                    temporal_dominance_override_name = name
+                                    break
+                            if (
+                                alignment_probe_temporal_q25_fallback_enabled
+                                and incumbent_name
+                                and preferred_probe_name
+                                and preferred_probe_name != incumbent_name
+                            ):
+                                preferred_item = tournament_by_name.get(
+                                    preferred_probe_name, {}
+                                )
+                                preferred_val_return_q25 = float(
+                                    preferred_item.get("val_return_q25_pct", 0.0)
+                                )
+                                preferred_val_pf_q25 = float(
+                                    preferred_item.get("val_pf_q25", 0.0)
+                                )
+                                if (
+                                    preferred_val_return_q25
+                                    < alignment_probe_temporal_q25_fallback_min_val_return_q25
+                                    or preferred_val_pf_q25
+                                    < alignment_probe_temporal_q25_fallback_min_val_pf_q25
+                                ):
+                                    incumbent_episode = int(
+                                        incumbent_item.get("episode", 10**9)
+                                    )
+                                    incumbent_probe_return = float(
+                                        incumbent_probe_item.get("return_pct", 0.0)
+                                    )
+                                    incumbent_probe_pf = float(
+                                        incumbent_probe_item.get("pf", 0.0)
+                                    )
+                                    temporal_q25_fallback_ranked = []
+                                    for name in temporal_shortlist_names:
+                                        if name in (incumbent_name, preferred_probe_name):
+                                            continue
+                                        candidate_item = tournament_by_name.get(name, {})
+                                        candidate_episode = int(
+                                            candidate_item.get("episode", 10**9)
+                                        )
+                                        if candidate_episode <= incumbent_episode:
+                                            continue
+                                        candidate_base_return = float(
+                                            candidate_item.get("base_return_pct", 0.0)
+                                        )
+                                        candidate_base_pf = float(
+                                            candidate_item.get("base_pf", 0.0)
+                                        )
+                                        candidate_forward_return = float(
+                                            candidate_item.get(
+                                                "forward_return_min",
+                                                candidate_item.get("tail_return_pct", 0.0),
+                                            )
+                                        )
+                                        candidate_forward_pf = float(
+                                            candidate_item.get(
+                                                "forward_pf_min",
+                                                candidate_item.get("tail_pf", 0.0),
+                                            )
+                                        )
+                                        candidate_val_pf = float(
+                                            candidate_item.get("val_pf", 0.0)
+                                        )
+                                        candidate_val_return_q25 = float(
+                                            candidate_item.get("val_return_q25_pct", 0.0)
+                                        )
+                                        candidate_val_pf_q25 = float(
+                                            candidate_item.get("val_pf_q25", 0.0)
+                                        )
+                                        candidate_probe = probe_results.get(name, {})
+                                        candidate_probe_return = float(
+                                            candidate_probe.get("return_pct", 0.0)
+                                        )
+                                        candidate_probe_pf = float(
+                                            candidate_probe.get("pf", 0.0)
+                                        )
+                                        candidate_probe_pos_frac = float(
+                                            candidate_probe.get("positive_frac", 0.0)
+                                        )
+                                        candidate_probe_mmr = float(
+                                            candidate_probe.get("mmr_pct_mean", 0.0)
+                                        )
+                                        if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                            continue
+                                        if candidate_forward_return <= 0.0 or candidate_forward_pf < 1.0:
+                                            continue
+                                        if (
+                                            candidate_val_return_q25
+                                            < alignment_probe_temporal_q25_fallback_min_val_return_q25
+                                        ):
+                                            continue
+                                        if (
+                                            candidate_val_pf_q25
+                                            < alignment_probe_temporal_q25_fallback_min_val_pf_q25
+                                        ):
+                                            continue
+                                        if (
+                                            candidate_val_pf
+                                            < incumbent_val_pf
+                                            + alignment_probe_temporal_q25_fallback_val_pf_edge_min
+                                        ):
+                                            continue
+                                        if (
+                                            candidate_probe_mmr
+                                            < incumbent_probe_mmr
+                                            + alignment_probe_temporal_q25_fallback_probe_mmr_edge_min
+                                        ):
+                                            continue
+                                        if (
+                                            candidate_probe_return
+                                            + alignment_probe_temporal_q25_fallback_return_slack_pct
+                                            < incumbent_probe_return
+                                        ):
+                                            continue
+                                        if (
+                                            candidate_probe_pf
+                                            + alignment_probe_temporal_q25_fallback_pf_slack
+                                            < incumbent_probe_pf
+                                        ):
+                                            continue
+                                        if (
+                                            candidate_probe_pos_frac
+                                            + alignment_probe_temporal_positive_frac_slack
+                                            < incumbent_probe_pos_frac
+                                        ):
+                                            continue
+                                        temporal_q25_fallback_ranked.append(
+                                            (
+                                                -candidate_val_pf,
+                                                -candidate_probe_mmr,
+                                                -candidate_probe_pf,
+                                                -candidate_probe_return,
+                                                candidate_episode,
+                                                name,
+                                            )
+                                        )
+                                    if temporal_q25_fallback_ranked:
+                                        temporal_q25_fallback_ranked.sort()
+                                        temporal_q25_fallback_names = [
+                                            x[5] for x in temporal_q25_fallback_ranked
+                                        ]
+                                        preferred_probe_name = (
+                                            temporal_q25_fallback_names[0]
+                                        )
+                                        temporal_dominance_override_name = (
+                                            preferred_probe_name
+                                        )
                         if (
                             alignment_probe_early_mmr_rescue_enabled
                             and incumbent_name
@@ -2808,22 +3723,908 @@ class Trainer:
                                 early_mmr_ranked.sort()
                                 early_mmr_rescue_names = [x[4] for x in early_mmr_ranked]
                                 preferred_probe_name = early_mmr_rescue_names[0]
+                        if (
+                            alignment_probe_q25_rescue_enabled
+                            and incumbent_name
+                            and incumbent_val_return_q25
+                            <= alignment_probe_q25_incumbent_return_q25_max
+                            and incumbent_val_pf_q25
+                            <= alignment_probe_q25_incumbent_pf_q25_max
+                        ):
+                            incumbent_episode = int(
+                                incumbent_item.get("episode", 10**9)
+                            )
+                            q25_rescue_ranked = []
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode < alignment_probe_temporal_min_episode
+                                    or candidate_episode >= incumbent_episode
+                                    or candidate_episode > alignment_probe_q25_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_item.get("tail_return_pct", 0.0),
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_item.get("tail_pf", 0.0),
+                                    )
+                                )
+                                candidate_val_return_q25 = float(
+                                    candidate_item.get("val_return_q25_pct", 0.0)
+                                )
+                                candidate_val_pf_q25 = float(
+                                    candidate_item.get("val_pf_q25", 0.0)
+                                )
+                                if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                    continue
+                                if candidate_forward_return <= 0.0 or candidate_forward_pf < 1.0:
+                                    continue
+                                if (
+                                    candidate_val_return_q25
+                                    < incumbent_val_return_q25
+                                    + alignment_probe_q25_return_q25_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_val_pf_q25
+                                    < incumbent_val_pf_q25
+                                    + alignment_probe_q25_pf_q25_edge_min
+                                ):
+                                    continue
+                                q25_rescue_ranked.append(
+                                    (
+                                        -candidate_val_pf_q25,
+                                        -candidate_val_return_q25,
+                                        -float(probe_results[name]["positive_frac"]),
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                            if q25_rescue_ranked and not early_mmr_rescue_names:
+                                q25_rescue_ranked.sort()
+                                q25_rescue_names = [x[4] for x in q25_rescue_ranked]
+                                preferred_probe_name = q25_rescue_names[0]
+                        if (
+                            alignment_probe_pf_mmr_rescue_enabled
+                            and incumbent_name
+                            and incumbent_val_mmr
+                            <= alignment_probe_pf_mmr_incumbent_val_mmr_max
+                        ):
+                            pf_mmr_rescue_ranked = []
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode < alignment_probe_temporal_min_episode
+                                    or candidate_episode > alignment_probe_pf_mmr_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_item.get("tail_return_pct", 0.0),
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_item.get("tail_pf", 0.0),
+                                    )
+                                )
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_mmr = float(
+                                    candidate_probe.get("mmr_pct_mean", 0.0)
+                                )
+                                candidate_probe_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                    continue
+                                if candidate_forward_return <= 0.0 or candidate_forward_pf < 1.0:
+                                    continue
+                                if (
+                                    candidate_base_pf
+                                    < incumbent_item.get("base_pf", 0.0)
+                                    + alignment_probe_pf_mmr_base_pf_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_forward_pf
+                                    < incumbent_forward_pf
+                                    + alignment_probe_pf_mmr_forward_pf_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_mmr
+                                    < incumbent_probe_mmr
+                                    + alignment_probe_pf_mmr_probe_mmr_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_pos_frac
+                                    + alignment_probe_pf_mmr_positive_frac_slack
+                                    < incumbent_probe_pos_frac
+                                ):
+                                    continue
+                                pf_mmr_rescue_ranked.append(
+                                    (
+                                        -candidate_forward_pf,
+                                        -candidate_base_pf,
+                                        -candidate_probe_mmr,
+                                        -candidate_probe_pos_frac,
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                            if (
+                                pf_mmr_rescue_ranked
+                                and not early_mmr_rescue_names
+                                and not q25_rescue_names
+                            ):
+                                pf_mmr_rescue_ranked.sort()
+                                pf_mmr_rescue_names = [x[5] for x in pf_mmr_rescue_ranked]
+                                preferred_probe_name = pf_mmr_rescue_names[0]
+                        if (
+                            alignment_probe_late_val_rescue_enabled
+                            and incumbent_name
+                            and incumbent_val_mmr
+                            <= alignment_probe_late_val_incumbent_val_mmr_max
+                        ):
+                            incumbent_episode = int(incumbent_item.get("episode", -1))
+                            late_val_rescue_ranked = []
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode <= incumbent_episode
+                                    or candidate_episode > alignment_probe_late_val_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_item.get("tail_return_pct", 0.0),
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_item.get("tail_pf", 0.0),
+                                    )
+                                )
+                                candidate_tail_pf = float(
+                                    candidate_item.get("tail_pf", candidate_forward_pf)
+                                )
+                                candidate_val_mmr = float(
+                                    candidate_item.get("val_mmr_pct_mean", 0.0)
+                                )
+                                candidate_val_pf = float(
+                                    candidate_item.get("val_pf", 0.0)
+                                )
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                    continue
+                                if candidate_forward_return <= 0.0 or candidate_forward_pf < 1.0:
+                                    continue
+                                if (
+                                    candidate_val_mmr
+                                    < alignment_probe_late_val_challenger_val_mmr_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_val_pf
+                                    < incumbent_val_pf
+                                    + alignment_probe_late_val_val_pf_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_tail_pf
+                                    < incumbent_tail_pf
+                                    + alignment_probe_late_val_tail_pf_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_pos_frac
+                                    + alignment_probe_late_val_positive_frac_slack
+                                    < incumbent_probe_pos_frac
+                                ):
+                                    continue
+                                late_val_rescue_ranked.append(
+                                    (
+                                        -candidate_val_pf,
+                                        -candidate_val_mmr,
+                                        -candidate_tail_pf,
+                                        -candidate_probe_pos_frac,
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                            if (
+                                late_val_rescue_ranked
+                                and not early_mmr_rescue_names
+                                and not q25_rescue_names
+                                and not pf_mmr_rescue_names
+                            ):
+                                late_val_rescue_ranked.sort()
+                                late_val_rescue_names = [
+                                    x[5] for x in late_val_rescue_ranked
+                                ]
+                                preferred_probe_name = late_val_rescue_names[0]
+                        late_mmr_rescue_ranked = []
+                        if (
+                            alignment_probe_late_mmr_rescue_enabled
+                            and incumbent_name
+                            and incumbent_val_pf
+                            <= alignment_probe_late_mmr_incumbent_val_pf_max
+                        ):
+                            incumbent_episode = int(incumbent_item.get("episode", -1))
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode <= incumbent_episode
+                                    or candidate_episode > alignment_probe_late_mmr_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_item.get("tail_return_pct", 0.0),
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_item.get("tail_pf", 0.0),
+                                    )
+                                )
+                                candidate_val_mmr = float(
+                                    candidate_item.get("val_mmr_pct_mean", 0.0)
+                                )
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                    continue
+                                if (
+                                    candidate_forward_return <= 0.0
+                                    or candidate_forward_pf
+                                    < alignment_probe_late_mmr_challenger_forward_pf_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_val_mmr
+                                    < incumbent_val_mmr
+                                    + alignment_probe_late_mmr_challenger_val_mmr_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_pos_frac
+                                    + alignment_probe_late_mmr_positive_frac_slack
+                                    < incumbent_probe_pos_frac
+                                ):
+                                    continue
+                                late_mmr_rescue_ranked.append(
+                                    (
+                                        -candidate_val_mmr,
+                                        -candidate_forward_pf,
+                                        -float(candidate_probe.get("pf", 0.0)),
+                                        -candidate_probe_pos_frac,
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                        if (
+                            late_mmr_rescue_ranked
+                            and not early_mmr_rescue_names
+                            and not q25_rescue_names
+                            and not pf_mmr_rescue_names
+                            and not late_val_rescue_names
+                        ):
+                            late_mmr_rescue_ranked.sort()
+                            late_mmr_rescue_names = [
+                                x[5] for x in late_mmr_rescue_ranked
+                            ]
+                            preferred_probe_name = late_mmr_rescue_names[0]
+                        low_vol_tail_rescue_ranked = []
+                        if (
+                            alignment_probe_low_vol_tail_rescue_enabled
+                            and low_vol_tail_rescue_active
+                            and incumbent_name
+                        ):
+                            incumbent_episode = int(incumbent_item.get("episode", -1))
+                            incumbent_base_return = float(
+                                incumbent_item.get("base_return_pct", 0.0)
+                            )
+                            incumbent_alt_return = float(
+                                incumbent_item.get("alt_return_pct", 0.0)
+                            )
+                            incumbent_tail_return = float(
+                                incumbent_item.get("tail_return_pct", 0.0)
+                            )
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode <= incumbent_episode
+                                    or candidate_episode
+                                    > alignment_probe_low_vol_tail_rescue_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_alt_return = float(
+                                    candidate_item.get("alt_return_pct", 0.0)
+                                )
+                                candidate_alt_pf = float(
+                                    candidate_item.get("alt_pf", 0.0)
+                                )
+                                candidate_tail_return = float(
+                                    candidate_item.get("tail_return_pct", 0.0)
+                                )
+                                candidate_tail_pf = float(
+                                    candidate_item.get("tail_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_tail_return,
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_tail_pf,
+                                    )
+                                )
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if candidate_base_return <= 0.0 or candidate_base_pf < 1.0:
+                                    continue
+                                if candidate_alt_return <= 0.0 or candidate_alt_pf < 1.0:
+                                    continue
+                                if candidate_tail_return <= 0.0 or candidate_tail_pf < alignment_probe_low_vol_tail_rescue_min_tail_pf:
+                                    continue
+                                if candidate_forward_return <= 0.0 or candidate_forward_pf < 1.0:
+                                    continue
+                                if (
+                                    candidate_base_return
+                                    + alignment_probe_low_vol_tail_rescue_base_return_slack_pct
+                                    < incumbent_base_return
+                                ):
+                                    continue
+                                if (
+                                    candidate_alt_return
+                                    + alignment_probe_low_vol_tail_rescue_alt_return_slack_pct
+                                    < incumbent_alt_return
+                                ):
+                                    continue
+                                if (
+                                    candidate_tail_return
+                                    + alignment_probe_low_vol_tail_rescue_tail_return_slack_pct
+                                    < incumbent_tail_return
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_pos_frac
+                                    + alignment_probe_low_vol_tail_rescue_positive_frac_slack
+                                    < incumbent_probe_pos_frac
+                                ):
+                                    continue
+                                low_vol_tail_rescue_ranked.append(
+                                    (
+                                        -candidate_tail_return,
+                                        -candidate_tail_pf,
+                                        -candidate_alt_return,
+                                        -candidate_base_return,
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                        if (
+                            low_vol_tail_rescue_ranked
+                            and not early_mmr_rescue_names
+                            and not q25_rescue_names
+                            and not pf_mmr_rescue_names
+                                and not late_val_rescue_names
+                                and not late_mmr_rescue_names
+                            ):
+                                low_vol_tail_rescue_ranked.sort()
+                                low_vol_tail_rescue_names = [
+                                    x[5] for x in low_vol_tail_rescue_ranked
+                                ]
+                                preferred_probe_name = low_vol_tail_rescue_names[0]
+                        high_cost_tail_rescue_ranked = []
+                        if (
+                            alignment_probe_high_cost_tail_rescue_enabled
+                            and high_cost_tail_rescue_active
+                            and incumbent_name
+                        ):
+                            incumbent_episode = int(incumbent_item.get("episode", -1))
+                            incumbent_tail_return = float(
+                                incumbent_item.get("tail_return_pct", 0.0)
+                            )
+                            incumbent_tail_pf = float(
+                                incumbent_item.get("tail_pf", 0.0)
+                            )
+                            for name in pass_positive_names:
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode <= incumbent_episode
+                                    or candidate_episode
+                                    > alignment_probe_high_cost_tail_rescue_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_tail_return = float(
+                                    candidate_item.get("tail_return_pct", 0.0)
+                                )
+                                candidate_tail_pf = float(
+                                    candidate_item.get("tail_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_tail_return,
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_tail_pf,
+                                    )
+                                )
+                                candidate_val_pf_q25 = float(
+                                    candidate_item.get("val_pf_q25", 0.0)
+                                )
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if (
+                                    candidate_base_return <= 0.0
+                                    or candidate_base_pf
+                                    < alignment_probe_high_cost_tail_rescue_base_pf_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_tail_return
+                                    < incumbent_tail_return
+                                    + alignment_probe_high_cost_tail_rescue_tail_return_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_tail_pf
+                                    < alignment_probe_high_cost_tail_rescue_min_tail_pf
+                                    or candidate_tail_pf
+                                    < incumbent_tail_pf
+                                    + alignment_probe_high_cost_tail_rescue_tail_pf_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_forward_return <= 0.0
+                                    or candidate_forward_pf
+                                    < alignment_probe_high_cost_tail_rescue_forward_pf_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_val_pf_q25
+                                    < alignment_probe_high_cost_tail_rescue_val_pf_q25_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_pos_frac
+                                    + alignment_probe_high_cost_tail_rescue_positive_frac_slack
+                                    < incumbent_probe_pos_frac
+                                ):
+                                    continue
+                                high_cost_tail_rescue_ranked.append(
+                                    (
+                                        -candidate_tail_pf,
+                                        -candidate_tail_return,
+                                        -candidate_forward_pf,
+                                        -candidate_base_pf,
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                            if (
+                                high_cost_tail_rescue_ranked
+                                and not early_mmr_rescue_names
+                                and not q25_rescue_names
+                                and not pf_mmr_rescue_names
+                                and not late_val_rescue_names
+                                and not late_mmr_rescue_names
+                                and not low_vol_tail_rescue_names
+                            ):
+                                high_cost_tail_rescue_ranked.sort()
+                                high_cost_tail_rescue_names = [
+                                    x[5] for x in high_cost_tail_rescue_ranked
+                                ]
+                                preferred_probe_name = high_cost_tail_rescue_names[0]
+                        abs_atr_late_rescue_ranked = []
+                        if (
+                            alignment_probe_abs_atr_late_rescue_enabled
+                            and abs_atr_late_rescue_active
+                            and incumbent_name
+                        ):
+                            incumbent_episode = int(incumbent_item.get("episode", -1))
+                            incumbent_base_return = float(
+                                incumbent_item.get("base_return_pct", 0.0)
+                            )
+                            incumbent_alt_return = float(
+                                incumbent_item.get("alt_return_pct", 0.0)
+                            )
+                            incumbent_probe_return = float(
+                                incumbent_probe_item.get("return_pct", 0.0)
+                            )
+                            incumbent_probe_pf = float(
+                                incumbent_probe_item.get("pf", 0.0)
+                            )
+                            for name in ranked_probe_names:
+                                if name == incumbent_name:
+                                    continue
+                                candidate_item = tournament_by_name.get(name, {})
+                                candidate_episode = int(
+                                    candidate_item.get("episode", 10**9)
+                                )
+                                if (
+                                    candidate_episode <= incumbent_episode
+                                    or candidate_episode
+                                    > alignment_probe_abs_atr_late_rescue_max_episode
+                                ):
+                                    continue
+                                candidate_base_return = float(
+                                    candidate_item.get("base_return_pct", 0.0)
+                                )
+                                candidate_base_pf = float(
+                                    candidate_item.get("base_pf", 0.0)
+                                )
+                                candidate_alt_return = float(
+                                    candidate_item.get("alt_return_pct", 0.0)
+                                )
+                                candidate_alt_pf = float(
+                                    candidate_item.get("alt_pf", 0.0)
+                                )
+                                candidate_forward_return = float(
+                                    candidate_item.get(
+                                        "forward_return_min",
+                                        candidate_item.get("tail_return_pct", 0.0),
+                                    )
+                                )
+                                candidate_forward_pf = float(
+                                    candidate_item.get(
+                                        "forward_pf_min",
+                                        candidate_item.get("tail_pf", 0.0),
+                                    )
+                                )
+                                candidate_val_mmr = float(
+                                    candidate_item.get("val_mmr_pct_mean", 0.0)
+                                )
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_return = float(
+                                    candidate_probe.get("return_pct", 0.0)
+                                )
+                                candidate_probe_pf = float(
+                                    candidate_probe.get("pf", 0.0)
+                                )
+                                candidate_probe_mmr = float(
+                                    candidate_probe.get("mmr_pct_mean", 0.0)
+                                )
+                                candidate_probe_pos_frac = float(
+                                    candidate_probe.get("positive_frac", 0.0)
+                                )
+                                if (
+                                    incumbent_val_pf
+                                    > alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max
+                                ):
+                                    continue
+                                if (
+                                    candidate_val_mmr
+                                    < alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min
+                                    or candidate_val_mmr
+                                    < incumbent_val_mmr
+                                    + alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_base_return
+                                    < incumbent_base_return
+                                    + alignment_probe_abs_atr_late_rescue_base_return_edge_min
+                                    or candidate_alt_return
+                                    < incumbent_alt_return
+                                    + alignment_probe_abs_atr_late_rescue_alt_return_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_base_pf
+                                    < alignment_probe_abs_atr_late_rescue_base_pf_min
+                                    or candidate_alt_pf
+                                    < alignment_probe_abs_atr_late_rescue_alt_pf_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_forward_return
+                                    < alignment_probe_abs_atr_late_rescue_forward_return_min
+                                    or candidate_forward_pf
+                                    < alignment_probe_abs_atr_late_rescue_forward_pf_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_return
+                                    + alignment_probe_abs_atr_late_rescue_probe_return_slack_pct
+                                    < incumbent_probe_return
+                                    or candidate_probe_pf
+                                    + alignment_probe_abs_atr_late_rescue_probe_pf_slack
+                                    < incumbent_probe_pf
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_mmr
+                                    < incumbent_probe_mmr
+                                    + alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min
+                                ):
+                                    continue
+                                if (
+                                    candidate_probe_pos_frac
+                                    + alignment_probe_abs_atr_late_rescue_positive_frac_slack
+                                    < incumbent_probe_pos_frac
+                                ):
+                                    continue
+                                abs_atr_late_rescue_ranked.append(
+                                    (
+                                        -candidate_val_mmr,
+                                        -candidate_alt_return,
+                                        -candidate_base_return,
+                                        -candidate_alt_pf,
+                                        candidate_episode,
+                                        name,
+                                    )
+                                )
+                            if (
+                                abs_atr_late_rescue_ranked
+                                and not early_mmr_rescue_names
+                                and not q25_rescue_names
+                                and not pf_mmr_rescue_names
+                                and not late_val_rescue_names
+                                and not late_mmr_rescue_names
+                                and not low_vol_tail_rescue_names
+                                and not high_cost_tail_rescue_names
+                            ):
+                                abs_atr_late_rescue_ranked.sort()
+                                abs_atr_late_rescue_names = [
+                                    x[5] for x in abs_atr_late_rescue_ranked
+                                ]
+                                preferred_probe_name = abs_atr_late_rescue_names[0]
+                        align_priority_rescue_ranked = []
+                        if (
+                            alignment_probe_align_priority_enabled
+                            and incumbent_name
+                        ):
+                            for name in ranked_probe_names:
+                                if name == incumbent_name:
+                                    continue
+                                candidate_probe = probe_results.get(name, {})
+                                candidate_probe_pos_frac = float(candidate_probe.get("positive_frac", 0.0))
+                                candidate_probe_return = float(candidate_probe.get("return_pct", 0.0))
+                                candidate_probe_pf = float(candidate_probe.get("pf", 0.0))
+                                
+                                if (
+                                    candidate_probe_pos_frac >= alignment_probe_align_priority_min_pos_frac
+                                    and candidate_probe_return >= alignment_probe_align_priority_min_return
+                                    and candidate_probe_pf >= 1.0
+                                ):
+                                    align_priority_rescue_ranked.append(
+                                        (
+                                            -candidate_probe_pos_frac,
+                                            -candidate_probe_return,
+                                            -candidate_probe_pf,
+                                            name,
+                                        )
+                                    )
+                            if align_priority_rescue_ranked and (
+                                selector_mode == "align_priority"
+                                or (
+                                    not early_mmr_rescue_names
+                                    and not q25_rescue_names
+                                    and not pf_mmr_rescue_names
+                                    and not late_val_rescue_names
+                                    and not late_mmr_rescue_names
+                                    and not low_vol_tail_rescue_names
+                                    and not high_cost_tail_rescue_names
+                                    and not abs_atr_late_rescue_names
+                                )
+                            ):
+                                align_priority_rescue_ranked.sort()
+                                align_priority_rescue_names = [
+                                    x[3] for x in align_priority_rescue_ranked
+                                ]
+                                preferred_probe_name = align_priority_rescue_names[0]
 
                 challenger_name = None
                 challenger_from_temporal_bias = False
+                challenger_from_temporal_q25_fallback = False
                 challenger_from_early_mmr_rescue = False
+                challenger_from_q25_rescue = False
+                challenger_from_pf_mmr_rescue = False
+                challenger_from_late_val_rescue = False
+                challenger_from_late_mmr_rescue = False
+                challenger_from_low_vol_tail_rescue = False
+                challenger_from_high_cost_tail_rescue = False
+                challenger_from_abs_atr_late_rescue = False
+                challenger_from_align_priority = False
                 if preferred_probe_name and preferred_probe_name != incumbent_name:
                     challenger_name = preferred_probe_name
                     challenger_from_early_mmr_rescue = (
                         alignment_probe_early_mmr_rescue_enabled
                         and preferred_probe_name in early_mmr_rescue_names
                     )
+                    challenger_from_q25_rescue = (
+                        alignment_probe_q25_rescue_enabled
+                        and not challenger_from_early_mmr_rescue
+                        and preferred_probe_name in q25_rescue_names
+                    )
+                    challenger_from_pf_mmr_rescue = (
+                        alignment_probe_pf_mmr_rescue_enabled
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and preferred_probe_name in pf_mmr_rescue_names
+                    )
+                    challenger_from_late_val_rescue = (
+                        alignment_probe_late_val_rescue_enabled
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and preferred_probe_name in late_val_rescue_names
+                    )
+                    challenger_from_late_mmr_rescue = (
+                        alignment_probe_late_mmr_rescue_enabled
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and preferred_probe_name in late_mmr_rescue_names
+                    )
+                    challenger_from_low_vol_tail_rescue = (
+                        alignment_probe_low_vol_tail_rescue_enabled
+                        and low_vol_tail_rescue_active
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and not challenger_from_late_mmr_rescue
+                        and preferred_probe_name in low_vol_tail_rescue_names
+                    )
+                    challenger_from_high_cost_tail_rescue = (
+                        alignment_probe_high_cost_tail_rescue_enabled
+                        and high_cost_tail_rescue_active
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and not challenger_from_late_mmr_rescue
+                        and not challenger_from_low_vol_tail_rescue
+                        and preferred_probe_name in high_cost_tail_rescue_names
+                    )
+                    challenger_from_abs_atr_late_rescue = (
+                        alignment_probe_abs_atr_late_rescue_enabled
+                        and abs_atr_late_rescue_active
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and not challenger_from_late_mmr_rescue
+                        and not challenger_from_high_cost_tail_rescue
+                        and preferred_probe_name in abs_atr_late_rescue_names
+                    )
+                    challenger_from_align_priority = (
+                        alignment_probe_align_priority_enabled
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and not challenger_from_late_mmr_rescue
+                        and not challenger_from_low_vol_tail_rescue
+                        and not challenger_from_high_cost_tail_rescue
+                        and not challenger_from_abs_atr_late_rescue
+                        and preferred_probe_name in align_priority_rescue_names
+                    )
+                    challenger_from_temporal_q25_fallback = (
+                        alignment_probe_temporal_q25_fallback_enabled
+                        and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and not challenger_from_late_mmr_rescue
+                        and not challenger_from_low_vol_tail_rescue
+                        and not challenger_from_high_cost_tail_rescue
+                        and not challenger_from_abs_atr_late_rescue
+                        and preferred_probe_name in temporal_q25_fallback_names
+                    )
                     challenger_from_temporal_bias = (
                         alignment_probe_temporal_bias_enabled
                         and not challenger_from_early_mmr_rescue
+                        and not challenger_from_q25_rescue
+                        and not challenger_from_pf_mmr_rescue
+                        and not challenger_from_late_val_rescue
+                        and not challenger_from_late_mmr_rescue
+                        and not challenger_from_low_vol_tail_rescue
+                        and not challenger_from_high_cost_tail_rescue
+                        and not challenger_from_abs_atr_late_rescue
+                        and not challenger_from_temporal_q25_fallback
                         and preferred_probe_name in temporal_shortlist_names
                     )
-                elif not temporal_shortlist_names and not early_mmr_rescue_names:
+                elif (
+                    not temporal_shortlist_names
+                    and not temporal_q25_fallback_names
+                    and not early_mmr_rescue_names
+                    and not q25_rescue_names
+                    and not pf_mmr_rescue_names
+                    and not late_val_rescue_names
+                    and not late_mmr_rescue_names
+                    and not low_vol_tail_rescue_names
+                    and not high_cost_tail_rescue_names
+                    and not abs_atr_late_rescue_names
+                ):
                     challenger_name = next(
                         (name for name in ranked_probe_names if name != incumbent_name),
                         None,
@@ -2833,6 +4634,7 @@ class Trainer:
                 return_edge = 0.0
                 pf_edge = 0.0
                 positive_frac_edge = 0.0
+                mmr_edge = 0.0
                 switched = False
                 if incumbent_probe is not None and challenger_probe is not None:
                     return_edge = float(challenger_probe["return_pct"] - incumbent_probe["return_pct"])
@@ -2841,12 +4643,24 @@ class Trainer:
                         challenger_probe.get("positive_frac", 0.0)
                         - incumbent_probe.get("positive_frac", 0.0)
                     )
+                    mmr_edge = float(
+                        challenger_probe.get("mmr_pct_mean", 0.0)
+                        - incumbent_probe.get("mmr_pct_mean", 0.0)
+                    )
                     challenger_passes = bool(challenger_probe.get("pass", False))
                     if not alignment_probe_require_pass:
                         challenger_passes = True
 
                     temporal_edge_gate = False
+                    temporal_q25_guard_passed = True
                     early_mmr_edge_gate = False
+                    q25_edge_gate = False
+                    pf_mmr_edge_gate = False
+                    late_val_edge_gate = False
+                    late_mmr_edge_gate = False
+                    low_vol_tail_edge_gate = False
+                    high_cost_tail_edge_gate = False
+                    abs_atr_late_edge_gate = False
                     if challenger_from_early_mmr_rescue and challenger_name in tournament_by_name:
                         challenger_item = tournament_by_name.get(challenger_name, {})
                         challenger_episode = int(challenger_item.get("episode", 10**9))
@@ -2879,15 +4693,462 @@ class Trainer:
                             and challenger_val_mmr
                             >= incumbent_val_mmr + alignment_probe_early_mmr_edge_min
                         )
+                    if challenger_from_q25_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_item.get("tail_return_pct", 0.0),
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_item.get("tail_pf", 0.0),
+                            )
+                        )
+                        challenger_val_return_q25 = float(
+                            challenger_item.get("val_return_q25_pct", 0.0)
+                        )
+                        challenger_val_pf_q25 = float(
+                            challenger_item.get("val_pf_q25", 0.0)
+                        )
+                        incumbent_episode = int(
+                            incumbent_item.get("episode", 10**9)
+                        )
+                        q25_edge_gate = bool(
+                            challenger_episode < incumbent_episode
+                            and challenger_episode >= alignment_probe_temporal_min_episode
+                            and challenger_episode <= alignment_probe_q25_max_episode
+                            and incumbent_val_return_q25
+                            <= alignment_probe_q25_incumbent_return_q25_max
+                            and incumbent_val_pf_q25
+                            <= alignment_probe_q25_incumbent_pf_q25_max
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf >= 1.0
+                            and challenger_forward_return > 0.0
+                            and challenger_forward_pf >= 1.0
+                            and challenger_val_return_q25
+                            >= incumbent_val_return_q25
+                            + alignment_probe_q25_return_q25_edge_min
+                            and challenger_val_pf_q25
+                            >= incumbent_val_pf_q25
+                            + alignment_probe_q25_pf_q25_edge_min
+                        )
+                    if challenger_from_pf_mmr_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_item.get("tail_return_pct", 0.0),
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_item.get("tail_pf", 0.0),
+                            )
+                        )
+                        challenger_probe_mmr = float(
+                            challenger_probe.get("mmr_pct_mean", 0.0)
+                        )
+                        challenger_probe_pos_frac = float(
+                            challenger_probe.get("positive_frac", 0.0)
+                        )
+                        pf_mmr_edge_gate = bool(
+                            challenger_episode >= alignment_probe_temporal_min_episode
+                            and challenger_episode <= alignment_probe_pf_mmr_max_episode
+                            and incumbent_val_mmr
+                            <= alignment_probe_pf_mmr_incumbent_val_mmr_max
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf
+                            >= incumbent_item.get("base_pf", 0.0)
+                            + alignment_probe_pf_mmr_base_pf_edge_min
+                            and challenger_forward_return > 0.0
+                            and challenger_forward_pf
+                            >= incumbent_forward_pf
+                            + alignment_probe_pf_mmr_forward_pf_edge_min
+                            and challenger_probe_mmr
+                            >= incumbent_probe_mmr
+                            + alignment_probe_pf_mmr_probe_mmr_edge_min
+                            and challenger_probe_pos_frac
+                            + alignment_probe_pf_mmr_positive_frac_slack
+                            >= incumbent_probe.get("positive_frac", 0.0)
+                        )
+                    if challenger_from_late_val_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_item.get("tail_return_pct", 0.0),
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_item.get("tail_pf", 0.0),
+                            )
+                        )
+                        challenger_tail_pf = float(
+                            challenger_item.get("tail_pf", challenger_forward_pf)
+                        )
+                        challenger_val_mmr = float(
+                            challenger_item.get("val_mmr_pct_mean", 0.0)
+                        )
+                        challenger_val_pf = float(
+                            challenger_item.get("val_pf", 0.0)
+                        )
+                        challenger_probe_pos_frac = float(
+                            challenger_probe.get("positive_frac", 0.0)
+                        )
+                        late_val_edge_gate = bool(
+                            challenger_episode > int(incumbent_item.get("episode", -1))
+                            and challenger_episode <= alignment_probe_late_val_max_episode
+                            and incumbent_val_mmr
+                            <= alignment_probe_late_val_incumbent_val_mmr_max
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf >= 1.0
+                            and challenger_forward_return > 0.0
+                            and challenger_forward_pf >= 1.0
+                            and challenger_val_mmr
+                            >= alignment_probe_late_val_challenger_val_mmr_min
+                            and challenger_val_pf
+                            >= incumbent_val_pf
+                            + alignment_probe_late_val_val_pf_edge_min
+                            and challenger_tail_pf
+                            >= incumbent_tail_pf
+                            + alignment_probe_late_val_tail_pf_edge_min
+                            and challenger_probe_pos_frac
+                            + alignment_probe_late_val_positive_frac_slack
+                            >= incumbent_probe.get("positive_frac", 0.0)
+                        )
+                    if challenger_from_late_mmr_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_item.get("tail_return_pct", 0.0),
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_item.get("tail_pf", 0.0),
+                            )
+                        )
+                        challenger_val_mmr = float(
+                            challenger_item.get("val_mmr_pct_mean", 0.0)
+                        )
+                        challenger_probe_pos_frac = float(
+                            challenger_probe.get("positive_frac", 0.0)
+                        )
+                        late_mmr_edge_gate = bool(
+                            challenger_episode > int(incumbent_item.get("episode", -1))
+                            and challenger_episode <= alignment_probe_late_mmr_max_episode
+                            and incumbent_val_pf
+                            <= alignment_probe_late_mmr_incumbent_val_pf_max
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf >= 1.0
+                            and challenger_forward_return > 0.0
+                            and challenger_forward_pf
+                            >= alignment_probe_late_mmr_challenger_forward_pf_min
+                            and challenger_val_mmr
+                            >= incumbent_val_mmr
+                            + alignment_probe_late_mmr_challenger_val_mmr_edge_min
+                            and challenger_probe_pos_frac
+                            + alignment_probe_late_mmr_positive_frac_slack
+                            >= incumbent_probe.get("positive_frac", 0.0)
+                        )
+                    if challenger_from_low_vol_tail_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_alt_return = float(
+                            challenger_item.get("alt_return_pct", 0.0)
+                        )
+                        challenger_alt_pf = float(challenger_item.get("alt_pf", 0.0))
+                        challenger_tail_return = float(
+                            challenger_item.get("tail_return_pct", 0.0)
+                        )
+                        challenger_tail_pf = float(
+                            challenger_item.get("tail_pf", 0.0)
+                        )
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_tail_return,
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_tail_pf,
+                            )
+                        )
+                        challenger_probe_pos_frac = float(
+                            challenger_probe.get("positive_frac", 0.0)
+                        )
+                        incumbent_episode = int(incumbent_item.get("episode", -1))
+                        low_vol_tail_edge_gate = bool(
+                            low_vol_tail_rescue_active
+                            and challenger_episode > incumbent_episode
+                            and challenger_episode
+                            <= alignment_probe_low_vol_tail_rescue_max_episode
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf >= 1.0
+                            and challenger_alt_return > 0.0
+                            and challenger_alt_pf >= 1.0
+                            and challenger_tail_return > 0.0
+                            and challenger_tail_pf
+                            >= alignment_probe_low_vol_tail_rescue_min_tail_pf
+                            and challenger_forward_return > 0.0
+                            and challenger_forward_pf >= 1.0
+                            and challenger_base_return
+                            + alignment_probe_low_vol_tail_rescue_base_return_slack_pct
+                            >= float(incumbent_item.get("base_return_pct", 0.0))
+                            and challenger_alt_return
+                            + alignment_probe_low_vol_tail_rescue_alt_return_slack_pct
+                            >= float(incumbent_item.get("alt_return_pct", 0.0))
+                            and challenger_tail_return
+                            + alignment_probe_low_vol_tail_rescue_tail_return_slack_pct
+                            >= float(incumbent_item.get("tail_return_pct", 0.0))
+                            and challenger_probe_pos_frac
+                            + alignment_probe_low_vol_tail_rescue_positive_frac_slack
+                            >= incumbent_probe.get("positive_frac", 0.0)
+                        )
+                    if challenger_from_high_cost_tail_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_tail_return = float(
+                            challenger_item.get("tail_return_pct", 0.0)
+                        )
+                        challenger_tail_pf = float(
+                            challenger_item.get("tail_pf", 0.0)
+                        )
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_tail_return,
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_tail_pf,
+                            )
+                        )
+                        challenger_val_pf_q25 = float(
+                            challenger_item.get("val_pf_q25", 0.0)
+                        )
+                        challenger_probe_pos_frac = float(
+                            challenger_probe.get("positive_frac", 0.0)
+                        )
+                        incumbent_episode = int(incumbent_item.get("episode", -1))
+                        incumbent_tail_return = float(
+                            incumbent_item.get("tail_return_pct", 0.0)
+                        )
+                        incumbent_tail_pf = float(
+                            incumbent_item.get("tail_pf", 0.0)
+                        )
+                        high_cost_tail_edge_gate = bool(
+                            high_cost_tail_rescue_active
+                            and challenger_episode > incumbent_episode
+                            and challenger_episode
+                            <= alignment_probe_high_cost_tail_rescue_max_episode
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and challenger_base_return > 0.0
+                            and challenger_base_pf
+                            >= alignment_probe_high_cost_tail_rescue_base_pf_min
+                            and challenger_tail_return
+                            >= incumbent_tail_return
+                            + alignment_probe_high_cost_tail_rescue_tail_return_edge_min
+                            and challenger_tail_pf
+                            >= alignment_probe_high_cost_tail_rescue_min_tail_pf
+                            and challenger_tail_pf
+                            >= incumbent_tail_pf
+                            + alignment_probe_high_cost_tail_rescue_tail_pf_edge_min
+                            and challenger_forward_return > 0.0
+                            and challenger_forward_pf
+                            >= alignment_probe_high_cost_tail_rescue_forward_pf_min
+                            and challenger_val_pf_q25
+                            >= alignment_probe_high_cost_tail_rescue_val_pf_q25_min
+                            and challenger_probe_pos_frac
+                            + alignment_probe_high_cost_tail_rescue_positive_frac_slack
+                            >= incumbent_probe.get("positive_frac", 0.0)
+                        )
+                    if challenger_from_abs_atr_late_rescue and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(challenger_item.get("episode", 10**9))
+                        challenger_base_return = float(
+                            challenger_item.get("base_return_pct", 0.0)
+                        )
+                        challenger_base_pf = float(challenger_item.get("base_pf", 0.0))
+                        challenger_alt_return = float(
+                            challenger_item.get("alt_return_pct", 0.0)
+                        )
+                        challenger_alt_pf = float(challenger_item.get("alt_pf", 0.0))
+                        challenger_forward_return = float(
+                            challenger_item.get(
+                                "forward_return_min",
+                                challenger_item.get("tail_return_pct", 0.0),
+                            )
+                        )
+                        challenger_forward_pf = float(
+                            challenger_item.get(
+                                "forward_pf_min",
+                                challenger_item.get("tail_pf", 0.0),
+                            )
+                        )
+                        challenger_val_mmr = float(
+                            challenger_item.get("val_mmr_pct_mean", 0.0)
+                        )
+                        challenger_probe_return = float(
+                            challenger_probe.get("return_pct", 0.0)
+                        )
+                        challenger_probe_pf = float(challenger_probe.get("pf", 0.0))
+                        challenger_probe_pos_frac = float(
+                            challenger_probe.get("positive_frac", 0.0)
+                        )
+                        challenger_probe_mmr = float(
+                            challenger_probe.get("mmr_pct_mean", 0.0)
+                        )
+                        incumbent_episode = int(incumbent_item.get("episode", -1))
+                        abs_atr_late_edge_gate = bool(
+                            abs_atr_late_rescue_active
+                            and challenger_episode > incumbent_episode
+                            and challenger_episode
+                            <= alignment_probe_abs_atr_late_rescue_max_episode
+                            and min_atr_pips_absolute
+                            >= alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute
+                            and min_atr_cost_ratio
+                            <= alignment_probe_abs_atr_late_rescue_max_costgate
+                            and incumbent_val_pf
+                            <= alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max
+                            and challenger_val_mmr
+                            >= alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min
+                            and challenger_val_mmr
+                            >= incumbent_val_mmr
+                            + alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min
+                            and challenger_base_return
+                            >= float(incumbent_item.get("base_return_pct", 0.0))
+                            + alignment_probe_abs_atr_late_rescue_base_return_edge_min
+                            and challenger_alt_return
+                            >= float(incumbent_item.get("alt_return_pct", 0.0))
+                            + alignment_probe_abs_atr_late_rescue_alt_return_edge_min
+                            and challenger_base_pf
+                            >= alignment_probe_abs_atr_late_rescue_base_pf_min
+                            and challenger_alt_pf
+                            >= alignment_probe_abs_atr_late_rescue_alt_pf_min
+                            and challenger_forward_return
+                            >= alignment_probe_abs_atr_late_rescue_forward_return_min
+                            and challenger_forward_pf
+                            >= alignment_probe_abs_atr_late_rescue_forward_pf_min
+                            and challenger_probe_return
+                            + alignment_probe_abs_atr_late_rescue_probe_return_slack_pct
+                            >= incumbent_probe.get("return_pct", 0.0)
+                            and challenger_probe_pf
+                            + alignment_probe_abs_atr_late_rescue_probe_pf_slack
+                            >= incumbent_probe.get("pf", 0.0)
+                            and challenger_probe_mmr
+                            >= incumbent_probe.get("mmr_pct_mean", 0.0)
+                            + alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min
+                            and challenger_probe_pos_frac
+                            + alignment_probe_abs_atr_late_rescue_positive_frac_slack
+                            >= incumbent_probe.get("positive_frac", 0.0)
+                        )
                     if challenger_from_temporal_bias and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
                         challenger_episode = int(
-                            tournament_by_name[challenger_name].get("episode", 10**9)
+                            challenger_item.get("episode", 10**9)
                         )
                         incumbent_episode = int(
                             tournament_by_name.get(incumbent_name, {}).get("episode", 10**9)
                         )
+                        challenger_val_return_q25 = float(
+                            challenger_item.get("val_return_q25_pct", 0.0)
+                        )
+                        challenger_val_pf_q25 = float(
+                            challenger_item.get("val_pf_q25", 0.0)
+                        )
+                        allow_later_temporal_override = bool(
+                            temporal_dominance_override_name is not None
+                            and challenger_name == temporal_dominance_override_name
+                        )
+                        temporal_q25_guard_passed = bool(
+                            not alignment_probe_temporal_q25_guard_enabled
+                            or incumbent_val_return_q25 < 0.0
+                            or incumbent_val_pf_q25 < 1.0
+                            or (
+                                challenger_val_return_q25
+                                + alignment_probe_temporal_q25_return_slack
+                                >= incumbent_val_return_q25
+                                and challenger_val_pf_q25
+                                + alignment_probe_temporal_q25_pf_slack
+                                >= incumbent_val_pf_q25
+                            )
+                        )
+                        # Allow later episodes if probe dominance is overwhelming
+                        _probe_return_edge = (
+                            challenger_probe["return_pct"] - incumbent_probe["return_pct"]
+                        )
+                        _probe_pf_edge = (
+                            challenger_probe["pf"] - incumbent_probe["pf"]
+                        )
+                        _probe_pos_frac_edge = (
+                            challenger_probe.get("positive_frac", 0.0)
+                            - incumbent_probe.get("positive_frac", 0.0)
+                        )
+                        allow_later_probe_dominance = bool(
+                            challenger_episode >= incumbent_episode
+                            and _probe_return_edge >= 0.5
+                            and _probe_pf_edge >= 0.2
+                            and _probe_pos_frac_edge >= 0.1
+                            and challenger_probe.get("pass", False)
+                        )
                         temporal_edge_gate = bool(
-                            challenger_episode < incumbent_episode
+                            (
+                                challenger_episode < incumbent_episode
+                                or allow_later_temporal_override
+                                or allow_later_probe_dominance
+                            )
                             and challenger_probe["return_pct"] > 0.0
                             and challenger_probe["pf"] >= 1.0
                             and (
@@ -2903,11 +5164,91 @@ class Trainer:
                                 + alignment_probe_temporal_positive_frac_slack
                                 >= incumbent_probe.get("positive_frac", 0.0)
                             )
+                            and (
+                                challenger_probe.get("mmr_pct_mean", 0.0)
+                                + alignment_probe_temporal_mmr_slack
+                                >= incumbent_probe.get("mmr_pct_mean", 0.0)
+                            )
+                            and temporal_q25_guard_passed
+                        )
+                    if challenger_from_temporal_q25_fallback and challenger_name in tournament_by_name:
+                        challenger_item = tournament_by_name.get(challenger_name, {})
+                        challenger_episode = int(
+                            challenger_item.get("episode", 10**9)
+                        )
+                        incumbent_episode = int(
+                            tournament_by_name.get(incumbent_name, {}).get("episode", 10**9)
+                        )
+                        challenger_val_return_q25 = float(
+                            challenger_item.get("val_return_q25_pct", 0.0)
+                        )
+                        challenger_val_pf_q25 = float(
+                            challenger_item.get("val_pf_q25", 0.0)
+                        )
+                        temporal_q25_guard_passed = bool(
+                            challenger_val_return_q25
+                            >= alignment_probe_temporal_q25_fallback_min_val_return_q25
+                            and challenger_val_pf_q25
+                            >= alignment_probe_temporal_q25_fallback_min_val_pf_q25
+                        )
+                        temporal_edge_gate = bool(
+                            challenger_episode > incumbent_episode
+                            and challenger_probe["return_pct"] > 0.0
+                            and challenger_probe["pf"] >= 1.0
+                            and (
+                                challenger_probe["return_pct"]
+                                + alignment_probe_temporal_q25_fallback_return_slack_pct
+                                >= incumbent_probe["return_pct"]
+                            )
+                            and (
+                                challenger_probe["pf"]
+                                + alignment_probe_temporal_q25_fallback_pf_slack
+                                >= incumbent_probe["pf"]
+                            )
+                            and (
+                                challenger_probe.get("positive_frac", 0.0)
+                                + alignment_probe_temporal_positive_frac_slack
+                                >= incumbent_probe.get("positive_frac", 0.0)
+                            )
+                            and (
+                                challenger_probe.get("mmr_pct_mean", 0.0)
+                                >= incumbent_probe.get("mmr_pct_mean", 0.0)
+                                + alignment_probe_temporal_q25_fallback_probe_mmr_edge_min
+                            )
+                            and float(challenger_item.get("val_pf", 0.0))
+                            >= incumbent_val_pf
+                            + alignment_probe_temporal_q25_fallback_val_pf_edge_min
+                            and temporal_q25_guard_passed
                         )
 
                     edge_gate = bool(
                         early_mmr_edge_gate
                         if challenger_from_early_mmr_rescue
+                        else q25_edge_gate
+                        if challenger_from_q25_rescue
+                        else pf_mmr_edge_gate
+                        if challenger_from_pf_mmr_rescue
+                        else late_val_edge_gate
+                        if challenger_from_late_val_rescue
+                        else late_mmr_edge_gate
+                        if challenger_from_late_mmr_rescue
+                        else low_vol_tail_edge_gate
+                        if challenger_from_low_vol_tail_rescue
+                        else high_cost_tail_edge_gate
+                        if challenger_from_high_cost_tail_rescue
+                        else abs_atr_late_edge_gate
+                        if challenger_from_abs_atr_late_rescue
+                        else (
+                            challenger_probe.get("positive_frac", 0.0) >= alignment_probe_align_priority_min_pos_frac
+                            and challenger_probe["return_pct"] >= alignment_probe_align_priority_min_return
+                            and (
+                                challenger_probe.get("positive_frac", 0.0) >= incumbent_probe.get("positive_frac", 0.0) + 0.05
+                                or challenger_probe["return_pct"] >= incumbent_probe["return_pct"] + 0.10
+                            )
+                        )
+                        if challenger_from_align_priority
+                        else temporal_edge_gate
+                        if challenger_from_temporal_q25_fallback
                         else temporal_edge_gate
                         if challenger_from_temporal_bias
                         else (
@@ -2917,20 +5258,28 @@ class Trainer:
                     )
 
                     switched = bool(
-                        challenger_probe["trades"] >= alignment_probe_min_trades
-                        and challenger_passes
-                        and (
-                            (
-                                challenger_probe.get("pass", False)
-                                and not incumbent_probe.get("pass", False)
-                                and challenger_probe["return_pct"] > 0.0
-                                and challenger_probe["pf"] >= 1.0
+                        (
+                            challenger_probe["trades"] >= alignment_probe_min_trades
+                            and challenger_passes
+                            and (
+                                (
+                                    challenger_probe.get("pass", False)
+                                    and not incumbent_probe.get("pass", False)
+                                    and challenger_probe["return_pct"] > 0.0
+                                    and challenger_probe["pf"] >= 1.0
+                                )
+                                or (
+                                    edge_gate
+                                    and not challenger_from_abs_atr_late_rescue
+                                    and challenger_probe["return_pct"] > 0.0
+                                    and challenger_probe["pf"] >= 1.0
+                                )
                             )
-                            or (
-                                edge_gate
-                                and challenger_probe["return_pct"] > 0.0
-                                and challenger_probe["pf"] >= 1.0
-                            )
+                        )
+                        or (
+                            challenger_probe["trades"] >= alignment_probe_min_trades
+                            and challenger_from_abs_atr_late_rescue
+                            and abs_atr_late_edge_gate
                         )
                     )
 
@@ -2959,10 +5308,90 @@ class Trainer:
                             "temporal_return_slack_pct": float(alignment_probe_temporal_return_slack_pct),
                             "temporal_pf_slack": float(alignment_probe_temporal_pf_slack),
                             "temporal_positive_frac_slack": float(alignment_probe_temporal_positive_frac_slack),
+                            "temporal_mmr_slack": float(alignment_probe_temporal_mmr_slack),
+                            "temporal_q25_guard_enabled": bool(alignment_probe_temporal_q25_guard_enabled),
+                            "temporal_q25_return_slack": float(alignment_probe_temporal_q25_return_slack),
+                            "temporal_q25_pf_slack": float(alignment_probe_temporal_q25_pf_slack),
+                            "temporal_q25_fallback_enabled": bool(alignment_probe_temporal_q25_fallback_enabled),
+                            "temporal_q25_fallback_return_slack_pct": float(alignment_probe_temporal_q25_fallback_return_slack_pct),
+                            "temporal_q25_fallback_pf_slack": float(alignment_probe_temporal_q25_fallback_pf_slack),
+                            "temporal_q25_fallback_probe_mmr_edge_min": float(alignment_probe_temporal_q25_fallback_probe_mmr_edge_min),
+                            "temporal_q25_fallback_val_pf_edge_min": float(alignment_probe_temporal_q25_fallback_val_pf_edge_min),
+                            "temporal_q25_fallback_min_val_return_q25": float(alignment_probe_temporal_q25_fallback_min_val_return_q25),
+                            "temporal_q25_fallback_min_val_pf_q25": float(alignment_probe_temporal_q25_fallback_min_val_pf_q25),
+                            "temporal_dominance_return_edge_min": float(alignment_probe_temporal_dominance_return_edge_min),
+                            "temporal_dominance_pf_edge_min": float(alignment_probe_temporal_dominance_pf_edge_min),
                             "temporal_require_forward_profit": bool(alignment_probe_temporal_require_forward_profit),
                             "early_mmr_rescue_enabled": bool(alignment_probe_early_mmr_rescue_enabled),
                             "early_mmr_min": float(alignment_probe_early_mmr_min),
                             "early_mmr_edge_min": float(alignment_probe_early_mmr_edge_min),
+                            "q25_rescue_enabled": bool(alignment_probe_q25_rescue_enabled),
+                            "q25_incumbent_return_q25_max": float(alignment_probe_q25_incumbent_return_q25_max),
+                            "q25_incumbent_pf_q25_max": float(alignment_probe_q25_incumbent_pf_q25_max),
+                            "q25_return_q25_edge_min": float(alignment_probe_q25_return_q25_edge_min),
+                            "q25_pf_q25_edge_min": float(alignment_probe_q25_pf_q25_edge_min),
+                            "q25_max_episode": int(alignment_probe_q25_max_episode),
+                            "pf_mmr_rescue_enabled": bool(alignment_probe_pf_mmr_rescue_enabled),
+                            "pf_mmr_incumbent_val_mmr_max": float(alignment_probe_pf_mmr_incumbent_val_mmr_max),
+                            "pf_mmr_probe_mmr_edge_min": float(alignment_probe_pf_mmr_probe_mmr_edge_min),
+                            "pf_mmr_base_pf_edge_min": float(alignment_probe_pf_mmr_base_pf_edge_min),
+                            "pf_mmr_forward_pf_edge_min": float(alignment_probe_pf_mmr_forward_pf_edge_min),
+                            "pf_mmr_positive_frac_slack": float(alignment_probe_pf_mmr_positive_frac_slack),
+                            "pf_mmr_max_episode": int(alignment_probe_pf_mmr_max_episode),
+                            "late_val_rescue_enabled": bool(alignment_probe_late_val_rescue_enabled),
+                            "late_val_incumbent_val_mmr_max": float(alignment_probe_late_val_incumbent_val_mmr_max),
+                            "late_val_challenger_val_mmr_min": float(alignment_probe_late_val_challenger_val_mmr_min),
+                            "late_val_val_pf_edge_min": float(alignment_probe_late_val_val_pf_edge_min),
+                            "late_val_tail_pf_edge_min": float(alignment_probe_late_val_tail_pf_edge_min),
+                            "late_val_positive_frac_slack": float(alignment_probe_late_val_positive_frac_slack),
+                            "late_val_max_episode": int(alignment_probe_late_val_max_episode),
+                            "late_mmr_rescue_enabled": bool(alignment_probe_late_mmr_rescue_enabled),
+                            "late_mmr_incumbent_val_pf_max": float(alignment_probe_late_mmr_incumbent_val_pf_max),
+                            "late_mmr_challenger_val_mmr_edge_min": float(alignment_probe_late_mmr_challenger_val_mmr_edge_min),
+                            "late_mmr_challenger_forward_pf_min": float(alignment_probe_late_mmr_challenger_forward_pf_min),
+                            "late_mmr_positive_frac_slack": float(alignment_probe_late_mmr_positive_frac_slack),
+                            "late_mmr_max_episode": int(alignment_probe_late_mmr_max_episode),
+                            "low_vol_tail_rescue_enabled": bool(alignment_probe_low_vol_tail_rescue_enabled),
+                            "low_vol_tail_rescue_active": bool(low_vol_tail_rescue_active),
+                            "low_vol_tail_rescue_max_episode": int(alignment_probe_low_vol_tail_rescue_max_episode),
+                            "low_vol_tail_rescue_base_return_slack_pct": float(alignment_probe_low_vol_tail_rescue_base_return_slack_pct),
+                            "low_vol_tail_rescue_alt_return_slack_pct": float(alignment_probe_low_vol_tail_rescue_alt_return_slack_pct),
+                            "low_vol_tail_rescue_tail_return_slack_pct": float(alignment_probe_low_vol_tail_rescue_tail_return_slack_pct),
+                            "low_vol_tail_rescue_min_tail_pf": float(alignment_probe_low_vol_tail_rescue_min_tail_pf),
+                            "low_vol_tail_rescue_positive_frac_slack": float(alignment_probe_low_vol_tail_rescue_positive_frac_slack),
+                            "high_cost_tail_rescue_enabled": bool(alignment_probe_high_cost_tail_rescue_enabled),
+                            "high_cost_tail_rescue_active": bool(high_cost_tail_rescue_active),
+                            "high_cost_tail_rescue_min_costgate": float(alignment_probe_high_cost_tail_rescue_min_costgate),
+                            "high_cost_tail_rescue_max_episode": int(alignment_probe_high_cost_tail_rescue_max_episode),
+                            "high_cost_tail_rescue_min_tail_pf": float(alignment_probe_high_cost_tail_rescue_min_tail_pf),
+                            "high_cost_tail_rescue_tail_pf_edge_min": float(alignment_probe_high_cost_tail_rescue_tail_pf_edge_min),
+                            "high_cost_tail_rescue_tail_return_edge_min": float(alignment_probe_high_cost_tail_rescue_tail_return_edge_min),
+                            "high_cost_tail_rescue_forward_pf_min": float(alignment_probe_high_cost_tail_rescue_forward_pf_min),
+                            "high_cost_tail_rescue_base_pf_min": float(alignment_probe_high_cost_tail_rescue_base_pf_min),
+                            "high_cost_tail_rescue_val_pf_q25_min": float(alignment_probe_high_cost_tail_rescue_val_pf_q25_min),
+                            "high_cost_tail_rescue_positive_frac_slack": float(alignment_probe_high_cost_tail_rescue_positive_frac_slack),
+                            "abs_atr_late_rescue_enabled": bool(alignment_probe_abs_atr_late_rescue_enabled),
+                            "abs_atr_late_rescue_active": bool(abs_atr_late_rescue_active),
+                            "abs_atr_late_rescue_min_atr_pips_absolute": float(alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute),
+                            "abs_atr_late_rescue_max_costgate": float(alignment_probe_abs_atr_late_rescue_max_costgate),
+                            "abs_atr_late_rescue_incumbent_val_pf_max": float(alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max),
+                            "abs_atr_late_rescue_max_episode": int(alignment_probe_abs_atr_late_rescue_max_episode),
+                            "abs_atr_late_rescue_challenger_val_mmr_min": float(alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min),
+                            "abs_atr_late_rescue_challenger_val_mmr_edge_min": float(alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min),
+                            "abs_atr_late_rescue_base_return_edge_min": float(alignment_probe_abs_atr_late_rescue_base_return_edge_min),
+                            "abs_atr_late_rescue_alt_return_edge_min": float(alignment_probe_abs_atr_late_rescue_alt_return_edge_min),
+                            "abs_atr_late_rescue_base_pf_min": float(alignment_probe_abs_atr_late_rescue_base_pf_min),
+                            "abs_atr_late_rescue_alt_pf_min": float(alignment_probe_abs_atr_late_rescue_alt_pf_min),
+                            "abs_atr_late_rescue_forward_return_min": float(alignment_probe_abs_atr_late_rescue_forward_return_min),
+                            "abs_atr_late_rescue_forward_pf_min": float(alignment_probe_abs_atr_late_rescue_forward_pf_min),
+                            "abs_atr_late_rescue_probe_return_slack_pct": float(alignment_probe_abs_atr_late_rescue_probe_return_slack_pct),
+                            "abs_atr_late_rescue_probe_pf_slack": float(alignment_probe_abs_atr_late_rescue_probe_pf_slack),
+                            "abs_atr_late_rescue_probe_mmr_edge_min": float(alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min),
+                            "abs_atr_late_rescue_positive_frac_slack": float(alignment_probe_abs_atr_late_rescue_positive_frac_slack),
+                            "future_divergence_anchor_enabled": bool(alignment_probe_future_divergence_anchor_enabled),
+                            "future_divergence_composite_max": float(alignment_probe_future_divergence_composite_max),
+                            "future_divergence_max_episode": int(alignment_probe_future_divergence_max_episode),
+                            "future_divergence_max_candidates": int(alignment_probe_future_divergence_max_candidates),
                             "walkforward_min_windows": int(self.config.fitness.test_walkforward_min_windows),
                             "walkforward_min_spr": float(self.config.fitness.test_walkforward_min_spr),
                             "walkforward_min_pf": float(self.config.fitness.test_walkforward_min_pf),
@@ -2971,11 +5400,28 @@ class Trainer:
                         "incumbent_filename": incumbent_name,
                         "challenger_filename": challenger_name,
                         "challenger_from_temporal_bias": bool(challenger_from_temporal_bias),
+                        "challenger_from_temporal_q25_fallback": bool(challenger_from_temporal_q25_fallback),
                         "challenger_from_early_mmr_rescue": bool(challenger_from_early_mmr_rescue),
+                        "challenger_from_q25_rescue": bool(challenger_from_q25_rescue),
+                        "challenger_from_pf_mmr_rescue": bool(challenger_from_pf_mmr_rescue),
+                        "challenger_from_late_val_rescue": bool(challenger_from_late_val_rescue),
+                        "challenger_from_late_mmr_rescue": bool(challenger_from_late_mmr_rescue),
+                        "challenger_from_low_vol_tail_rescue": bool(challenger_from_low_vol_tail_rescue),
+                        "challenger_from_high_cost_tail_rescue": bool(challenger_from_high_cost_tail_rescue),
+                        "challenger_from_abs_atr_late_rescue": bool(challenger_from_abs_atr_late_rescue),
                         "ranked_probe_filenames": ranked_probe_names,
                         "preferred_probe_filename": preferred_probe_name,
                         "temporal_shortlist_filenames": temporal_shortlist_names,
+                        "temporal_q25_fallback_filenames": temporal_q25_fallback_names,
+                        "temporal_dominance_override_filename": temporal_dominance_override_name,
                         "early_mmr_rescue_filenames": early_mmr_rescue_names,
+                        "q25_rescue_filenames": q25_rescue_names,
+                        "pf_mmr_rescue_filenames": pf_mmr_rescue_names,
+                        "late_val_rescue_filenames": late_val_rescue_names,
+                        "late_mmr_rescue_filenames": late_mmr_rescue_names,
+                        "low_vol_tail_rescue_filenames": low_vol_tail_rescue_names,
+                        "high_cost_tail_rescue_filenames": high_cost_tail_rescue_names,
+                        "abs_atr_late_rescue_filenames": abs_atr_late_rescue_names,
                         "temporal_keep_floor_return_pct": (
                             float(temporal_keep_floor) if temporal_keep_floor is not None else None
                         ),
@@ -2984,16 +5430,90 @@ class Trainer:
                         "return_edge": float(return_edge),
                         "pf_edge": float(pf_edge),
                         "positive_frac_edge": float(positive_frac_edge),
+                        "mmr_edge": float(mmr_edge),
                         "temporal_return_slack_pct": float(alignment_probe_temporal_return_slack_pct),
                         "temporal_pf_slack": float(alignment_probe_temporal_pf_slack),
                         "temporal_positive_frac_slack": float(alignment_probe_temporal_positive_frac_slack),
+                        "temporal_mmr_slack": float(alignment_probe_temporal_mmr_slack),
+                        "temporal_q25_guard_enabled": bool(alignment_probe_temporal_q25_guard_enabled),
+                        "temporal_q25_return_slack": float(alignment_probe_temporal_q25_return_slack),
+                        "temporal_q25_pf_slack": float(alignment_probe_temporal_q25_pf_slack),
+                        "temporal_dominance_return_edge_min": float(alignment_probe_temporal_dominance_return_edge_min),
+                        "temporal_dominance_pf_edge_min": float(alignment_probe_temporal_dominance_pf_edge_min),
                         "temporal_require_forward_profit": bool(alignment_probe_temporal_require_forward_profit),
                         "early_mmr_min": float(alignment_probe_early_mmr_min),
                         "early_mmr_edge_min": float(alignment_probe_early_mmr_edge_min),
+                        "q25_incumbent_return_q25_max": float(alignment_probe_q25_incumbent_return_q25_max),
+                        "q25_incumbent_pf_q25_max": float(alignment_probe_q25_incumbent_pf_q25_max),
+                        "q25_return_q25_edge_min": float(alignment_probe_q25_return_q25_edge_min),
+                        "q25_pf_q25_edge_min": float(alignment_probe_q25_pf_q25_edge_min),
+                        "q25_max_episode": int(alignment_probe_q25_max_episode),
+                        "pf_mmr_incumbent_val_mmr_max": float(alignment_probe_pf_mmr_incumbent_val_mmr_max),
+                        "pf_mmr_probe_mmr_edge_min": float(alignment_probe_pf_mmr_probe_mmr_edge_min),
+                        "pf_mmr_base_pf_edge_min": float(alignment_probe_pf_mmr_base_pf_edge_min),
+                        "pf_mmr_forward_pf_edge_min": float(alignment_probe_pf_mmr_forward_pf_edge_min),
+                        "pf_mmr_positive_frac_slack": float(alignment_probe_pf_mmr_positive_frac_slack),
+                        "pf_mmr_max_episode": int(alignment_probe_pf_mmr_max_episode),
+                        "late_val_incumbent_val_mmr_max": float(alignment_probe_late_val_incumbent_val_mmr_max),
+                        "late_val_challenger_val_mmr_min": float(alignment_probe_late_val_challenger_val_mmr_min),
+                        "late_val_val_pf_edge_min": float(alignment_probe_late_val_val_pf_edge_min),
+                        "late_val_tail_pf_edge_min": float(alignment_probe_late_val_tail_pf_edge_min),
+                        "late_val_positive_frac_slack": float(alignment_probe_late_val_positive_frac_slack),
+                        "late_val_max_episode": int(alignment_probe_late_val_max_episode),
+                        "late_mmr_incumbent_val_pf_max": float(alignment_probe_late_mmr_incumbent_val_pf_max),
+                        "late_mmr_challenger_val_mmr_edge_min": float(alignment_probe_late_mmr_challenger_val_mmr_edge_min),
+                        "late_mmr_challenger_forward_pf_min": float(alignment_probe_late_mmr_challenger_forward_pf_min),
+                        "late_mmr_positive_frac_slack": float(alignment_probe_late_mmr_positive_frac_slack),
+                        "late_mmr_max_episode": int(alignment_probe_late_mmr_max_episode),
+                        "low_vol_tail_rescue_active": bool(low_vol_tail_rescue_active),
+                        "low_vol_tail_rescue_max_episode": int(alignment_probe_low_vol_tail_rescue_max_episode),
+                        "low_vol_tail_rescue_base_return_slack_pct": float(alignment_probe_low_vol_tail_rescue_base_return_slack_pct),
+                        "low_vol_tail_rescue_alt_return_slack_pct": float(alignment_probe_low_vol_tail_rescue_alt_return_slack_pct),
+                        "low_vol_tail_rescue_tail_return_slack_pct": float(alignment_probe_low_vol_tail_rescue_tail_return_slack_pct),
+                        "low_vol_tail_rescue_min_tail_pf": float(alignment_probe_low_vol_tail_rescue_min_tail_pf),
+                        "low_vol_tail_rescue_positive_frac_slack": float(alignment_probe_low_vol_tail_rescue_positive_frac_slack),
+                        "high_cost_tail_rescue_active": bool(high_cost_tail_rescue_active),
+                        "high_cost_tail_rescue_min_costgate": float(alignment_probe_high_cost_tail_rescue_min_costgate),
+                        "high_cost_tail_rescue_max_episode": int(alignment_probe_high_cost_tail_rescue_max_episode),
+                        "high_cost_tail_rescue_min_tail_pf": float(alignment_probe_high_cost_tail_rescue_min_tail_pf),
+                        "high_cost_tail_rescue_tail_pf_edge_min": float(alignment_probe_high_cost_tail_rescue_tail_pf_edge_min),
+                        "high_cost_tail_rescue_tail_return_edge_min": float(alignment_probe_high_cost_tail_rescue_tail_return_edge_min),
+                        "high_cost_tail_rescue_forward_pf_min": float(alignment_probe_high_cost_tail_rescue_forward_pf_min),
+                        "high_cost_tail_rescue_base_pf_min": float(alignment_probe_high_cost_tail_rescue_base_pf_min),
+                        "high_cost_tail_rescue_val_pf_q25_min": float(alignment_probe_high_cost_tail_rescue_val_pf_q25_min),
+                        "high_cost_tail_rescue_positive_frac_slack": float(alignment_probe_high_cost_tail_rescue_positive_frac_slack),
+                        "abs_atr_late_rescue_active": bool(abs_atr_late_rescue_active),
+                        "abs_atr_late_rescue_min_atr_pips_absolute": float(alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute),
+                        "abs_atr_late_rescue_max_costgate": float(alignment_probe_abs_atr_late_rescue_max_costgate),
+                        "abs_atr_late_rescue_incumbent_val_pf_max": float(alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max),
+                        "abs_atr_late_rescue_max_episode": int(alignment_probe_abs_atr_late_rescue_max_episode),
+                        "abs_atr_late_rescue_challenger_val_mmr_min": float(alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min),
+                        "abs_atr_late_rescue_challenger_val_mmr_edge_min": float(alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min),
+                        "abs_atr_late_rescue_base_return_edge_min": float(alignment_probe_abs_atr_late_rescue_base_return_edge_min),
+                        "abs_atr_late_rescue_alt_return_edge_min": float(alignment_probe_abs_atr_late_rescue_alt_return_edge_min),
+                        "abs_atr_late_rescue_base_pf_min": float(alignment_probe_abs_atr_late_rescue_base_pf_min),
+                        "abs_atr_late_rescue_alt_pf_min": float(alignment_probe_abs_atr_late_rescue_alt_pf_min),
+                        "abs_atr_late_rescue_forward_return_min": float(alignment_probe_abs_atr_late_rescue_forward_return_min),
+                        "abs_atr_late_rescue_forward_pf_min": float(alignment_probe_abs_atr_late_rescue_forward_pf_min),
+                        "abs_atr_late_rescue_probe_return_slack_pct": float(alignment_probe_abs_atr_late_rescue_probe_return_slack_pct),
+                        "abs_atr_late_rescue_probe_pf_slack": float(alignment_probe_abs_atr_late_rescue_probe_pf_slack),
+                        "abs_atr_late_rescue_probe_mmr_edge_min": float(alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min),
+                        "abs_atr_late_rescue_positive_frac_slack": float(alignment_probe_abs_atr_late_rescue_positive_frac_slack),
                         "incumbent_val_mmr_pct_mean": float(incumbent_val_mmr),
+                        "incumbent_val_pf": float(incumbent_val_pf),
                         "incumbent_base_mmr_pct_mean": float(incumbent_base_mmr),
+                        "incumbent_val_return_q25_pct": float(incumbent_val_return_q25),
+                        "incumbent_val_pf_q25": float(incumbent_val_pf_q25),
                         "temporal_edge_gate": bool(temporal_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "temporal_q25_guard_passed": bool(temporal_q25_guard_passed if incumbent_probe is not None and challenger_probe is not None else True),
                         "early_mmr_edge_gate": bool(early_mmr_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "q25_edge_gate": bool(q25_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "pf_mmr_edge_gate": bool(pf_mmr_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "late_val_edge_gate": bool(late_val_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "late_mmr_edge_gate": bool(late_mmr_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "low_vol_tail_edge_gate": bool(low_vol_tail_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "high_cost_tail_edge_gate": bool(high_cost_tail_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
+                        "abs_atr_late_edge_gate": bool(abs_atr_late_edge_gate if incumbent_probe is not None and challenger_probe is not None else False),
                         "switched": bool(switched),
                         "winner_after_alignment": winner.get("filename"),
                         "probe_results": probe_results,
