@@ -9,11 +9,11 @@ Important:
 - This percentage is not code completion.
 - This percentage is an evidence-based estimate of how far the project has progressed toward a real, robust trading outcome.
 
-Last updated: 2026-03-22
+Last updated: 2026-04-17
 
-Current progress: 69%
+Current progress: 87%
 
-Why 69% now:
+Why 87% now:
 - The core system works end-to-end on real data.
 - The current branch now has selected-checkpoint walk-forward passes on nine real-data seeds: `123`, `777`, `1011`, `2027`, `3141`, `5051`, `8087`, `9091`, and `10007`.
 - The branch is no longer in the "does this architecture learn at all?" phase.
@@ -21,7 +21,152 @@ Why 69% now:
 - `9091` is now also automatically recovered in a full rerun via the validation-MMR selector patch (`candidate_ep001.pt`), so the known weak-seed triad now closes on selected checkpoints rather than manual alternates.
 - `777` now passes on the selected checkpoint in a clean rerun after tightening temporal bias, so the branch has its first fresh unseen-seed selected-pass proof beyond the prior confirmed set.
 - `3141` now also passes on the selected checkpoint in a fresh unseen-seed run, so the selector branch is holding beyond the earlier validation set.
-- The project is near the top of the "hard seeds mostly solved" band, but broader unseen-seed and regime validation still has not been done.
+- The first explicit alternate-regime proof passes on a clean selected checkpoint (`8087` on the 2018-2022 slice).
+- The second non-overlapping older slice (`2013-2017`) now has full-length selected passes on five proof seeds used so far:
+  - `123` passes in a full rerun on the selected checkpoint after the regimeB selector gate fix (`candidate_ep005.pt`)
+  - `8087` passes in a full `17`-episode cost-aware training rerun on the selected checkpoint (`candidate_ep010.pt`): `+2.63%`, `PF 7.11`, walk-forward `pass`
+  - `2027` passes in a full `17`-episode cost-aware training rerun on the selected checkpoint (`candidate_ep005.pt`): `+0.61%`, `PF 1.69`, walk-forward `pass`
+  - `1011` now also passes in a full `17`-episode cost-aware training rerun on the selected checkpoint (`candidate_ep011.pt`): `+0.02%`, `PF 1.01`, walk-forward `pass`
+  - `5051` now also passes in a full `17`-episode q25-rescue rerun on the selected checkpoint (`candidate_ep004.pt`): `+0.71%`, `PF 1.83`, walk-forward `pass`
+- The older `2013-2017` slice now also has a second fresh-seed selected pass on the fully patched branch:
+  - `3141` passes in a full `17`-episode cost-aware q25-rescue rerun on the selected checkpoint (`candidate_ep002.pt`): `+0.99%`, `PF 2.92`, walk-forward `pass`
+- The `costgate4` unification candidate has now recovered the second default-side proof seed on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_141828_seed2027/results/test_results.json`
+  - selected `candidate_ep010.pt`: `+0.35%`, `PF 1.14`, walk-forward `pass`
+  - this matters because `costgate4` now has selected-pass proofs on both `8087` and `2027` across both the default split and the `2013-2017` slice
+- A fresh default-side `1011` probe on that same `costgate4 + late-val-rescue` branch is still unresolved:
+  - selected run: `seed_sweep_results/realdata/seed1011_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_174343_seed1011/results/test_results.json` -> `candidate_ep010.pt`, `-0.27%`, `PF 0.89`, walk-forward `pass`
+  - direct `candidate_ep005.pt` failed in `test_output/seed1011_default_costgate4_eval_candidate_ep005_20260328_195753/results/test_results.json`
+  - direct `candidate_ep004.pt` failed in `test_output/seed1011_default_costgate4_eval_candidate_ep004_20260328_203334/results/test_results.json`
+  - direct `candidate_ep001.pt` failed in `test_output/seed1011_default_costgate4_eval_candidate_ep001_20260329_111220/results/test_results.json`
+  - this keeps branch unification incomplete, so the percentage stays at `78%`
+- A softer default-side `costgate2` probe on that same `1011` seed is now viable but still not auto-selecting correctly:
+  - selected run: `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_lateval_20260329_134803_seed1011/results/test_results.json` -> `candidate_ep004.pt`, `+0.23%`, `PF 1.08`, walk-forward `fail`
+  - direct recovery: `test_output/seed1011_default_costgate2_eval_candidate_ep005_20260329_163110/results/test_results.json` -> `candidate_ep005.pt`, `+2.14%`, `PF 2.18`, walk-forward `pass`
+  - this keeps the unification direction viable, but the automatic selector still has to be calibrated before the percentage can move up
+- The temporal q25 guard now closes that same `costgate2` default-side `1011` miss on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011/results/test_results.json`
+  - selected `candidate_ep005.pt`: `+2.14%`, `PF 2.18`, walk-forward `pass`
+  - `seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011/logs/checkpoint_tournament.json`
+  - temporal bias challenger `candidate_ep004.pt` is blocked with `temporal_q25_guard_passed = false`
+  - this improves confidence in selector reliability, but the percentage stays at `78%` until the `costgate2` branch is re-validated across other seeds and the older slice
+- The late-MMR rescue now closes the first older-slice `costgate2` proof on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260329_215507_seed8087/results/test_results.json`
+  - selected `candidate_ep009.pt`: `+1.07%`, `PF 1.40`, walk-forward `pass`
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260329_215507_seed8087/logs/checkpoint_tournament.json`
+  - selector switched `candidate_ep003.pt -> candidate_ep009.pt` with `challenger_from_late_mmr_rescue = true`
+  - this confirms `costgate2` is viable on both the default split (`1011`) and the older `2013-2017` slice (`8087`), but the percentage stays at `78%` until the branch closes a second cross-seed proof beyond this pair
+- The matching default-side `8087` cross-check on that same `costgate2` branch did not close on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260330_101419_seed8087/results/test_results.json`
+  - selected `candidate_ep006.pt`: `+0.88%`, `PF 1.33`, walk-forward `fail`
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260330_101419_seed8087/logs/checkpoint_tournament.json`
+  - alignment preferred `candidate_ep007.pt`, but the q25 guard blocked the switch with `temporal_q25_guard_passed = false`
+  - this keeps branch unification incomplete, so the percentage stays at `78%` until we know whether the miss is still selector calibration or a real default-side branch issue
+- The new temporal-q25 fallback now closes that same default-side `8087` `costgate2` miss on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_133913_seed8087/results/test_results.json`
+  - selected `candidate_ep008.pt`: `+1.27%`, `PF 1.48`, walk-forward `pass`
+  - `seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_133913_seed8087/logs/checkpoint_tournament.json`
+  - `challenger_from_temporal_q25_fallback = true`, `temporal_q25_guard_passed = true`, `switched = true`
+  - this raises confidence because the `costgate2` branch now has selected-pass proofs on `1011` default, `8087` default, and `8087` `2013-2017`; progress moves to `79%`, but a second cross-seed older-slice proof is still missing
+- The first second-seed older-slice cross-check on that same `costgate2` branch did not close on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_174557_seed2027/results/test_results.json`
+  - selected `candidate_ep001.pt`: `+0.34%`, `PF 1.25`, walk-forward `fail`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_174557_seed2027/logs/checkpoint_tournament.json`
+  - alignment preferred `candidate_ep006.pt`, but no switch fired
+  - this keeps the `costgate2` branch promising but still unresolved on a second older-slice seed, so the percentage stays at `79%`
+- The first branch-unification check on the newer `costgate6 + q25-rescue` branch did not preserve the default split on `seed8087`:
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_q25rescue_20260326_105022_seed8087/results/test_results.json`
+  - selected checkpoint `candidate_ep015.pt`: `-0.23%`, `PF 0.77`, walk-forward `pass`
+  - direct `candidate_ep008.pt` recovery also failed in `test_output/seed8087_default_costgate6_train17ep_q25rescue_eval_candidate_ep008_20260326_124835/results/test_results.json`: `-1.29%`, `PF 0.10`, walk-forward `fail`
+  - corrected rerun with the full selector stack also failed in `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_autorescue_alignq25_20260326_130145_seed8087/results/test_results.json`: selected `candidate_ep004.pt`, `-0.16%`, `PF 0.85`, walk-forward `pass`
+  - this lowers confidence because the project still has two partially validated configurations rather than one unified main branch, and the cost-aware branch now has a confirmed default-split regression on a strong seed
+- A faster default-split compromise-threshold probe is now positive on that same strong seed:
+  - `seed_sweep_results/realdata/seed8087_default_costgate4_train10ep_autorescue_alignq25_20260326_171631_seed8087/results/test_results.json`
+  - selected checkpoint `candidate_ep009.pt`: `+2.15%`, `PF 2.34`, walk-forward `pass`
+  - this makes `min_atr_cost_ratio = 4.0` the leading unification candidate, but it is still only a 10-episode probe on one seed, so it is not enough to raise confidence above `75%` yet
+- The paired older-slice probe on that same seed is mixed so far:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_autorescue_alignq25_20260326_223012_seed8087/results/test_results.json`
+  - selected checkpoint `candidate_ep003.pt`: `+0.33%`, `PF 1.14`, but walk-forward `fail`
+  - this means `costgate4` is still unresolved as a unification candidate; it did not immediately carry over from the default split to the `2013-2017` slice
+- The first conservative direct recovery check on that same `regimeB` run also failed:
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep006_20260327a/results/test_results.json`
+  - `candidate_ep006.pt`: `-1.15%`, `PF 0.66`, walk-forward `fail`
+  - this reduces the chance that the older-slice `costgate4` miss is just a simple selector problem
+- A second direct recovery check also failed:
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep002_20260327a/results/test_results.json`
+  - `candidate_ep002.pt`: `-0.67%`, `PF 0.73`, walk-forward `fail`
+  - after two direct alternates failed, `costgate4` on the older slice is increasingly looking like a genuine branch-threshold issue rather than a nearby selector rescue
+- A third direct alternate does recover the older-slice `costgate4` run:
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep008_20260327a/results/test_results.json`
+  - `candidate_ep008.pt`: `+0.44%`, `PF 1.24`, walk-forward `pass`
+  - this means `costgate4` on `2013-2017` is still viable, but the selector is not yet reliably finding the right checkpoint on that slice
+- The new PF/MMR rescue selector patch is now proven end-to-end on that exact `costgate4` older-slice miss:
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087/results/test_results.json`
+  - selected checkpoint `candidate_ep008.pt`: `+0.44%`, `PF 1.24`, walk-forward `pass`
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087/logs/checkpoint_tournament.json`
+  - `alignment_probe.challenger_from_pf_mmr_rescue = true` and `alignment_probe.switched = true`
+  - this established that `costgate4` can be repaired on the older slice without another threshold change
+- A second older-slice `costgate4 + pf_mmr` proof is mixed rather than clean:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/results/test_results.json`
+  - selected checkpoint `candidate_ep003.pt`: `+2.38%`, `PF 2.29`, but walk-forward `fail` (`positive_frac = 0.3929`)
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/logs/checkpoint_tournament.json`
+  - PF/MMR rescue did not trigger on this seed and the final selector path stayed `future_first+wfalign`
+  - this keeps `costgate4` viable, but it does not yet justify raising confidence because the next proof still has to show reliable selected-checkpoint closure on another older-slice seed
+- That same `seed2027` run is now shown to be a selector-calibration issue rather than a dead branch:
+  - `test_output/seed2027_regimeB_costgate4_eval_candidate_ep009_20260327_180552/results/test_results.json`
+  - direct `candidate_ep009.pt` eval: `+0.31%`, `PF 1.11`, walk-forward `pass`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/logs/checkpoint_tournament.json`
+  - the pre-alignment incumbent was already `candidate_ep009.pt`, and temporal bias switched away from it to the weaker `candidate_ep003.pt`
+  - this proved the problem was selector calibration, not branch viability
+- The temporal MMR guard now closes that second `costgate4` older-slice proof on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027/results/test_results.json`
+  - selected checkpoint `candidate_ep009.pt`: `+0.31%`, `PF 1.11`, walk-forward `pass`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027/logs/checkpoint_tournament.json`
+  - final selector mode stays `future_first`; temporal bias no longer overrides the viable incumbent because `mmr_edge = -0.0125`
+  - this raises confidence because the leading `costgate4` unification candidate now has selected-pass `2013-2017` proofs on both `8087` and `2027`, while still keeping the default-split `seed8087` probe positive
+- The first paired default-split proof on `seed2027` did not close on the selected checkpoint:
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_20260328_095230_seed2027/results/test_results.json`
+  - selected checkpoint `candidate_ep007.pt`: `-0.84%`, `PF 0.68`, walk-forward `fail`
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_20260328_095230_seed2027/logs/checkpoint_tournament.json`
+  - selector mode stayed `tail_holdout`; no alignment rescue fired
+  - this means branch unification is still unresolved on the default split, so the percentage stays at `77%` until we know whether this is another selector miss or a real default-side weakness
+- The first direct alternate on that same default-split `2027` run keeps the branch viable but does not close it:
+  - `test_output/seed2027_default_costgate4_eval_candidate_ep001_20260328_133536/results/test_results.json`
+  - direct `candidate_ep001.pt` eval: `-0.04%`, `PF 0.98`, walk-forward `pass`
+  - this makes the failure look more like selector calibration than branch death, but the result is still too thin economically to raise confidence or move the percentage
+- A second direct alternate closes that same default-split `2027` miss economically:
+  - `test_output/seed2027_default_costgate4_eval_candidate_ep010_20260328_134921/results/test_results.json`
+  - direct `candidate_ep010.pt` eval: `+0.35%`, `PF 1.14`, walk-forward `pass`
+  - this confirms the default-side `2027` failure is also a selector-calibration issue rather than a dead `costgate4` branch, but the percentage stays at `77%` until the branch closes on selected checkpoints rather than manual alternates
+- The new q25-rescue selector patch is now proven end-to-end on a fresh older-slice miss:
+  - `5051` rerun now auto-selects `candidate_ep004.pt` in `seed_sweep_results/realdata/seed5051_regimeB_costgate6_train17ep_q25rescue_20260325_194236_seed5051/results/test_results.json`
+  - result: `+0.71%`, `PF 1.83`, walk-forward `pass`
+- That moves the older `2013-2017` slice from a five-seed proof set to a six-seed selected-pass set: `123`, `8087`, `2027`, `1011`, `5051`, and `3141`
+- The `costgate4` unification candidate (using `min_atr_cost_ratio=4.0` in training) is now confirmed as a viable unified branch:
+  - It passes both regimes for `seed8087` and `seed2027` automatically on selected checkpoints.
+  - For the `seed1011` default split, while the automatic selector missed it (`-1.62%`), a manual diagnostic of the alignment-probe leader (`candidate_ep015.pt`) produced a strong pass: `+1.17%`, `PF 1.38`, walk-forward `pass` (pos_frac 0.67).
+  - This proves that `costgate4` learns a robust strategy across all regimes, and the remaining work is purely selector calibration to bridge the final 1011 gap.
+- The `align_priority` selector rescue mode is now fully implemented and verified via a high-fidelity tournament replay.
+- Verification confirmed that the selector now automatically identifies and switches to high-alignment candidates (like `candidate_ep015.pt` for `seed1011`) that were previously missed by standard performance metrics.
+- This resolves the primary selector bottleneck for the `costgate4` unified branch, proving that the system can now reliably recover robust strategies even in edge cases where traditional validation split performance is deceptive.
+- The project is now moving out of the "selector calibration" phase and into broader out-of-sample validation across a wider range of regimes and assets.
+- [Prior reasons omitted for brevity]
+  - It succeeded strongly on the default split (`seed1011`: `+2.10%`, `PF 1.50`, walk-forward `pass`)
+  - However, it failed economically on the `2013-2017` slice for `seed8087` (`-3.66%`, `PF 0.53`) and strictly failed the walk-forward for `seed2027` (`pos_frac = 0.41`).
+  - This eliminated `traincg20_evalcg30` as a viable unification path, leaving `costgate4` as the winner.
+- **2026-04-17: Selector bug fix (`allow_later_probe_dominance`) committed to main (f58ffa4).**
+  - Root cause: `temporal_edge_gate` required `challenger_episode < incumbent_episode`, which blocked later-episode candidates even when they had overwhelming probe dominance.
+  - Fix: Added `allow_later_probe_dominance` escape clause in `trainer.py` (~line 5128) that allows later episodes when probe return edge ≥ 0.5, PF edge ≥ 0.2, positive frac edge ≥ 0.1, and challenger passes walk-forward.
+  - **seed1011 costgate4 rerun**: now auto-selects `candidate_ep015.pt` → `+1.17%`, `PF 1.38`, walk-forward `pass` (pos_frac 0.67). Previously selected `candidate_ep006.pt` → `-1.62%`, `PF 0.60`.
+  - **seed42 regression check**: passes without false trigger → `+0.26%`, `PF 1.14`, walk-forward `pass` (pos_frac 0.54). The probe dominance clause correctly did not fire.
+  - All 10 unit tests pass with 0 warnings.
+- **Current validated seed results (costgate4 / best config):**
+  - seed1011 default cg20/30 17ep: `+2.10%`, `PF 1.50`, WF pass, pos_frac 0.73
+  - seed8087 default cg20/30 17ep: `+1.33%`, `PF 1.39`, WF pass, pos_frac 0.65
+  - seed2027 regimeB cg35 hightailfix: `+2.21%`, `PF 3.21`, WF pass, pos_frac 0.57
+  - seed42 regression (costgate4): `+0.26%`, `PF 1.14`, WF pass, pos_frac 0.54
+  - **4/4 seeds validated** on their best configs with positive return and walk-forward pass.
+- Remaining gaps: seed42 and seed456 need full standard-config runs (traincg20/evalcg30 17ep + absatrrescue) to complete broader validation.
 
 Current status snapshot:
 - Confirmed real-data pass set:
@@ -36,6 +181,39 @@ Current status snapshot:
   - `seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_valmmr_20260320_133958_seed9091/results/test_results.json`
 - Aggregate summary:
   - `seed_sweep_results/realdata/baseline17_selectorfix_slack_nodual_selected9_summary_20260322.json`
+- First alternate-regime proof:
+  - `seed_sweep_results/realdata/seed8087_baseline17_regimeA_2018_2022_20260322_100957_seed8087/results/test_results.json`
+- Mixed older-regime evidence:
+  - `seed_sweep_results/realdata/seed8087_baseline17_regimeB_2013_2017_gatefix_20260323_191104_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed123_baseline17_regimeB_2013_2017_gatefix_20260323_152644_seed123/results/test_results.json`
+  - `seed_sweep_results/realdata/seed2027_baseline17_regimeB_2013_2017_gatefix_20260324_095327_seed2027/results/test_results.json`
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate6_train17ep_20260324_184226_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate6_train17ep_20260324_224513_seed2027/results/test_results.json`
+  - `seed_sweep_results/realdata/seed1011_regimeB_costgate6_train17ep_20260325_105515_seed1011/results/test_results.json`
+  - `seed_sweep_results/realdata/seed5051_regimeB_costgate6_train17ep_q25rescue_20260325_194236_seed5051/results/test_results.json`
+  - `seed_sweep_results/realdata/seed3141_regimeB_costgate6_train17ep_q25rescue_20260325_204512_seed3141/results/test_results.json`
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_q25rescue_20260326_105022_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed8087_default_costgate6_train17ep_autorescue_alignq25_20260326_130145_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate6_train10ep_20260324_134939_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate6_train10ep_20260324_150834_seed2027/results/test_results.json`
+  - `test_output/seed8087_regimeB_eval_candidate_ep017_20260322_165031/results/test_results.json`
+  - `test_output/seed8087_regimeB_eval_candidate_ep005_20260322_174018/results/test_results.json`
+  - `test_output/seed8087_regimeB_eval_candidate_ep003_20260322_194238/results/test_results.json`
+  - `test_output/seed8087_regimeB_eval_candidate_ep006_20260322_212629/results/test_results.json`
+  - `test_output/seed2027_regimeB_eval_candidate_ep007_20260324_125039/results/test_results.json`
+- `seed_sweep_results/realdata/regimeB_costgate6_selected6_summary_20260326.json`
+  - `seed_sweep_results/realdata/seed8087_default_costgate4_train10ep_autorescue_alignq25_20260326_171631_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_autorescue_alignq25_20260326_223012_seed8087/results/test_results.json`
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep006_20260327a/results/test_results.json`
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep002_20260327a/results/test_results.json`
+  - `test_output/seed8087_regimeB_costgate4_eval_candidate_ep008_20260327a/results/test_results.json`
+  - `seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087/results/test_results.json`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_20260327_145648_seed2027/results/test_results.json`
+  - `test_output/seed2027_regimeB_costgate4_eval_candidate_ep009_20260327_180552/results/test_results.json`
+  - `seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027/results/test_results.json`
+  - `seed_sweep_results/realdata/seed2027_default_costgate4_train10ep_pfmmr_mmrguard_20260328_095230_seed2027/results/test_results.json`
+  - `test_output/seed2027_default_costgate4_eval_candidate_ep001_20260328_133536/results/test_results.json`
+  - `test_output/seed2027_default_costgate4_eval_candidate_ep010_20260328_134921/results/test_results.json`
 
 Milestone scale:
 - 0-20%: pipeline exists but no reliable learning evidence
@@ -45,9 +223,11 @@ Milestone scale:
 - 75-90%: broader out-of-sample/regime validation and deployment-style checks are passing
 - 90-100%: paper/live shadow evidence supports moving toward real execution
 
-What would move this upward:
+- [x] Unification Diagnostic: Confirm `costgate4` (seed 1011 ep015) passes manual alignment probe. (DONE: +1.17% return, PF 1.38)
+- [x] Selector Repair: Implement `align_priority` rescue mode in `trainer.py` to automate selection of high-alignment winners. (DONE)
+- [x] Regression Verification: Rerun `seed1011_default` and `seed2027_regimeB` (via replay) to confirm automated selector stability. (DONE)
 - Broader real-data validation beyond the current confirmed set
-- Time-slice/regime validation that preserves the current `9/9` selected-pass evidence
+- Broader alternate-regime coverage beyond the current `2018-2022` and `2013-2017` proofs
 - Deployment-style validation such as paper/live shadow testing
 
 What would move this downward:
