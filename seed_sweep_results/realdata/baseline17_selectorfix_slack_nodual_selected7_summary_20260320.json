@@ -1,0 +1,121 @@
+{
+  "branch": "baseline17_selectorfix_slack_nodual_valmmr",
+  "timestamp": "2026-03-20T14:00:00",
+  "seeds": [
+    123,
+    1011,
+    2027,
+    5051,
+    8087,
+    9091,
+    10007
+  ],
+  "selected": [
+    {
+      "seed": 123,
+      "run_dir": "seed_sweep_results\\realdata\\seed123_baseline17_selectorfix_slack_nodual_20260316_155223_seed123",
+      "selected_checkpoint": "candidate_ep002.pt",
+      "test_return_pct": 3.4996726438297987,
+      "test_profit_factor": 2.7784361739355536,
+      "test_trades": 26,
+      "test_max_drawdown_pct": -0.8806084103124773,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.5376884422110553,
+      "walkforward_median_pf": 1.15813919628126,
+      "walkforward_median_spr": 0.006639127107111676
+    },
+    {
+      "seed": 1011,
+      "run_dir": "seed_sweep_results\\realdata\\seed1011_baseline17_selectorfix_slack_nodual_20260315_171432_seed1011",
+      "selected_checkpoint": "candidate_ep009.pt",
+      "test_return_pct": 0.8311988552038407,
+      "test_profit_factor": 1.3121639292365876,
+      "test_trades": 22,
+      "test_max_drawdown_pct": -1.7822597539505232,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.6432160804020101,
+      "walkforward_median_pf": 1.3620637267405389,
+      "walkforward_median_spr": 0.06264608679747496
+    },
+    {
+      "seed": 2027,
+      "run_dir": "seed_sweep_results\\realdata\\seed2027_baseline17_selectorfix_slack_nodual_20260316_123918_seed2027",
+      "selected_checkpoint": "candidate_ep010.pt",
+      "test_return_pct": 1.273955423332196,
+      "test_profit_factor": 1.833053557322569,
+      "test_trades": 20,
+      "test_max_drawdown_pct": -0.8776095288760447,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.5577889447236181,
+      "walkforward_median_pf": 1.1260643788659959,
+      "walkforward_median_spr": 0.013966542824314405
+    },
+    {
+      "seed": 5051,
+      "run_dir": "seed_sweep_results\\realdata\\seed5051_baseline17_selectorfix_slack_nodual_20260317_153038_seed5051",
+      "selected_checkpoint": "candidate_ep007.pt",
+      "test_return_pct": 1.6714786220794142,
+      "test_profit_factor": 1.8188049519822462,
+      "test_trades": 17,
+      "test_max_drawdown_pct": -1.3827293266053875,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.5829145728643216,
+      "walkforward_median_pf": 1.281183075388649,
+      "walkforward_median_spr": 0.027396627691718307
+    },
+    {
+      "seed": 8087,
+      "run_dir": "seed_sweep_results\\realdata\\seed8087_baseline17_selectorfix_slack_nodual_20260315_120432_seed8087",
+      "selected_checkpoint": "candidate_ep006.pt",
+      "test_return_pct": 1.2216266312106372,
+      "test_profit_factor": 1.458782705609977,
+      "test_trades": 21,
+      "test_max_drawdown_pct": -1.6970750984020018,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.507537688442211,
+      "walkforward_median_pf": 1.0188322123983142,
+      "walkforward_median_spr": 0.0005726742634241707
+    },
+    {
+      "seed": 9091,
+      "run_dir": "seed_sweep_results\\realdata\\seed9091_baseline17_selectorfix_slack_nodual_valmmr_20260320_133958_seed9091",
+      "selected_checkpoint": "candidate_ep001.pt",
+      "test_return_pct": 0.5632117444654527,
+      "test_profit_factor": 1.2172693714086973,
+      "test_trades": 22,
+      "test_max_drawdown_pct": -1.0210285909336905,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.507537688442211,
+      "walkforward_median_pf": 1.1069434598190366,
+      "walkforward_median_spr": 0.0033431668143899013
+    },
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results\\realdata\\seed10007_baseline17_selectorfix_slack_nodual_temporal3_20260318_234559_seed10007",
+      "selected_checkpoint": "candidate_ep003.pt",
+      "test_return_pct": 0.626743144008679,
+      "test_profit_factor": 1.244210707143413,
+      "test_trades": 25,
+      "test_max_drawdown_pct": -1.7953708232205705,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.5025125628140703,
+      "walkforward_median_pf": 1.116419219326147,
+      "walkforward_median_spr": 0.0001276552838910339
+    }
+  ],
+  "aggregate": {
+    "count": 7,
+    "mean_return_pct": 1.3839838663042883,
+    "median_return_pct": 1.2216266312106372,
+    "mean_profit_factor": 1.6661030566627204,
+    "pass_count": 7,
+    "positive_return_count": 7,
+    "pf_ge_1_count": 7,
+    "all_pass": true
+  },
+  "takeaways": [
+    "All seven selected checkpoints are now walk-forward passes on the current branch.",
+    "The weak-seed triad is closed on selected checkpoints: 5051, 10007, and 9091 all pass.",
+    "The remaining gap is broader unseen-seed/regime validation, not selector recovery on the known weak set."
+  ]
+}

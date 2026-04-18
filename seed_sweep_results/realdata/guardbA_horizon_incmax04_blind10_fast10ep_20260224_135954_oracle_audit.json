@@ -1,0 +1,587 @@
+{
+  "generated_at": "2026-02-25T13:12:38",
+  "source_summary": "seed_sweep_results/realdata/guardbA_horizon_incmax04_blind10_fast10ep_20260224_135954_summary.json",
+  "rows": [
+    {
+      "seed": 10007,
+      "selected_checkpoint": "candidate_ep010.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep010.pt",
+        "status": "ok",
+        "return_pct": 2.969086949138311,
+        "profit_factor": 2.731374082854019,
+        "trades": 25
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep010.pt",
+        "status": "ok",
+        "return_pct": 2.969086949138311,
+        "profit_factor": 2.731374082854019,
+        "trades": 25
+      },
+      "oracle_miss": false,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": -0.7041457444843746,
+          "profit_factor": 0.7858932927494645,
+          "trades": 23
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 0.6765058253907608,
+          "profit_factor": 1.2587114747636379,
+          "trades": 26
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 2.0765697846525377,
+          "profit_factor": 2.181754077854005,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": -1.8210671166453474,
+          "profit_factor": 0.570174260191288,
+          "trades": 23
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 2.969086949138311,
+          "profit_factor": 2.731374082854019,
+          "trades": 25
+        }
+      ]
+    },
+    {
+      "seed": 1011,
+      "selected_checkpoint": "candidate_ep010.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep010.pt",
+        "status": "ok",
+        "return_pct": 1.54663960275927,
+        "profit_factor": 1.6386375152358625,
+        "trades": 24
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep002.pt",
+        "status": "ok",
+        "return_pct": 2.0454614568212737,
+        "profit_factor": 1.9692343389623934,
+        "trades": 24
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": 2.0454614568212737,
+          "profit_factor": 1.9692343389623934,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 0.3323837919388062,
+          "profit_factor": 1.1186583421176444,
+          "trades": 22
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 0.6667116883088742,
+          "profit_factor": 1.2246805605041637,
+          "trades": 20
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": -0.024502756875133258,
+          "profit_factor": 0.9928041801401946,
+          "trades": 23
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 1.54663960275927,
+          "profit_factor": 1.6386375152358625,
+          "trades": 24
+        }
+      ]
+    },
+    {
+      "seed": 2027,
+      "selected_checkpoint": "candidate_ep008.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep008.pt",
+        "status": "ok",
+        "return_pct": 1.3381530634406058,
+        "profit_factor": 1.643983963140738,
+        "trades": 20
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 3.3541279721724937,
+        "profit_factor": 4.073924690198926,
+        "trades": 19
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": 2.4226068405387435,
+          "profit_factor": 2.3850492853354295,
+          "trades": 22
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 3.3541279721724937,
+          "profit_factor": 4.073924690198926,
+          "trades": 19
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 1.056312285516925,
+          "profit_factor": 1.6887797750583968,
+          "trades": 19
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": 1.3381530634406058,
+          "profit_factor": 1.643983963140738,
+          "trades": 20
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": -0.5625372146653262,
+          "profit_factor": 0.7233268222017956,
+          "trades": 21
+        }
+      ]
+    },
+    {
+      "seed": 3039,
+      "selected_checkpoint": "candidate_ep004.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 2.2144259468687144,
+        "profit_factor": 2.936661884269999,
+        "trades": 24
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep002.pt",
+        "status": "ok",
+        "return_pct": 3.1212490865441644,
+        "profit_factor": 2.320004363092848,
+        "trades": 19
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": 3.1212490865441644,
+          "profit_factor": 2.320004363092848,
+          "trades": 19
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 2.2144259468687144,
+          "profit_factor": 2.936661884269999,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 1.8087762786759942,
+          "profit_factor": 1.7521255465503118,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": 0.49541452418262466,
+          "profit_factor": 1.1663073557194437,
+          "trades": 17
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": -0.11653696892403032,
+          "profit_factor": 0.9646233817459327,
+          "trades": 21
+        }
+      ]
+    },
+    {
+      "seed": 4049,
+      "selected_checkpoint": "candidate_ep006.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep006.pt",
+        "status": "ok",
+        "return_pct": 0.19205603979215446,
+        "profit_factor": 1.084666547598163,
+        "trades": 21
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 1.6640794556351812,
+        "profit_factor": 1.818249010461005,
+        "trades": 21
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": -0.4472481473107748,
+          "profit_factor": 0.8041667604683936,
+          "trades": 25
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 1.6640794556351812,
+          "profit_factor": 1.818249010461005,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 0.19205603979215446,
+          "profit_factor": 1.084666547598163,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": -1.6332783401481255,
+          "profit_factor": 0.4255384579358795,
+          "trades": 20
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 0.7760712262038449,
+          "profit_factor": 1.2269126783011437,
+          "trades": 19
+        }
+      ]
+    },
+    {
+      "seed": 5051,
+      "selected_checkpoint": "candidate_ep004.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 1.1777005536348417,
+        "profit_factor": 1.5601224246009613,
+        "trades": 17
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep010.pt",
+        "status": "ok",
+        "return_pct": 2.764500416502713,
+        "profit_factor": 2.3370756373352144,
+        "trades": 21
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": -0.8967707289178173,
+          "profit_factor": 0.7193960121767956,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 1.1777005536348417,
+          "profit_factor": 1.5601224246009613,
+          "trades": 17
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": -3.22182736950386,
+          "profit_factor": 0.33694624059996675,
+          "trades": 23
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": -0.801756511094931,
+          "profit_factor": 0.741930059587121,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 2.764500416502713,
+          "profit_factor": 2.3370756373352144,
+          "trades": 21
+        }
+      ]
+    },
+    {
+      "seed": 6067,
+      "selected_checkpoint": "candidate_ep002.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep002.pt",
+        "status": "ok",
+        "return_pct": 1.8817975269340481,
+        "profit_factor": 2.11769709631358,
+        "trades": 18
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep008.pt",
+        "status": "ok",
+        "return_pct": 2.5980073578494522,
+        "profit_factor": 2.127830565403251,
+        "trades": 25
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": 1.8817975269340481,
+          "profit_factor": 2.11769709631358,
+          "trades": 18
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 2.4558903464209525,
+          "profit_factor": 2.4112143733298153,
+          "trades": 25
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": -1.7446365603509983,
+          "profit_factor": 0.5553606707814865,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": 2.5980073578494522,
+          "profit_factor": 2.127830565403251,
+          "trades": 25
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 0.2974862778131193,
+          "profit_factor": 1.1500686949527077,
+          "trades": 13
+        }
+      ]
+    },
+    {
+      "seed": 7079,
+      "selected_checkpoint": "candidate_ep004.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 4.9119324599633085,
+        "profit_factor": 6.202232107310309,
+        "trades": 25
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep002.pt",
+        "status": "ok",
+        "return_pct": 6.193677472927672,
+        "profit_factor": 9.227621741337318,
+        "trades": 22
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": 6.193677472927672,
+          "profit_factor": 9.227621741337318,
+          "trades": 22
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 4.9119324599633085,
+          "profit_factor": 6.202232107310309,
+          "trades": 25
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 2.2523700982525874,
+          "profit_factor": 2.0512486239633296,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": -0.49461612734686966,
+          "profit_factor": 0.8519848241443319,
+          "trades": 19
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 1.461544236587109,
+          "profit_factor": 1.606640005748968,
+          "trades": 23
+        }
+      ]
+    },
+    {
+      "seed": 8087,
+      "selected_checkpoint": "candidate_ep004.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 2.0602445904850164,
+        "profit_factor": 2.8244132113800315,
+        "trades": 18
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep004.pt",
+        "status": "ok",
+        "return_pct": 2.0602445904850164,
+        "profit_factor": 2.8244132113800315,
+        "trades": 18
+      },
+      "oracle_miss": false,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": -0.9604045738921152,
+          "profit_factor": 0.676385539200862,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 2.0602445904850164,
+          "profit_factor": 2.8244132113800315,
+          "trades": 18
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": 1.068539700385407,
+          "profit_factor": 1.4444555558117844,
+          "trades": 22
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": -0.6923921213366824,
+          "profit_factor": 0.6920378951570445,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": -0.5066392604231917,
+          "profit_factor": 0.7972680168608149,
+          "trades": 23
+        }
+      ]
+    },
+    {
+      "seed": 9091,
+      "selected_checkpoint": "candidate_ep006.pt",
+      "selected_eval": {
+        "checkpoint": "candidate_ep006.pt",
+        "status": "ok",
+        "return_pct": -1.2828795098623669,
+        "profit_factor": 0.5580610657156961,
+        "trades": 21
+      },
+      "oracle_best": {
+        "checkpoint": "candidate_ep010.pt",
+        "status": "ok",
+        "return_pct": 1.019833575054796,
+        "profit_factor": 1.3601088507344112,
+        "trades": 20
+      },
+      "oracle_miss": true,
+      "candidate_evals": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "status": "ok",
+          "return_pct": 0.4021437312472287,
+          "profit_factor": 1.1565811597839362,
+          "trades": 22
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "status": "ok",
+          "return_pct": 0.15518724938421435,
+          "profit_factor": 1.0565808293186747,
+          "trades": 26
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "status": "ok",
+          "return_pct": -1.2828795098623669,
+          "profit_factor": 0.5580610657156961,
+          "trades": 21
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "status": "ok",
+          "return_pct": 0.3654239091083422,
+          "profit_factor": 1.1149279162772974,
+          "trades": 24
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "status": "ok",
+          "return_pct": 1.019833575054796,
+          "profit_factor": 1.3601088507344112,
+          "trades": 20
+        }
+      ]
+    }
+  ],
+  "aggregate": {
+    "seed_count": 10,
+    "oracle_comparable_count": 10,
+    "oracle_miss_count": 8,
+    "oracle_miss_seeds": [
+      1011,
+      2027,
+      3039,
+      4049,
+      5051,
+      6067,
+      7079,
+      9091
+    ],
+    "mean_selected_return_pct": 1.7009157223153903,
+    "mean_oracle_return_pct": 2.7790268333131074,
+    "mean_selected_pf": 2.3297849898419356,
+    "mean_oracle_pf": 3.0789836491759415,
+    "delta_mean_return_pct": 1.078111110997717,
+    "delta_mean_pf": 0.7491986593340059
+  }
+}

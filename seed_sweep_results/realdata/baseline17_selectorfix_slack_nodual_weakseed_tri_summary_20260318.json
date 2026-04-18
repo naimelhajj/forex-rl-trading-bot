@@ -1,0 +1,76 @@
+{
+    "branch":  "baseline17_selectorfix_slack_nodual",
+    "timestamp":  "2026-03-18T23:25:41",
+    "seeds":  [
+                  "5051",
+                  "9091",
+                  "10007"
+              ],
+    "selected":  [
+                     {
+                         "seed":  5051,
+                         "run_dir":  "seed_sweep_results/realdata/seed5051_baseline17_selectorfix_slack_nodual_20260317_153038_seed5051",
+                         "selected_checkpoint":  "candidate_ep007.pt",
+                         "test_return_pct":  1.6714786220794142,
+                         "test_profit_factor":  1.8188049519822462,
+                         "test_trades":  17,
+                         "walkforward_pass":  true,
+                         "classification":  "pass"
+                     },
+                     {
+                         "seed":  9091,
+                         "run_dir":  "seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_20260317_100857_seed9091",
+                         "selected_checkpoint":  "candidate_ep006.pt",
+                         "test_return_pct":  -1.6899377996731357,
+                         "test_profit_factor":  0.51667420156062183,
+                         "test_trades":  26,
+                         "walkforward_pass":  false,
+                         "classification":  "fail"
+                     },
+                     {
+                         "seed":  10007,
+                         "run_dir":  "seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_20260318_132033_seed10007",
+                         "selected_checkpoint":  "candidate_ep013.pt",
+                         "test_return_pct":  2.2214985190932346,
+                         "test_profit_factor":  1.9022637473518798,
+                         "test_trades":  22,
+                         "walkforward_pass":  false,
+                         "classification":  "selector_miss"
+                     }
+                 ],
+    "best_tested_alternates":  [
+                                   {
+                                       "seed":  9091,
+                                       "best_alt_checkpoint":  "candidate_ep003.pt",
+                                       "result_path":  "test_output/seed9091_baseline17_selectorfix_slack_nodual_eval_candidate_ep003_20260318a/results/test_results.json",
+                                       "test_return_pct":  1.9537350695212563,
+                                       "test_profit_factor":  1.860406889952108,
+                                       "test_trades":  22,
+                                       "walkforward_pass":  false,
+                                       "note":  "best tested alternate, still fails walk-forward"
+                                   },
+                                   {
+                                       "seed":  10007,
+                                       "best_alt_checkpoint":  "candidate_ep003.pt",
+                                       "result_path":  "test_output/seed10007_baseline17_selectorfix_slack_nodual_eval_candidate_ep003_20260318a/results/test_results.json",
+                                       "test_return_pct":  0.626743144008679,
+                                       "test_profit_factor":  1.244210707143413,
+                                       "test_trades":  25,
+                                       "walkforward_pass":  true,
+                                       "note":  "recoverable selector miss"
+                                   }
+                               ],
+    "summary":  {
+                    "selected_passes":  1,
+                    "selected_fails":  2,
+                    "recoverable_via_tested_alternate":  1,
+                    "unresolved_hard_cases":  [
+                                                  "9091"
+                                              ],
+                    "takeaways":  [
+                                      "5051 passes on the selected checkpoint.",
+                                      "10007 is recoverable via candidate_ep003; selector still misses it.",
+                                      "9091 remains the only tested weak seed without a walk-forward-passing checkpoint."
+                                  ]
+                }
+}

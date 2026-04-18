@@ -1,0 +1,149 @@
+{
+  "baseline_selected": {
+    "count": 10,
+    "mean_return_pct": 0.7246362231019687,
+    "median_return_pct": 1.4758377328635275,
+    "mean_pf": 1.8720906493584792,
+    "median_pf": 1.6395402357180662,
+    "wf_pass_count": 5,
+    "positive_pf_ge1_count": 7
+  },
+  "blend": {
+    "count": 10,
+    "mean_return_pct": 0.8297155075315621,
+    "median_return_pct": 0.6507832980896855,
+    "mean_pf": 1.5051949847916086,
+    "median_pf": 1.2995411334274036,
+    "wf_pass_count": 5,
+    "positive_pf_ge1_count": 6
+  },
+  "delta": {
+    "mean_return_pct": 0.10507928442959336,
+    "mean_pf": -0.3668956645668706,
+    "wf_pass_count": 0,
+    "improved_return_seeds": 4,
+    "improved_pf_seeds": 4
+  },
+  "rows": [
+    {
+      "seed": 1011,
+      "selected_return_pct": 1.54663960275927,
+      "selected_pf": 1.6386375152358625,
+      "selected_wf_pass": false,
+      "blend_return_pct": 1.54663960275927,
+      "blend_pf": 1.6386375152358625,
+      "blend_wf_pass": false,
+      "delta_return_pct": 0.0,
+      "delta_pf": 0.0,
+      "delta_wf": 0
+    },
+    {
+      "seed": 2027,
+      "selected_return_pct": 1.405035862967785,
+      "selected_pf": 1.6404429562002696,
+      "selected_wf_pass": false,
+      "blend_return_pct": -0.2865583353432677,
+      "blend_pf": 0.9061096085412879,
+      "blend_wf_pass": true,
+      "delta_return_pct": -1.6915941983110527,
+      "delta_pf": -0.7343333476589817,
+      "delta_wf": 1
+    },
+    {
+      "seed": 3039,
+      "selected_return_pct": 1.8087762786759942,
+      "selected_pf": 1.7521255465503118,
+      "selected_wf_pass": true,
+      "blend_return_pct": 1.3100274628109698,
+      "blend_pf": 1.4919523357424749,
+      "blend_wf_pass": false,
+      "delta_return_pct": -0.4987488158650244,
+      "delta_pf": -0.26017321080783695,
+      "delta_wf": -1
+    },
+    {
+      "seed": 4049,
+      "selected_return_pct": 0.19205603979215446,
+      "selected_pf": 1.084666547598163,
+      "selected_wf_pass": false,
+      "blend_return_pct": 0.2425511012976056,
+      "blend_pf": 1.1071299311123324,
+      "blend_wf_pass": false,
+      "delta_return_pct": 0.05049506150545113,
+      "delta_pf": 0.022463383514169433,
+      "delta_wf": 0
+    },
+    {
+      "seed": 5051,
+      "selected_return_pct": -3.22182736950386,
+      "selected_pf": 0.33694624059996675,
+      "selected_wf_pass": true,
+      "blend_return_pct": -0.01931357224248531,
+      "blend_pf": 0.9921668934684893,
+      "blend_wf_pass": true,
+      "delta_return_pct": 3.202513797261375,
+      "delta_pf": 0.6552206528685225,
+      "delta_wf": 0
+    },
+    {
+      "seed": 6067,
+      "selected_return_pct": 1.8817975269340481,
+      "selected_pf": 2.11769709631358,
+      "selected_wf_pass": false,
+      "blend_return_pct": -1.1796956427019056,
+      "blend_pf": 0.7023549875321367,
+      "blend_wf_pass": false,
+      "delta_return_pct": -3.0614931696359537,
+      "delta_pf": -1.4153421087814433,
+      "delta_wf": 0
+    },
+    {
+      "seed": 7079,
+      "selected_return_pct": 4.9119324599633085,
+      "selected_pf": 6.202232107310309,
+      "selected_wf_pass": true,
+      "blend_return_pct": 2.901500132327506,
+      "blend_pf": 3.086308020100966,
+      "blend_wf_pass": true,
+      "delta_return_pct": -2.0104323276358027,
+      "delta_pf": -3.1159240872093426,
+      "delta_wf": 0
+    },
+    {
+      "seed": 8087,
+      "selected_return_pct": 2.0602445904850164,
+      "selected_pf": 2.8244132113800315,
+      "selected_wf_pass": true,
+      "blend_return_pct": 1.0590154948817654,
+      "blend_pf": 1.528244088266192,
+      "blend_wf_pass": false,
+      "delta_return_pct": -1.001229095603251,
+      "delta_pf": -1.2961691231138395,
+      "delta_wf": -1
+    },
+    {
+      "seed": 9091,
+      "selected_return_pct": -1.305525119719575,
+      "selected_pf": 0.5928364218359311,
+      "selected_wf_pass": false,
+      "blend_return_pct": 3.668821112927745,
+      "blend_pf": 2.8242462090692673,
+      "blend_wf_pass": true,
+      "delta_return_pct": 4.97434623264732,
+      "delta_pf": 2.231409787233336,
+      "delta_wf": 1
+    },
+    {
+      "seed": 10007,
+      "selected_return_pct": -2.032767641334454,
+      "selected_pf": 0.5309088505603673,
+      "selected_wf_pass": true,
+      "blend_return_pct": -0.9458322814015818,
+      "blend_pf": 0.7748002588470773,
+      "blend_wf_pass": true,
+      "delta_return_pct": 1.0869353599328724,
+      "delta_pf": 0.24389140828670997,
+      "delta_wf": 0
+    }
+  ]
+}

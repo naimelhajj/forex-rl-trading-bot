@@ -1,0 +1,63 @@
+{
+  "timestamp": "20260302_184847",
+  "profile": "guardbA_h100_rrmin0_alignk10fix_stage20_rerun_weakseeds",
+  "runs": [
+    {
+      "seed": 123,
+      "return_pct": 1.9777489807029758,
+      "profit_factor": 2.6568642987361364,
+      "trades": 25,
+      "walkforward_pass": true,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.0846770342358906,
+      "walkforward_positive_frac": 0.5829145728643216,
+      "source_test_results": "test_output/reeval_full_stage20_seed123/results/test_results.json"
+    },
+    {
+      "seed": 1011,
+      "return_pct": 1.0287819622459615,
+      "profit_factor": 1.5761228995244019,
+      "trades": 24,
+      "walkforward_pass": true,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.2894494822371513,
+      "walkforward_positive_frac": 0.6381909547738693,
+      "source_test_results": "test_output/reeval_full_stage20_seed1011/results/test_results.json"
+    },
+    {
+      "seed": 2027,
+      "return_pct": 1.0649453978644807,
+      "profit_factor": 1.3765189484096074,
+      "trades": 26,
+      "walkforward_pass": false,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.39195979899497485,
+      "source_test_results": "seed_sweep_results/realdata/guardbA_h100_rrmin0_alignk10fix_stage20_rerun_20260302_123126_seed2027/results/test_results.json"
+    },
+    {
+      "seed": 8087,
+      "return_pct": 0.5623305669142376,
+      "profit_factor": 1.2565801187702053,
+      "trades": 21,
+      "walkforward_pass": false,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.38190954773869346,
+      "source_test_results": "seed_sweep_results/realdata/guardbA_h100_rrmin0_alignk10fix_stage20_rerun_20260302_153702_seed8087/results/test_results.json"
+    }
+  ],
+  "aggregate": {
+    "seeds_count": 4,
+    "mean_return_pct": 1.158451726931914,
+    "mean_profit_factor": 1.7165215663600877,
+    "mean_trades": 24.0,
+    "positive_return_count": 4,
+    "profit_factor_gt_1_count": 4,
+    "walkforward_pass_count": 2
+  },
+  "notes": [
+    "Seeds 2027 and 8087 were rerun on 2026-03-02 after walk-forward evaluation fix in main.py.",
+    "Seeds 123 and 1011 use latest full-horizon re-evaluation outputs."
+  ]
+}

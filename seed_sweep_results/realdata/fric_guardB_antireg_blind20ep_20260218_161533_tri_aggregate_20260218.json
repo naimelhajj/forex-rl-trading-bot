@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T16:21:24Z",
+  "run_prefix": "fric_guardB_antireg_blind20ep_20260218_161533",
+  "source": "train_test",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": -1.131288141367215,
+  "mean_profit_factor": 0.9372450637997,
+  "mean_total_trades": 18.0,
+  "mean_spr": -0.06806942447209792,
+  "mean_max_drawdown_pct": -1.9429359543971134,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_antireg_blind20ep_20260218_161533_seed1011/results/test_results.json",
+      "return_pct": 0.3356329140142167,
+      "profit_factor": 1.7949109675296158,
+      "total_trades": 9,
+      "spr": -0.03684123067342165,
+      "max_drawdown_pct": -0.5966700865138521,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.03684123067342165,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_antireg_blind20ep_20260218_161533_seed2027/results/test_results.json",
+      "return_pct": -1.6827460895527335,
+      "profit_factor": 0.5048384867082221,
+      "total_trades": 20,
+      "spr": 0.0006495106315996533,
+      "max_drawdown_pct": -2.768220811239041,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.0006495106315996533,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_antireg_blind20ep_20260218_161533_seed3039/results/test_results.json",
+      "return_pct": -2.046751248563128,
+      "profit_factor": 0.5119857371612622,
+      "total_trades": 25,
+      "spr": -0.16801655337447177,
+      "max_drawdown_pct": -2.4639169654384467,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.16801655337447177,
+      "walkforward_positive_frac": 0.0
+    }
+  ]
+}

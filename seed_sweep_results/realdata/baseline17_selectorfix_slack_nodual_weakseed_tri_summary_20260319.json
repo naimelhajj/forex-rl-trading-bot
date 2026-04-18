@@ -1,0 +1,69 @@
+{
+  "branch": "baseline17_selectorfix_slack_nodual_temporal3",
+  "timestamp": "2026-03-19T18:05:00",
+  "seeds": [
+    "5051",
+    "9091",
+    "10007"
+  ],
+  "selected": [
+    {
+      "seed": 5051,
+      "run_dir": "seed_sweep_results/realdata/seed5051_baseline17_selectorfix_slack_nodual_20260317_153038_seed5051",
+      "selected_checkpoint": "candidate_ep007.pt",
+      "test_return_pct": 1.6714786220794142,
+      "test_profit_factor": 1.8188049519822462,
+      "test_trades": 17,
+      "walkforward_pass": true,
+      "classification": "pass"
+    },
+    {
+      "seed": 9091,
+      "run_dir": "seed_sweep_results/realdata/seed9091_baseline17_selectorfix_slack_nodual_temporal3_20260319_135839_seed9091",
+      "selected_checkpoint": "candidate_ep003.pt",
+      "test_return_pct": 1.9537350695212563,
+      "test_profit_factor": 1.860406889952108,
+      "test_trades": 22,
+      "walkforward_pass": false,
+      "classification": "selector_miss"
+    },
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results/realdata/seed10007_baseline17_selectorfix_slack_nodual_temporal3_20260318_234559_seed10007",
+      "selected_checkpoint": "candidate_ep003.pt",
+      "test_return_pct": 0.626743144008679,
+      "test_profit_factor": 1.244210707143413,
+      "test_trades": 25,
+      "walkforward_pass": true,
+      "classification": "pass"
+    }
+  ],
+  "best_tested_alternates": [
+    {
+      "seed": 9091,
+      "best_alt_checkpoint": "candidate_ep001.pt",
+      "result_path": "test_output/seed9091_baseline17_selectorfix_slack_nodual_temporal3_eval_candidate_ep001_20260319a/results/test_results.json",
+      "test_return_pct": 0.5632117444654527,
+      "test_profit_factor": 1.2172693714086973,
+      "test_trades": 22,
+      "walkforward_pass": true,
+      "note": "recoverable selector miss"
+    }
+  ],
+  "summary": {
+    "selected_passes": 2,
+    "selected_fails": 1,
+    "recoverable_via_selector_patch": [
+      "10007"
+    ],
+    "recoverable_via_tested_alternate": [
+      "9091"
+    ],
+    "unresolved_hard_cases": [],
+    "takeaways": [
+      "5051 passes on the selected checkpoint.",
+      "10007 now auto-recovers to candidate_ep003 with the temporal-min-episode=3 selector patch.",
+      "9091 is recoverable via candidate_ep001, so the last apparent hard case is now a selector miss rather than a branch failure."
+    ]
+  }
+}

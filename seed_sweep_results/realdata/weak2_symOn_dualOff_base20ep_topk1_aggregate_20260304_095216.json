@@ -1,0 +1,28 @@
+{
+  "profile": "symOn_dualOff_base20ep_topk1",
+  "seed_count": 2,
+  "return_pct_mean": 0.19736619063698835,
+  "profit_factor_mean": 1.203114974210707,
+  "walkforward_passes": 1,
+  "walkforward_pass_rate": 0.5,
+  "seeds": [
+    {
+      "seed": 2027,
+      "return_pct": 1.8991683313611896,
+      "profit_factor": 1.8170831323031424,
+      "total_trades": 25,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.5125628140703518,
+      "result_path": "seed_sweep_results/realdata/weak2027_symOn_dualOff_base20ep_topk1_20260304_085513_seed2027/results/test_results.json"
+    },
+    {
+      "seed": 8087,
+      "return_pct": -1.5044359500872129,
+      "profit_factor": 0.5891468161182714,
+      "total_trades": 18,
+      "walkforward_pass": false,
+      "walkforward_positive_frac": 0.22110552763819097,
+      "result_path": "seed_sweep_results/realdata/weak8087_symOn_dualOff_base20ep_topk1_20260304_092621_seed8087/results/test_results.json"
+    }
+  ]
+}

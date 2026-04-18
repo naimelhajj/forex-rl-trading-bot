@@ -1,0 +1,34 @@
+{
+    "generated_at":  "2026-03-30T10:13:37",
+    "branch":  "costgate2_pfmmr_mmrguard_q25guard_latemmr",
+    "selected_pass_runs":  [
+                               {
+                                   "seed":  1011,
+                                   "split":  "default",
+                                   "result_file":  "seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011/results/test_results.json",
+                                   "selected_checkpoint":  "candidate_ep005.pt",
+                                   "test_return_pct":  2.1357379305998681,
+                                   "test_profit_factor":  2.1795744153044754,
+                                   "test_trades":  24,
+                                   "test_max_drawdown_pct":  -1.2090542992284599,
+                                   "test_walkforward_pass":  true
+                               },
+                               {
+                                   "seed":  8087,
+                                   "split":  "regimeB_2013_2017",
+                                   "result_file":  "seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260329_215507_seed8087/results/test_results.json",
+                                   "selected_checkpoint":  "candidate_ep009.pt",
+                                   "test_return_pct":  1.0717484431441937,
+                                   "test_profit_factor":  1.3977380443054075,
+                                   "test_trades":  25,
+                                   "test_max_drawdown_pct":  -1.3743059506924129,
+                                   "test_walkforward_pass":  true
+                               }
+                           ],
+    "aggregate":  {
+                      "runs":  2,
+                      "mean_return_pct":  1.6037431868720309,
+                      "mean_profit_factor":  1.7886562298049413,
+                      "walkforward_passes":  2
+                  }
+}

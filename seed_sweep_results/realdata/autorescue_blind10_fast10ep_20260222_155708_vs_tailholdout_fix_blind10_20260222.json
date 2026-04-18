@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-02-22T18:15:13",
+  "baseline": "tailholdout_fix_blind10_fast10ep_20260220_231427",
+  "candidate": "autorescue_blind10_fast10ep_20260222_155708",
+  "base_delta": {
+    "mean_return_pct": -0.4356405418047693,
+    "mean_profit_factor": -0.19070518567454697,
+    "positive_pf_gt_1_count": -1,
+    "wf_pass_count": 0
+  },
+  "wf2400_delta": {
+    "mean_return_pct": -0.4356405418047693,
+    "mean_profit_factor": -0.19070518567454697,
+    "positive_pf_gt_1_count": -1,
+    "wf_pass_count": -1
+  },
+  "base_candidate": {
+    "mean_test_return_pct": 0.9793536029035765,
+    "mean_test_profit_factor": 1.5309304934117423,
+    "positive_pf_gt_1_count": 8,
+    "wf_pass_count": 0,
+    "auto_rescue_trigger_count": 1
+  },
+  "wf2400_candidate": {
+    "mean_test_return_pct": 0.9793536029035765,
+    "mean_test_profit_factor": 1.5309304934117423,
+    "positive_pf_gt_1_count": 8,
+    "wf_pass_count": 1,
+    "auto_rescue_trigger_count": 1
+  }
+}

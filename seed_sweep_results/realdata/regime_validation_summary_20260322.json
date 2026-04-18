@@ -1,0 +1,232 @@
+{
+  "timestamp": "2026-03-26T09:45:00",
+  "regime_checks": [
+    {
+      "seed": 8087,
+      "slice_name": "regimeA_2018_2022",
+      "csv_start_date": "2018-01-01",
+      "csv_end_date": "2022-12-31",
+      "run_dir": "seed_sweep_results\\\\realdata\\\\seed8087_baseline17_regimeA_2018_2022_20260322_100957_seed8087",
+      "selected_checkpoint": "candidate_ep015.pt",
+      "test_return_pct": 1.6876923365927166,
+      "test_profit_factor": 2.087328373443731,
+      "test_trades": 27,
+      "test_max_drawdown_pct": -0.6915204573622856,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.6491228070175439,
+      "walkforward_median_pf": 1.637001219656858,
+      "walkforward_median_spr": 0.052007396163152864
+    },
+    {
+      "seed": 8087,
+      "slice_name": "regimeB_2013_2017",
+      "csv_start_date": "2013-01-01",
+      "csv_end_date": "2017-12-31",
+      "run_dir": "seed_sweep_results\\\\realdata\\\\seed8087_baseline17_regimeB_2013_2017_20260322_122135_seed8087",
+      "selected_checkpoint": "candidate_ep013.pt",
+      "selected_test_return_pct": -1.4336530310248286,
+      "selected_test_profit_factor": 0.5813407170451601,
+      "selected_walkforward_pass": false,
+      "best_tested_alternates": [
+        {
+          "checkpoint": "candidate_ep017.pt",
+          "result_file": "test_output\\\\seed8087_regimeB_eval_candidate_ep017_20260322_165031\\\\results\\\\test_results.json",
+          "test_return_pct": 1.317102621595656,
+          "test_profit_factor": 1.5535842637345008,
+          "walkforward_pass": false,
+          "walkforward_positive_frac": 0.48214285714285715
+        },
+        {
+          "checkpoint": "candidate_ep005.pt",
+          "result_file": "test_output\\\\seed8087_regimeB_eval_candidate_ep005_20260322_174018\\\\results\\\\test_results.json",
+          "test_return_pct": -0.15698534647652362,
+          "test_profit_factor": 0.9526797631404162,
+          "walkforward_pass": false,
+          "walkforward_positive_frac": 0.35714285714285715
+        },
+        {
+          "checkpoint": "candidate_ep003.pt",
+          "result_file": "test_output\\\\seed8087_regimeB_eval_candidate_ep003_20260322_194238\\\\results\\\\test_results.json",
+          "test_return_pct": -0.8887657507424374,
+          "test_profit_factor": 0.7741004916020481,
+          "walkforward_pass": true,
+          "walkforward_positive_frac": 0.6071428571428571
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "result_file": "test_output\\\\seed8087_regimeB_eval_candidate_ep006_20260322_212629\\\\results\\\\test_results.json",
+          "test_return_pct": 0.20709675367824865,
+          "test_profit_factor": 1.0636303667266995,
+          "walkforward_pass": true,
+          "walkforward_positive_frac": 0.5
+        }
+      ],
+      "status": "cost_aware_train17ep_selected_pass",
+      "gatefix_rerun": {
+        "run_dir": "seed_sweep_results\\realdata\\seed8087_baseline17_regimeB_2013_2017_gatefix_20260323_191104_seed8087",
+        "selected_checkpoint": "candidate_ep013.pt",
+        "test_return_pct": -1.4336530310248286,
+        "test_profit_factor": 0.5813407170451601,
+        "test_trades": 24,
+        "test_max_drawdown_pct": -2.0904254315190656,
+        "walkforward_pass": false,
+        "walkforward_positive_frac": 0.30357142857142855,
+        "walkforward_median_pf": 1.3330677443545804,
+        "walkforward_median_spr": 0.0
+      },
+      "costgate6_train10ep": {
+        "run_dir": "seed_sweep_results\\realdata\\seed8087_regimeB_costgate6_train10ep_20260324_134939_seed8087",
+        "selected_checkpoint": "candidate_ep004.pt",
+        "test_return_pct": 0.4999787495079122,
+        "test_profit_factor": 1.4430160655193434,
+        "test_trades": 15,
+        "test_max_drawdown_pct": -0.6139943882908397,
+        "walkforward_pass": true,
+        "walkforward_positive_frac": 0.5535714285714286,
+        "walkforward_median_pf": 1.3786245378331687,
+        "walkforward_median_spr": 0.012865913364560645
+      },
+      "costgate6_train17ep": {
+        "run_dir": "seed_sweep_results\\realdata\\seed8087_regimeB_costgate6_train17ep_20260324_184226_seed8087",
+        "selected_checkpoint": "candidate_ep010.pt",
+        "test_return_pct": 2.6290772796184747,
+        "test_profit_factor": 7.11384946990902,
+        "test_trades": 12,
+        "test_max_drawdown_pct": -0.44544902305767003,
+        "walkforward_pass": true,
+        "walkforward_positive_frac": 0.8928571428571429,
+        "walkforward_median_pf": 1.5238403461968708,
+        "walkforward_median_spr": 0.2892862583060517
+      }
+    },
+    {
+      "seed": 123,
+      "slice_name": "regimeB_2013_2017",
+      "csv_start_date": "2013-01-01",
+      "csv_end_date": "2017-12-31",
+      "best_tested_alternates": [],
+      "status": "selected_pass_after_gatefix",
+      "initial_selected_run_dir": "seed_sweep_results\\\\realdata\\\\seed123_baseline17_regimeB_2013_2017_20260322_175139_seed123",
+      "initial_selected_checkpoint": "candidate_ep004.pt",
+      "initial_selected_test_return_pct": -0.03711110731119405,
+      "initial_selected_test_profit_factor": 0.986089879469332,
+      "initial_selected_walkforward_pass": false,
+      "selected_rerun_after_gatefix": {
+        "run_dir": "seed_sweep_results\\realdata\\seed123_baseline17_regimeB_2013_2017_gatefix_20260323_152644_seed123",
+        "selected_checkpoint": "candidate_ep005.pt",
+        "test_return_pct": 2.0477036120035486,
+        "test_profit_factor": 2.145943621036901,
+        "test_trades": 26,
+        "test_max_drawdown_pct": -1.2283731065056878,
+        "walkforward_pass": true,
+        "walkforward_positive_frac": 0.5357142857142857,
+        "walkforward_median_pf": 1.6494660201233908,
+        "walkforward_median_spr": 0.01006629099306982
+      }
+    },
+    {
+      "seed": 2027,
+      "slice_name": "regimeB_2013_2017",
+      "csv_start_date": "2013-01-01",
+      "csv_end_date": "2017-12-31",
+      "run_dir": "seed_sweep_results\\realdata\\seed2027_baseline17_regimeB_2013_2017_gatefix_20260324_095327_seed2027",
+      "selected_checkpoint": "candidate_ep011.pt",
+      "selected_test_return_pct": 0.6077607368134563,
+      "selected_test_profit_factor": 1.3485964330697546,
+      "selected_walkforward_pass": false,
+      "selected_walkforward_positive_frac": 0.2857142857142857,
+      "status": "cost_aware_train17ep_selected_pass",
+      "best_tested_alternates": [
+        {
+          "checkpoint": "candidate_ep007.pt",
+          "result_file": "test_output\\seed2027_regimeB_eval_candidate_ep007_20260324_125039\\results\\test_results.json",
+          "test_return_pct": 0.25219410087260474,
+          "test_profit_factor": 1.106214470725051,
+          "walkforward_pass": true,
+          "walkforward_positive_frac": 0.8571428571428571
+        }
+      ],
+      "costgate6_train10ep": {
+        "run_dir": "seed_sweep_results\\realdata\\seed2027_regimeB_costgate6_train10ep_20260324_150834_seed2027",
+        "selected_checkpoint": "candidate_ep001.pt",
+        "test_return_pct": 0.00295135456171991,
+        "test_profit_factor": 1.0034028480102597,
+        "test_trades": 9,
+        "test_max_drawdown_pct": -0.46932470268950977,
+        "walkforward_pass": true,
+        "walkforward_positive_frac": 0.6964285714285714,
+        "walkforward_median_pf": 1.3137246171647954,
+        "walkforward_median_spr": 0.017416168340162658
+      },
+      "costgate6_train17ep": {
+        "run_dir": "seed_sweep_results\\realdata\\seed2027_regimeB_costgate6_train17ep_20260324_224513_seed2027",
+        "selected_checkpoint": "candidate_ep005.pt",
+        "test_return_pct": 0.6059092463159832,
+        "test_profit_factor": 1.6872314436255944,
+        "test_trades": 13,
+        "test_max_drawdown_pct": -0.5539191979699818,
+        "walkforward_pass": true,
+        "walkforward_positive_frac": 0.7857142857142857,
+        "walkforward_median_pf": 2.0495818164577715,
+        "walkforward_median_spr": 0.1381205766550698
+      }
+    },
+    {
+      "seed": 1011,
+      "slice_name": "regimeB_2013_2017",
+      "csv_start_date": "2013-01-01",
+      "csv_end_date": "2017-12-31",
+      "run_dir": "seed_sweep_results\\realdata\\seed1011_regimeB_costgate6_train17ep_20260325_105515_seed1011",
+      "selected_checkpoint": "candidate_ep011.pt",
+      "test_return_pct": 0.015768659106840666,
+      "test_profit_factor": 1.0138123714309593,
+      "test_trades": 11,
+      "test_max_drawdown_pct": -0.6296420679658945,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.6607142857142857,
+      "walkforward_median_pf": 1.3214879363374237,
+      "walkforward_median_spr": 0.057132696752114964,
+      "status": "cost_aware_train17ep_selected_pass_fresh_seed_thin"
+    },
+    {
+      "seed": 5051,
+      "slice_name": "regimeB_2013_2017",
+      "csv_start_date": "2013-01-01",
+      "csv_end_date": "2017-12-31",
+      "run_dir": "seed_sweep_results/realdata/seed5051_regimeB_costgate6_train17ep_q25rescue_20260325_194236_seed5051",
+      "selected_checkpoint": "candidate_ep004.pt",
+      "test_return_pct": 0.7077705928396849,
+      "test_profit_factor": 1.8309546062303683,
+      "test_trades": 10,
+      "test_max_drawdown_pct": -0.4906744806006761,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.7142857142857143,
+      "walkforward_median_pf": 1.4940026426237691,
+      "walkforward_median_spr": 0.01570149961270632,
+      "status": "cost_aware_train17ep_selected_pass_after_q25_rescue"
+    },
+    {
+      "seed": 3141,
+      "slice_name": "regimeB_2013_2017",
+      "csv_start_date": "2013-01-01",
+      "csv_end_date": "2017-12-31",
+      "run_dir": "seed_sweep_results/realdata/seed3141_regimeB_costgate6_train17ep_q25rescue_20260325_204512_seed3141",
+      "selected_checkpoint": "candidate_ep002.pt",
+      "test_return_pct": 0.9855216192006022,
+      "test_profit_factor": 2.91894868547168,
+      "test_trades": 10,
+      "test_max_drawdown_pct": -0.40301410224621553,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.875,
+      "walkforward_median_pf": 2.19575680627317,
+      "walkforward_median_spr": 0.22204568500411173,
+      "status": "cost_aware_train17ep_selected_pass_fresh_seed"
+    }
+  ],
+  "takeaways": [
+    "The 2018-2022 slice passes cleanly on the selected checkpoint.",
+    "The 2013-2017 slice now has full-length selected passes on six proof seeds: seed123, seed8087, seed2027, seed1011, seed5051, and seed3141.",
+    "The q25-rescue selector patch now has two clean fresh-seed proofs on the older slice: seed5051 and seed3141 both pass on automatically selected checkpoints.",
+    "The next milestone is branch unification: verify that the newer cost-aware q25-rescue branch does not regress the default split before treating it as the main configuration."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "timestamp": "20260223_095309",
+  "arms": [
+    "autorescue",
+    "basefirst"
+  ],
+  "prefixes": [
+    "selector_ab_autorescue_tri10ep_20260223_095309",
+    "selector_ab_basefirst_tri10ep_20260223_095309"
+  ],
+  "seeds": [
+    1123,
+    2213,
+    3347
+  ],
+  "train_delta_second_minus_first": {
+    "mean_test_return": -0.2066840175728409,
+    "mean_test_profit_factor": -0.08917317599918917,
+    "positive_and_pf_ge_1_count": -1,
+    "walkforward_pass_count": 0
+  },
+  "wf2400_delta_second_minus_first": {
+    "mean_test_return": -0.20668401757284094,
+    "mean_test_profit_factor": -0.08917317599918873,
+    "positive_and_pf_ge_1_count": -1,
+    "walkforward_pass_count": 1
+  }
+}

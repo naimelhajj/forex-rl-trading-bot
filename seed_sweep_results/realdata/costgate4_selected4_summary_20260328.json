@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-03-28T17:42:58",
+  "cases": [
+    {
+      "label": "seed8087_default_costgate4_train10ep_autorescue_alignq25",
+      "path": "seed_sweep_results\\realdata\\seed8087_default_costgate4_train10ep_autorescue_alignq25_20260326_171631_seed8087\\results\\test_results.json",
+      "return_pct": 2.1525890199728392,
+      "profit_factor": 2.3362084037357196,
+      "trades": 19,
+      "max_drawdown_pct": -0.8865906931413182,
+      "walkforward_pass": true
+    },
+    {
+      "label": "seed8087_regimeB_costgate4_train10ep_pfmmr",
+      "path": "seed_sweep_results\\realdata\\seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087\\results\\test_results.json",
+      "return_pct": 0.4430772683991613,
+      "profit_factor": 1.2410555056586134,
+      "trades": 17,
+      "max_drawdown_pct": -1.5227950532753358,
+      "walkforward_pass": true
+    },
+    {
+      "label": "seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard",
+      "path": "seed_sweep_results\\realdata\\seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027\\results\\test_results.json",
+      "return_pct": 0.3055900294390401,
+      "profit_factor": 1.1065640237205925,
+      "trades": 21,
+      "max_drawdown_pct": -1.6344443868445524,
+      "walkforward_pass": true
+    },
+    {
+      "label": "seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval",
+      "path": "seed_sweep_results\\realdata\\seed2027_default_costgate4_train10ep_pfmmr_mmrguard_lateval_20260328_141828_seed2027\\results\\test_results.json",
+      "return_pct": 0.3454104714046391,
+      "profit_factor": 1.1375261030941328,
+      "trades": 22,
+      "max_drawdown_pct": -1.080356542701472,
+      "walkforward_pass": true
+    }
+  ],
+  "aggregate": {
+    "count": 4,
+    "mean_return_pct": 0.8116666973039199,
+    "mean_profit_factor": 1.4553385090522646,
+    "selected_walkforward_passes": 4,
+    "positive_return_count": 4,
+    "nonnegative_return_count": 4
+  }
+}

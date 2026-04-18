@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-02-23T22:47:08",
+  "config": "guardbA_blind10_fast10ep_20260223_200325",
+  "probe_source": "seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_oracle_probe_weakseeds_wf2400_20260223_220212.json",
+  "rows": [
+    {
+      "seed": 5051,
+      "selected_checkpoint": "candidate_ep006.pt",
+      "selected_eval_wf2400": {
+        "test_return_pct": -3.22182736950386,
+        "test_profit_factor": 0.33694624059996675,
+        "test_total_trades": 23,
+        "test_walkforward_pass": true
+      },
+      "oracle_best_checkpoint": "candidate_ep010.pt",
+      "oracle_best_eval_wf2400": {
+        "test_return_pct": 2.764500416502713,
+        "test_profit_factor": 2.3370756373352144,
+        "test_total_trades": 21,
+        "test_walkforward_pass": false
+      },
+      "delta_oracle_minus_selected": {
+        "test_return_pct": 5.986327786006573,
+        "test_profit_factor": 2.0001293967352476,
+        "test_total_trades": -2,
+        "test_walkforward_pass": -1
+      }
+    },
+    {
+      "seed": 10007,
+      "selected_checkpoint": "candidate_ep008.pt",
+      "selected_eval_wf2400": {
+        "test_return_pct": -2.032767641334454,
+        "test_profit_factor": 0.5309088505603673,
+        "test_total_trades": 24,
+        "test_walkforward_pass": true
+      },
+      "oracle_best_checkpoint": "candidate_ep010.pt",
+      "oracle_best_eval_wf2400": {
+        "test_return_pct": 2.969086949138311,
+        "test_profit_factor": 2.731374082854019,
+        "test_total_trades": 25,
+        "test_walkforward_pass": false
+      },
+      "delta_oracle_minus_selected": {
+        "test_return_pct": 5.001854590472766,
+        "test_profit_factor": 2.2004652322936518,
+        "test_total_trades": 1,
+        "test_walkforward_pass": -1
+      }
+    }
+  ]
+}

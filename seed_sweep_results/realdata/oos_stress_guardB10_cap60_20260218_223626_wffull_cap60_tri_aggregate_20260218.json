@@ -1,0 +1,64 @@
+{
+  "generated_at_utc": "2026-02-18T20:50:05Z",
+  "tag": "oos_stress_guardB10_cap60_20260218_223626",
+  "base_run_prefix": "fric_guardB_blind10ep_20260218_134723",
+  "source": "eval_wffull_cap60",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 1.4031337823368666,
+  "mean_profit_factor": 1.4528793360125327,
+  "mean_total_trades": 49.0,
+  "mean_steps": 14892.0,
+  "mean_spr": 1.273107971715086e-05,
+  "mean_max_drawdown_pct": -2.254251912481568,
+  "walkforward_pass_count": 2,
+  "walkforward_pass_rate": 0.6666666666666666,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed1011/eval_wffull_oos_stress_guardB10_cap60_20260218_223626/results/test_results.json",
+      "return_pct": 4.95088101153025,
+      "profit_factor": 2.410136087899361,
+      "total_trades": 47,
+      "steps": 14892,
+      "spr": 5.7599631469993634e-05,
+      "max_drawdown_pct": -1.3348907939163732,
+      "walkforward_pass": true,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.0006671249651166348,
+      "walkforward_positive_frac": 0.507537688442211
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed2027/eval_wffull_oos_stress_guardB10_cap60_20260218_223626/results/test_results.json",
+      "return_pct": -0.9491559626512602,
+      "profit_factor": 0.8898902871632637,
+      "total_trades": 45,
+      "steps": 14892,
+      "spr": -1.45311335596163e-05,
+      "max_drawdown_pct": -2.957927893150881,
+      "walkforward_pass": false,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": -0.0005710396377043742,
+      "walkforward_positive_frac": 0.457286432160804
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed3039/eval_wffull_oos_stress_guardB10_cap60_20260218_223626/results/test_results.json",
+      "return_pct": 0.20767629813160937,
+      "profit_factor": 1.0586116329749733,
+      "total_trades": 55,
+      "steps": 14892,
+      "spr": -4.875258758924752e-06,
+      "max_drawdown_pct": -2.4699370503774496,
+      "walkforward_pass": true,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.017913767000686046,
+      "walkforward_positive_frac": 0.5778894472361809
+    }
+  ]
+}

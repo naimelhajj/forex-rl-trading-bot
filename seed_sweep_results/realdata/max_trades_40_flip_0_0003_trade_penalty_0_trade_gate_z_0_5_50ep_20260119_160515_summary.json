@@ -1,0 +1,66 @@
+{
+  "timestamp": "20260119_160515",
+  "config": {
+    "seeds": [
+      456
+    ],
+    "episodes": 50,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "max_trades_40_flip_0_0003_trade_penalty_0_trade_gate_z_0_5_50ep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 0.0,
+    "flip_penalty": 0.0003,
+    "min_atr_cost_ratio": null,
+    "use_regime_filter": null,
+    "regime_min_vol_z": null,
+    "regime_align_trend": null,
+    "regime_require_trending": null,
+    "cooldown_bars": null,
+    "min_hold_bars": null,
+    "max_trades_per_episode": 40,
+    "hold_tie_tau": null,
+    "hold_break_after": null,
+    "trade_gate_margin": null,
+    "trade_gate_z": 0.5,
+    "r_multiple_reward_weight": null,
+    "r_multiple_reward_clip": null
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 120,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_trade_gate_z_0_5_50ep_20260119_160515_seed456",
+      "results": {
+        "status": "missing_results",
+        "results_path": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_trade_gate_z_0_5_50ep_20260119_160515_seed456\\eval\\results\\test_results.json"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    },
+    "profit_factor": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    },
+    "fitness": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    }
+  }
+}

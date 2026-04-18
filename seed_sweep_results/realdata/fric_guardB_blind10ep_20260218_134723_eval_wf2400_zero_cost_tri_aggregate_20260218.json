@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T12:27:14Z",
+  "run_prefix": "fric_guardB_blind10ep_20260218_134723",
+  "source": "eval_wf2400_zero_cost",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 2.3794924789671454,
+  "mean_profit_factor": 3.005043607224803,
+  "mean_total_trades": 22.666666666666668,
+  "mean_spr": 0.007393248160070917,
+  "mean_max_drawdown_pct": -1.1193476603968995,
+  "walkforward_pass_count": 3,
+  "walkforward_pass_rate": 1.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed1011/eval_wf2400_zero_cost/results/test_results.json",
+      "return_pct": 4.230012389966609,
+      "profit_factor": 5.553743017077195,
+      "total_trades": 21,
+      "spr": 0.01515417671852646,
+      "max_drawdown_pct": -0.7396025491664652,
+      "walkforward_pass": true,
+      "walkforward_windows": 26,
+      "walkforward_median_spr": 0.10206379991361458,
+      "walkforward_positive_frac": 0.6538461538461539
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed2027/eval_wf2400_zero_cost/results/test_results.json",
+      "return_pct": 1.372449670493614,
+      "profit_factor": 1.4751616763848023,
+      "total_trades": 22,
+      "spr": 0.0060516625332568815,
+      "max_drawdown_pct": -1.5321720449850367,
+      "walkforward_pass": true,
+      "walkforward_windows": 26,
+      "walkforward_median_spr": 0.0007096096723664895,
+      "walkforward_positive_frac": 0.5
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed3039/eval_wf2400_zero_cost/results/test_results.json",
+      "return_pct": 1.5360153764412132,
+      "profit_factor": 1.986226128212412,
+      "total_trades": 25,
+      "spr": 0.0009739052284294121,
+      "max_drawdown_pct": -1.086268387039197,
+      "walkforward_pass": true,
+      "walkforward_windows": 26,
+      "walkforward_median_spr": 0.054699175973808,
+      "walkforward_positive_frac": 0.6153846153846154
+    }
+  ]
+}

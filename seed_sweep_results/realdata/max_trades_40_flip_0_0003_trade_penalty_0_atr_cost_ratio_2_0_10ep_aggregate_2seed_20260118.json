@@ -1,0 +1,36 @@
+{
+  "timestamp": "20260118_193850",
+  "seeds": [
+    456,
+    777
+  ],
+  "runs": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_atr_cost_ratio_2_0_10ep_20260118_160319_seed456\\eval_fast_atr_cost_ratio_2_0",
+      "test_return": -2.0342616080162967,
+      "test_profit_factor": 0.6763163422953418,
+      "test_spr": 0.0,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.005025125628140704
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_atr_cost_ratio_2_0_10ep_20260118_175417_seed777",
+      "test_return": -0.7677899904110941,
+      "test_profit_factor": 0.9204100404642546,
+      "test_spr": 0.0,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.0
+    }
+  ],
+  "aggregate": {
+    "return_pct_mean": -1.4010257992136954,
+    "profit_factor_mean": 0.7983631913797982,
+    "spr_mean": 0.0,
+    "walkforward_pass_count": 0
+  },
+  "note": "ATR cost-ratio gate (min_atr_cost_ratio=2.0) 10-episode runs; seed 456 used fast eval slice."
+}

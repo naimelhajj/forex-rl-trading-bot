@@ -1,0 +1,59 @@
+﻿{
+    "generated_at_utc":  "2026-02-20T15:20:05Z",
+    "run_prefix":  "tailrescue3_fastscreen_20260220_164326_exp18",
+    "source":  "eval_wf2400",
+    "seeds":  [
+                  6067,
+                  9091,
+                  10007
+              ],
+    "count":  3,
+    "mean_return_pct":  1.2936093627595364,
+    "mean_profit_factor":  1.6268549319054648,
+    "mean_total_trades":  24.333333333333332,
+    "mean_spr":  -0.00052541532817761919,
+    "mean_max_drawdown_pct":  -1.2333021285165451,
+    "walkforward_pass_count":  2,
+    "walkforward_pass_rate":  0.66666666666666663,
+    "results":  [
+                    {
+                        "seed":  6067,
+                        "result_file":  "seed_sweep_results\\realdata\\tailrescue3_fastscreen_20260220_164326_exp18_seed6067\\eval_wf2400\\results\\test_results.json",
+                        "return_pct":  0.9915964456765014,
+                        "profit_factor":  1.3597872936464259,
+                        "total_trades":  22,
+                        "spr":  0.00060726890106597238,
+                        "max_drawdown_pct":  -2.0634876916408156,
+                        "walkforward_pass":  true,
+                        "walkforward_windows":  26,
+                        "walkforward_median_spr":  0.0044496607526256123,
+                        "walkforward_positive_frac":  0.53846153846153844
+                    },
+                    {
+                        "seed":  9091,
+                        "result_file":  "seed_sweep_results\\realdata\\tailrescue3_fastscreen_20260220_164326_exp18_seed9091\\eval_wf2400\\results\\test_results.json",
+                        "return_pct":  2.0132143791493196,
+                        "profit_factor":  2.1935987446887539,
+                        "total_trades":  25,
+                        "spr":  -0.0025136461137028497,
+                        "max_drawdown_pct":  -0.74310700667829133,
+                        "walkforward_pass":  false,
+                        "walkforward_windows":  26,
+                        "walkforward_median_spr":  0,
+                        "walkforward_positive_frac":  0.46153846153846162
+                    },
+                    {
+                        "seed":  10007,
+                        "result_file":  "seed_sweep_results\\realdata\\tailrescue3_fastscreen_20260220_164326_exp18_seed10007\\eval_wf2400\\results\\test_results.json",
+                        "return_pct":  0.87601726345278852,
+                        "profit_factor":  1.3271787573812146,
+                        "total_trades":  26,
+                        "spr":  0.00033013122810401967,
+                        "max_drawdown_pct":  -0.893311687230528,
+                        "walkforward_pass":  true,
+                        "walkforward_windows":  26,
+                        "walkforward_median_spr":  0.047586159662124643,
+                        "walkforward_positive_frac":  0.57692307692307687
+                    }
+                ]
+}

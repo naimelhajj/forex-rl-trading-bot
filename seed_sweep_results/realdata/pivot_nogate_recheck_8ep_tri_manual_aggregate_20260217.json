@@ -1,0 +1,70 @@
+﻿{
+    "timestamp":  "2026-02-17T11:33:08",
+    "run_prefix":  "pivot_nogate_recheck_8ep",
+    "episodes":  8,
+    "max_steps_per_episode":  600,
+    "config":  {
+                   "no_symmetry_loss":  true,
+                   "no_dual_controller":  true,
+                   "trade_penalty":  0,
+                   "flip_penalty":  0.0003,
+                   "cooldown_bars":  6,
+                   "min_hold_bars":  3,
+                   "max_trades_per_episode":  40,
+                   "trade_gate":  "disabled"
+               },
+    "runs":  [
+                 {
+                     "seed":  456,
+                     "run_dir":  "seed_sweep_results/realdata/pivot_nogate_recheck_8ep_20260217_104156_seed456",
+                     "log":  "logs/pivot_nogate_recheck_8ep_seed456_20260217_104156.log",
+                     "results_path":  "seed_sweep_results\\realdata\\pivot_nogate_recheck_8ep_20260217_104156_seed456\\results\\test_results.json",
+                     "test_return":  0.56556837452255149,
+                     "test_profit_factor":  1.2810758564218689,
+                     "test_total_trades":  31,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  -0.41596377788218031,
+                     "test_walkforward_median_pf":  1.2810758564218689
+                 },
+                 {
+                     "seed":  777,
+                     "run_dir":  "seed_sweep_results/realdata/pivot_nogate_recheck_8ep_20260217_111616_seed777",
+                     "log":  "logs/pivot_nogate_recheck_8ep_seed777_20260217_111616.log",
+                     "results_path":  "seed_sweep_results\\realdata\\pivot_nogate_recheck_8ep_20260217_111616_seed777\\results\\test_results.json",
+                     "test_return":  -3.2804066479559912,
+                     "test_profit_factor":  0.36322596997874212,
+                     "test_total_trades":  22,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  0,
+                     "test_walkforward_median_pf":  0.36322596997874212
+                 },
+                 {
+                     "seed":  789,
+                     "run_dir":  "seed_sweep_results/realdata/pivot_nogate_recheck_8ep_20260217_105902_seed789",
+                     "log":  "logs/pivot_nogate_recheck_8ep_seed789_20260217_105901.log",
+                     "results_path":  "seed_sweep_results\\realdata\\pivot_nogate_recheck_8ep_20260217_105902_seed789\\results\\test_results.json",
+                     "test_return":  -4.5661714608326136,
+                     "test_profit_factor":  0.34804631381952872,
+                     "test_total_trades":  24,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  -0.0040539108214640834,
+                     "test_walkforward_median_pf":  0.34804631381952877
+                 }
+             ],
+    "aggregate":  {
+                      "seeds":  3,
+                      "return_mean":  -2.4270032447553511,
+                      "return_std":  2.1802005199657808,
+                      "pf_mean":  0.66411604674004654,
+                      "pf_std":  0.43630047792948906,
+                      "trades_mean":  25.666666666666668,
+                      "walkforward_pass_count":  0,
+                      "walkforward_pass_frac":  0,
+                      "positive_return_count":  1,
+                      "pf_ge_1_count":  1
+                  },
+    "decision":  {
+                     "status":  "rejected",
+                     "reason":  "Cross-seed mean return negative and 0/3 walk-forward passes despite one positive seed."
+                 }
+}

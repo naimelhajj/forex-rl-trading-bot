@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T18:46:07Z",
+  "run_prefix": "calib_profitpick_njitter_vw1200_blind10ep_20260218_202646",
+  "source": "train_test",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 0.31784332440196367,
+  "mean_profit_factor": 1.198511249715185,
+  "mean_total_trades": 22.0,
+  "mean_spr": 0.04162903465733627,
+  "mean_max_drawdown_pct": -1.2931059116117603,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/calib_profitpick_njitter_vw1200_blind10ep_20260218_202646_seed1011/results/test_results.json",
+      "return_pct": 0.07576731947922521,
+      "profit_factor": 1.1077418216999833,
+      "total_trades": 20,
+      "spr": 0.20270691283531062,
+      "max_drawdown_pct": -0.9874035335493908,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.20270691283531062,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/calib_profitpick_njitter_vw1200_blind10ep_20260218_202646_seed2027/results/test_results.json",
+      "return_pct": -0.31687049125147526,
+      "profit_factor": 0.8960315024258343,
+      "total_trades": 22,
+      "spr": 0.0,
+      "max_drawdown_pct": -1.7183027658986838,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/calib_profitpick_njitter_vw1200_blind10ep_20260218_202646_seed3039/results/test_results.json",
+      "return_pct": 1.194633144978141,
+      "profit_factor": 1.591760425019738,
+      "total_trades": 24,
+      "spr": -0.07781980886330181,
+      "max_drawdown_pct": -1.1736114353872058,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.07781980886330181,
+      "walkforward_positive_frac": 0.0
+    }
+  ]
+}

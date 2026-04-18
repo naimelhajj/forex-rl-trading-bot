@@ -1,0 +1,30 @@
+{
+  "timestamp": "20260223_114154",
+  "arms": [
+    "autorescue",
+    "autorescue_tiebreak"
+  ],
+  "prefixes": [
+    "selector_ab_autorescue_tri10ep_20260223_114154",
+    "selector_ab_autorescue_tiebreak_tri10ep_20260223_114154"
+  ],
+  "seeds": [
+    4451,
+    5563,
+    6679
+  ],
+  "train_delta_second_minus_first": {
+    "mean_test_return": 0.22698045000839606,
+    "mean_test_profit_factor": 0.05860416764101539,
+    "positive_and_pf_ge_1_count": 1,
+    "walkforward_pass_count": 0
+  },
+  "wf2400_delta_second_minus_first": {
+    "mean_test_return": 0.22698045000839606,
+    "mean_test_profit_factor": 0.05860416764101539,
+    "positive_and_pf_ge_1_count": 1,
+    "walkforward_pass_count": 1
+  },
+  "tiebreak_switch_count_second": 2,
+  "tiebreak_eval_count_second": 3
+}

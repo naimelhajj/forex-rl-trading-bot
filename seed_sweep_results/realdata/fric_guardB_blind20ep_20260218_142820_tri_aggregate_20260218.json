@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T13:46:33Z",
+  "run_prefix": "fric_guardB_blind20ep_20260218_142820",
+  "source": "train_test",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": -0.7940475220540902,
+  "mean_profit_factor": 0.7905849636622616,
+  "mean_total_trades": 25.0,
+  "mean_spr": -0.006016076236476215,
+  "mean_max_drawdown_pct": -2.2694018742301143,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind20ep_20260218_142820_seed1011/results/test_results.json",
+      "return_pct": -1.7050413611277238,
+      "profit_factor": 0.40853080233272715,
+      "total_trades": 26,
+      "spr": -0.006077483157438312,
+      "max_drawdown_pct": -3.1700294564541376,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.006077483157438312,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind20ep_20260218_142820_seed2027/results/test_results.json",
+      "return_pct": -1.2965273469397909,
+      "profit_factor": 0.6161312044461212,
+      "total_trades": 24,
+      "spr": 0.0,
+      "max_drawdown_pct": -2.2790961274774175,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind20ep_20260218_142820_seed3039/results/test_results.json",
+      "return_pct": 0.6194261419052438,
+      "profit_factor": 1.3470928842079364,
+      "total_trades": 25,
+      "spr": -0.011970745551990332,
+      "max_drawdown_pct": -1.359080038758788,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.011970745551990332,
+      "walkforward_positive_frac": 0.0
+    }
+  ]
+}

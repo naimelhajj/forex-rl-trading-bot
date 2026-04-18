@@ -1,0 +1,45 @@
+{
+  "branch": "costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_temporal_q25_fallback",
+  "generated_on": "2026-03-30",
+  "runs": [
+    {
+      "name": "seed1011_default_costgate2",
+      "split": "default",
+      "checkpoint": "candidate_ep005.pt",
+      "path": "seed_sweep_results/realdata/seed1011_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_20260329_175139_seed1011/results/test_results.json",
+      "return_pct": 2.135737930599868,
+      "profit_factor": 2.1795744153044754,
+      "trades": 24,
+      "max_drawdown_pct": -1.2090542992284599,
+      "walkforward_pass": true
+    },
+    {
+      "name": "seed8087_regimeB_costgate2",
+      "split": "regimeB_2013_2017",
+      "checkpoint": "candidate_ep009.pt",
+      "path": "seed_sweep_results/realdata/seed8087_regimeB_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmr_20260329_215507_seed8087/results/test_results.json",
+      "return_pct": 1.0717484431441937,
+      "profit_factor": 1.3977380443054075,
+      "trades": 25,
+      "max_drawdown_pct": -1.374305950692413,
+      "walkforward_pass": true
+    },
+    {
+      "name": "seed8087_default_costgate2",
+      "split": "default",
+      "checkpoint": "candidate_ep008.pt",
+      "path": "seed_sweep_results/realdata/seed8087_default_costgate2_train10ep_pfmmr_mmrguard_q25guard_latemmrtq25fb_20260330_133913_seed8087/results/test_results.json",
+      "return_pct": 1.2664394389330536,
+      "profit_factor": 1.4769855570693624,
+      "trades": 27,
+      "max_drawdown_pct": -1.1916414537169262,
+      "walkforward_pass": true
+    }
+  ],
+  "aggregate": {
+    "count": 3,
+    "selected_passes": 3,
+    "mean_return_pct": 1.491308604225705,
+    "mean_profit_factor": 1.6847660055597486
+  }
+}

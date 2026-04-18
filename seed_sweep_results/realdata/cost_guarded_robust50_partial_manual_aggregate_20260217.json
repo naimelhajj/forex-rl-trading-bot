@@ -1,0 +1,50 @@
+﻿{
+    "timestamp":  "2026-02-17T11:33:26",
+    "run_prefix":  "cost_guarded_robust50",
+    "episodes":  50,
+    "max_steps_per_episode":  1000,
+    "runs":  [
+                 {
+                     "seed":  456,
+                     "run_dir":  "seed_sweep_results/realdata/cost_guarded_robust50_20260216_213747_seed456",
+                     "log":  "logs/cost_guarded_robust50_seed456_20260216_213747.log",
+                     "results_path":  "seed_sweep_results\\realdata\\cost_guarded_robust50_20260216_213747_seed456\\results\\test_results.json",
+                     "test_return":  -1.5380941918384572,
+                     "test_profit_factor":  0,
+                     "test_total_trades":  3,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  0,
+                     "test_walkforward_median_pf":  0
+                 },
+                 {
+                     "seed":  789,
+                     "run_dir":  "seed_sweep_results/realdata/cost_guarded_robust50_20260216_234031_seed789",
+                     "log":  "logs/cost_guarded_robust50_seed789_20260216_234031.log",
+                     "results_path":  "seed_sweep_results\\realdata\\cost_guarded_robust50_20260216_234031_seed789\\results\\test_results.json",
+                     "test_return":  -1.743395078305221,
+                     "test_profit_factor":  0.67384147824027807,
+                     "test_total_trades":  19,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  -0.013016953163366122,
+                     "test_walkforward_median_pf":  0.35908461614709286
+                 }
+             ],
+    "aggregate":  {
+                      "seeds":  2,
+                      "return_mean":  -1.6407446350718391,
+                      "return_std":  0.10265044323338191,
+                      "pf_mean":  0.33692073912013903,
+                      "pf_std":  0.33692073912013903,
+                      "trades_mean":  11,
+                      "walkforward_pass_count":  0,
+                      "walkforward_pass_frac":  0
+                  },
+    "notes":  [
+                  "Seed 789 training run was interrupted by reboot and evaluated from saved best checkpoint.",
+                  "Both seeds produced negative test return and walk-forward fail."
+              ],
+    "decision":  {
+                     "status":  "rejected",
+                     "reason":  "Robust50 extension degraded to negative returns and weak PF across available seeds."
+                 }
+}

@@ -1,0 +1,644 @@
+{
+  "prefix": "post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629",
+  "profile": "wf2400_all_candidates_full10",
+  "seeds": [
+    {
+      "seed": 10007,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": -1.2227556725539657,
+        "test_profit_factor": 0.5828860165204021,
+        "test_total_trades": 26,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.4230769230769231
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep002.pt",
+        "test_return_pct": 0.6520643227142076,
+        "test_profit_factor": 1.2618556645220724,
+        "test_total_trades": 21,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.15384615384615385
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.15384615384615385
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": 0.14132952300036639,
+          "test_profit_factor": 1.039753729579041,
+          "test_total_trades": 23,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.34615384615384615
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_total_trades": 26,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": -1.383327563249237,
+          "test_profit_factor": 0.6005554559749217,
+          "test_total_trades": 18,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.11538461538461539
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": -2.35239968501173,
+          "test_profit_factor": 0.43274735235667655,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.19230769230769232
+        }
+      ]
+    },
+    {
+      "seed": 1011,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 2.3331569443610256,
+        "test_profit_factor": 2.461463494890398,
+        "test_total_trades": 23,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.3076923076923077
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep008.pt",
+        "test_return_pct": 1.4671537572387372,
+        "test_profit_factor": 1.9101754901540022,
+        "test_total_trades": 22,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.6153846153846154
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_total_trades": 23,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.3076923076923077
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": 0.7326370952406291,
+          "test_profit_factor": 1.4975592440273888,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.34615384615384615
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": -0.7451987574186636,
+          "test_profit_factor": 0.7331999545367365,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 1.4671537572387372,
+          "test_profit_factor": 1.9101754901540022,
+          "test_total_trades": 22,
+          "test_walkforward_pass": true,
+          "test_walkforward_positive_frac": 0.6153846153846154
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": 0.06685451003969334,
+          "test_profit_factor": 1.0297509444549686,
+          "test_total_trades": 23,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231
+        }
+      ]
+    },
+    {
+      "seed": 2027,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 1.6598182786025095,
+        "test_profit_factor": 1.8015088007402846,
+        "test_total_trades": 23,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep008.pt",
+        "test_return_pct": 1.6598182786025095,
+        "test_profit_factor": 1.8015088007402846,
+        "test_total_trades": 23,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_total_trades": 23,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.19230769230769232
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": 1.0123944816704533,
+          "test_profit_factor": 1.7280089613754674,
+          "test_total_trades": 20,
+          "test_walkforward_pass": true,
+          "test_walkforward_positive_frac": 0.8076923076923077
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 0.47342154221574617,
+          "test_profit_factor": 1.1985039160368238,
+          "test_total_trades": 16,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.038461538461538464
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 1.6598182786025095,
+          "test_profit_factor": 1.8015088007402846,
+          "test_total_trades": 23,
+          "test_walkforward_pass": true,
+          "test_walkforward_positive_frac": 0.5384615384615384
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": -1.6673747243531878,
+          "test_profit_factor": 0.6825975455230744,
+          "test_total_trades": 24,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        }
+      ]
+    },
+    {
+      "seed": 3039,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 0.5694348385155479,
+        "test_profit_factor": 1.1756624870746308,
+        "test_total_trades": 24,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.38461538461538464
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep006.pt",
+        "test_return_pct": 1.1091052973654758,
+        "test_profit_factor": 1.3608225323799799,
+        "test_total_trades": 20,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.6153846153846154
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": -0.9356314458355497,
+          "test_profit_factor": 0.7256693059127844,
+          "test_total_trades": 20,
+          "test_walkforward_pass": true,
+          "test_walkforward_positive_frac": 0.7692307692307693
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_total_trades": 24,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.38461538461538464
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 1.1091052973654758,
+          "test_profit_factor": 1.3608225323799799,
+          "test_total_trades": 20,
+          "test_walkforward_pass": true,
+          "test_walkforward_positive_frac": 0.6153846153846154
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 3.0538723984998795,
+          "test_profit_factor": 1.982647000532216,
+          "test_total_trades": 19,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": 2.029913249578108,
+          "test_profit_factor": 2.2158412599443706,
+          "test_total_trades": 17,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.15384615384615385
+        }
+      ]
+    },
+    {
+      "seed": 4049,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": -1.2429807994482789,
+        "test_profit_factor": 0.6232976165996762,
+        "test_total_trades": 17,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.4230769230769231
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep002.pt",
+        "test_return_pct": 2.3608933092814866,
+        "test_profit_factor": 2.410369912402805,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.2692307692307692
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": -1.2429807994482789,
+          "test_profit_factor": 0.6232976165996762,
+          "test_total_trades": 17,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": -1.0720763648621512,
+          "test_profit_factor": 0.6790808754295873,
+          "test_total_trades": 17,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": -0.9629127019700201,
+          "test_profit_factor": 0.7439646590994891,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": 1.9103817699728687,
+          "test_profit_factor": 1.690261855112846,
+          "test_total_trades": 25,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231
+        }
+      ]
+    },
+    {
+      "seed": 5051,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 2.3838342962348325,
+        "test_profit_factor": 1.8944979247964147,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.0
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep008.pt",
+        "test_return_pct": 3.866929119964424,
+        "test_profit_factor": 2.770816554780992,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.38461538461538464
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": 1.9825881365093112,
+          "test_profit_factor": 3.0425657319877453,
+          "test_total_trades": 19,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.46153846153846156
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": -0.4965785474928097,
+          "test_profit_factor": 0.8139712900714494,
+          "test_total_trades": 19,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 2.3838342962348325,
+          "test_profit_factor": 1.8944979247964147,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 3.866929119964424,
+          "test_profit_factor": 2.770816554780992,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.38461538461538464
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_total_trades": 23,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        }
+      ]
+    },
+    {
+      "seed": 6067,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 2.860084915483996,
+        "test_profit_factor": 2.3218860562787262,
+        "test_total_trades": 25,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.46153846153846156
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep008.pt",
+        "test_return_pct": 4.7465382103236475,
+        "test_profit_factor": 9.113802994988287,
+        "test_total_trades": 20,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.38461538461538464
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": -0.8944267560827779,
+          "test_profit_factor": 0.6978088527971744,
+          "test_total_trades": 18,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.34615384615384615
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": -2.084868007324392,
+          "test_profit_factor": 0.35146342063621056,
+          "test_total_trades": 18,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.38461538461538464
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 1.268873066902132,
+          "test_profit_factor": 1.3773284182116488,
+          "test_total_trades": 19,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 4.7465382103236475,
+          "test_profit_factor": 9.113802994988287,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.38461538461538464
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_total_trades": 25,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.46153846153846156
+        }
+      ]
+    },
+    {
+      "seed": 7079,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 1.5325508294922185,
+        "test_profit_factor": 1.8108379009026963,
+        "test_total_trades": 24,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.2692307692307692
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep002.pt",
+        "test_return_pct": 2.0267797037465396,
+        "test_profit_factor": 2.039952612875397,
+        "test_total_trades": 19,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.0
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": 2.0267797037465396,
+          "test_profit_factor": 2.039952612875397,
+          "test_total_trades": 19,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": -0.02465194231413559,
+          "test_profit_factor": 0.9912131554353246,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_total_trades": 24,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 1.3837915891394825,
+          "test_profit_factor": 1.574824896274431,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.3076923076923077
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": 0.47979924230685533,
+          "test_profit_factor": 1.166993219441866,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        }
+      ]
+    },
+    {
+      "seed": 8087,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 0.7507186089292572,
+        "test_profit_factor": 1.354911981558095,
+        "test_total_trades": 21,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep008.pt",
+        "test_return_pct": 0.7507186089292572,
+        "test_profit_factor": 1.354911981558095,
+        "test_total_trades": 21,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": -2.5888930163675217,
+          "test_profit_factor": 0.35753030481725007,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.46153846153846156
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": -0.536937392910064,
+          "test_profit_factor": 0.7969178543555216,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 0.8837535848800426,
+          "test_profit_factor": 1.2989158403673757,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_total_trades": 21,
+          "test_walkforward_pass": true,
+          "test_walkforward_positive_frac": 0.5384615384615384
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": -1.6144674923103897,
+          "test_profit_factor": 0.4640829888373633,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.15384615384615385
+        }
+      ]
+    },
+    {
+      "seed": 9091,
+      "selected_checkpoint": "best_model.pt",
+      "selected_metrics": {
+        "checkpoint": "best_model.pt",
+        "test_return_pct": 0.9222050987365504,
+        "test_profit_factor": 1.4023322156984406,
+        "test_total_trades": 21,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.15384615384615385
+      },
+      "best_candidate_by_test": {
+        "checkpoint": "candidate_ep006.pt",
+        "test_return_pct": 2.066850898926109,
+        "test_profit_factor": 1.8715655012898595,
+        "test_total_trades": 20,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.23076923076923078
+      },
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "test_return_pct": 1.3002847775944737,
+          "test_profit_factor": 1.4443793120474366,
+          "test_total_trades": 19,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.38461538461538464
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "test_return_pct": 0.9222050987365504,
+          "test_profit_factor": 1.4023322156984406,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.15384615384615385
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "test_return_pct": 2.066850898926109,
+          "test_profit_factor": 1.8715655012898595,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "test_return_pct": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_total_trades": 16,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "test_return_pct": -0.9576265008797491,
+          "test_profit_factor": 0.6781033101590863,
+          "test_total_trades": 17,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.3076923076923077
+        }
+      ]
+    }
+  ],
+  "selected_aggregate": {
+    "n": 10,
+    "mean_return_pct": 1.0546067338353693,
+    "mean_pf": 1.5429284495059765,
+    "mean_trades": 22.6,
+    "positive_pf_gt1": 8,
+    "wf_pass_count": 2
+  },
+  "oracle_candidate_aggregate": {
+    "n": 10,
+    "mean_return_pct": 2.0706851507092394,
+    "mean_pf": 2.5895782045691775,
+    "mean_trades": 21.0,
+    "positive_pf_gt1": 10,
+    "wf_pass_count": 4
+  },
+  "selection_hit_count": 0,
+  "selection_total": 10
+}

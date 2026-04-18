@@ -1,0 +1,122 @@
+{
+  "profile": "guardbA_horizon100_noalign_10ep",
+  "generated_at_utc": "2026-02-27T13:29:01.719326+00:00",
+  "runs": [
+    {
+      "seed": 123,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed123",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep009.pt",
+      "return_pct": -0.19639443112737798,
+      "profit_factor": 0.9384768245331434,
+      "trades": 22,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_031657_seed456",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout",
+      "winner": "candidate_ep002.pt",
+      "return_pct": 3.9237057212821114,
+      "profit_factor": 4.066346824984966,
+      "trades": 18,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_054837_seed777",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout",
+      "winner": "candidate_ep006.pt",
+      "return_pct": 0.07172354747568832,
+      "profit_factor": 1.0280057017545388,
+      "trades": 24,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_070252_seed789",
+      "result_source": "manual_eval_selected/results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep004.pt",
+      "return_pct": 2.2192630857548634,
+      "profit_factor": 2.0502333178379675,
+      "trades": 26,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 1011,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed1011",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep002.pt",
+      "return_pct": 0.6040591852485733,
+      "profit_factor": 1.2303894935667956,
+      "trades": 22,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 2027,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed2027",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep009.pt",
+      "return_pct": -0.5517497490490464,
+      "profit_factor": 0.8790431236372789,
+      "trades": 21,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 5051,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_011818_seed5051",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep007.pt",
+      "return_pct": 1.0681745442516766,
+      "profit_factor": 1.3860064926358429,
+      "trades": 26,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 8087,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed8087",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep007.pt",
+      "return_pct": 0.7957767887613487,
+      "profit_factor": 1.215646373453317,
+      "trades": 20,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 9091,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_004132_seed9091",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep001.pt",
+      "return_pct": 2.2312686910777035,
+      "profit_factor": 2.2228776913408566,
+      "trades": 23,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_20260227_015834_seed10007",
+      "result_source": "results/test_results.json",
+      "selector_mode": "tail_holdout+horizon",
+      "winner": "candidate_ep002.pt",
+      "return_pct": 2.656344030324531,
+      "profit_factor": 2.1610509088849073,
+      "trades": 21,
+      "walkforward_pass": false
+    }
+  ],
+  "aggregate": {
+    "count": 10,
+    "mean_return_pct": 1.2822171414000072,
+    "mean_profit_factor": 1.7178076752629614,
+    "positive_with_pf_ge_1": 8
+  }
+}

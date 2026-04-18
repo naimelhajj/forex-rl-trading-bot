@@ -1,0 +1,38 @@
+﻿{
+    "prefix":  "guardbA_horizon055_noalign_10ep",
+    "generated_at_utc":  "2026-02-26T22:38:12.2103947Z",
+    "seeds":  [
+                  9091,
+                  10007
+              ],
+    "runs":  [
+                 {
+                     "seed":  9091,
+                     "run_dir":  "seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_20260226_232237_seed9091",
+                     "log_file":  "logs/guardbA_horizon055_noalign_10ep_seed9091_20260226_232237.log",
+                     "selector_mode":  "tail_holdout",
+                     "winner":  "candidate_ep006.pt",
+                     "return_pct":  -0.59728827879960145,
+                     "profit_factor":  0.7949667028608125,
+                     "trades":  27,
+                     "walkforward_pass":  false
+                 },
+                 {
+                     "seed":  10007,
+                     "run_dir":  "seed_sweep_results/realdata/guardbA_horizon055_noalign_10ep_20260226_235910_seed10007",
+                     "log_file":  "logs/guardbA_horizon055_noalign_10ep_seed10007_20260226_235910.log",
+                     "selector_mode":  "tail_holdout",
+                     "winner":  "candidate_ep008.pt",
+                     "return_pct":  0.96872683257858139,
+                     "profit_factor":  1.4721311828238224,
+                     "trades":  19,
+                     "walkforward_pass":  false
+                 }
+             ],
+    "aggregate":  {
+                      "count":  2,
+                      "mean_return_pct":  0.18571927688948997,
+                      "mean_profit_factor":  1.1335489428423173,
+                      "positive_with_pf_ge_1":  null
+                  }
+}

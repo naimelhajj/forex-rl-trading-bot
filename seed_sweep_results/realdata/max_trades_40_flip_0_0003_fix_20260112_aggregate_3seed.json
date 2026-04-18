@@ -1,0 +1,23 @@
+{
+  "seeds": [
+    456,
+    777,
+    789
+  ],
+  "return_pct": {
+    "mean": 0.09728980552189403,
+    "count": 3
+  },
+  "profit_factor": {
+    "mean": 1.1209805623393907,
+    "count": 3
+  },
+  "fitness": {
+    "mean": 0.442908520287465,
+    "count": 3
+  },
+  "sources": [
+    "seed_sweep_results/realdata/max_trades_40_flip_0_0003_fix_20260112_193708_summary.json",
+    "seed_sweep_results/realdata/max_trades_40_flip_0_0003_fix_20260112_202733_summary.json"
+  ]
+}

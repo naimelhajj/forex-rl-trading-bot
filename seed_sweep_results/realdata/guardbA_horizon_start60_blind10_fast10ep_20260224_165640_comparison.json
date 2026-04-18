@@ -1,0 +1,125 @@
+{
+  "generated_at": "2026-02-25T11:40:26",
+  "new_summary": "seed_sweep_results/realdata/guardbA_horizon_start60_blind10_fast10ep_20260224_165640_summary.json",
+  "compare_to": {
+    "incmax04_blind10": "seed_sweep_results/realdata/guardbA_horizon_incmax04_blind10_fast10ep_20260224_135954_summary.json",
+    "horizon_prev_blind10": "seed_sweep_results/realdata/guardbA_horizon_blind10_fast10ep_20260224_094831_summary.json",
+    "guardbA_base_blind10": "seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_summary.json"
+  },
+  "aggregate": {
+    "new_mean_return_pct": 1.1387185625595575,
+    "new_mean_pf": 1.9668254176174376,
+    "new_positive_pf_ge1_count": 8,
+    "new_horizon_switched_count": 2,
+    "delta_vs_incmax04_mean_return_pct": -0.5621971597558328,
+    "delta_vs_incmax04_mean_pf": -0.36295957222449804,
+    "delta_vs_incmax04_positive_pf_ge1_count": -1,
+    "delta_vs_incmax04_horizon_switched_count": -1,
+    "delta_vs_guardbA_base_mean_return_pct": 0.3973360059556752,
+    "delta_vs_guardbA_base_mean_pf": 0.09393166221384286,
+    "delta_vs_guardbA_base_positive_pf_ge1_count": 1,
+    "negative_seed_count_new": 2
+  },
+  "rows": [
+    {
+      "seed": 1011,
+      "new_return_pct": 1.54663960275927,
+      "new_pf": 1.6386375152358625,
+      "delta_vs_incmax04_return_pct": 0.0,
+      "delta_vs_incmax04_pf": 0.0,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 2027,
+      "new_return_pct": 1.3381530634406058,
+      "new_pf": 1.643983963140738,
+      "delta_vs_incmax04_return_pct": 0.0,
+      "delta_vs_incmax04_pf": 0.0,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 3039,
+      "new_return_pct": 1.8087762786759942,
+      "new_pf": 1.7521255465503118,
+      "delta_vs_incmax04_return_pct": -0.4056496681927202,
+      "delta_vs_incmax04_pf": -1.1845363377196871,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 4049,
+      "new_return_pct": 0.19205603979215446,
+      "new_pf": 1.084666547598163,
+      "delta_vs_incmax04_return_pct": 0.0,
+      "delta_vs_incmax04_pf": 0.0,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 5051,
+      "new_return_pct": -0.8967707289178173,
+      "new_pf": 0.7193960121767956,
+      "delta_vs_incmax04_return_pct": -2.074471282552659,
+      "delta_vs_incmax04_pf": -0.8407264124241657,
+      "delta_vs_guardbA_base_return_pct": 2.325056640586043,
+      "delta_vs_guardbA_base_pf": 0.38244977157682886,
+      "new_horizon_switched": true
+    },
+    {
+      "seed": 6067,
+      "new_return_pct": 1.8817975269340481,
+      "new_pf": 2.11769709631358,
+      "delta_vs_incmax04_return_pct": 0.0,
+      "delta_vs_incmax04_pf": 0.0,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 7079,
+      "new_return_pct": 4.9119324599633085,
+      "new_pf": 6.202232107310309,
+      "delta_vs_incmax04_return_pct": 0.0,
+      "delta_vs_incmax04_pf": 0.0,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 8087,
+      "new_return_pct": 2.0602445904850164,
+      "new_pf": 2.8244132113800315,
+      "delta_vs_incmax04_return_pct": 0.0,
+      "delta_vs_incmax04_pf": 0.0,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    },
+    {
+      "seed": 9091,
+      "new_return_pct": 0.3654239091083422,
+      "new_pf": 1.1149279162772974,
+      "delta_vs_incmax04_return_pct": 1.648303418970709,
+      "delta_vs_incmax04_pf": 0.5568668505616012,
+      "delta_vs_guardbA_base_return_pct": 1.648303418970709,
+      "delta_vs_guardbA_base_pf": 0.5568668505616012,
+      "new_horizon_switched": true
+    },
+    {
+      "seed": 10007,
+      "new_return_pct": -1.8210671166453474,
+      "new_pf": 0.570174260191288,
+      "delta_vs_incmax04_return_pct": -4.790154065783659,
+      "delta_vs_incmax04_pf": -2.1611998226627307,
+      "delta_vs_guardbA_base_return_pct": 0.0,
+      "delta_vs_guardbA_base_pf": 0.0,
+      "new_horizon_switched": false
+    }
+  ]
+}

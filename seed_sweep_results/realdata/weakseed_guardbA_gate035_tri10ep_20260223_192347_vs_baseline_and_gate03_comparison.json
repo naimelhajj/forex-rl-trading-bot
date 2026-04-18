@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-02-23T20:01:28",
+  "new_config": "weakseed_guardbA_gate035_tri10ep_20260223_192347",
+  "baseline_config": "autorescue_blind10_fast10ep_20260222_155708",
+  "prior_gate03_config": "weakseed_guardbA_reward_tri10ep_20260223_172019",
+  "seed_subset": [
+    2027,
+    8087,
+    9091
+  ],
+  "new_eval_wf2400_aggregate": {
+    "n_seeds": 3,
+    "mean_test_return_pct": 0.32597275296728884,
+    "mean_test_profit_factor": 1.1384145641587042,
+    "mean_test_trades": 25.0,
+    "positive_pf_gt_1_count": 1,
+    "wf_pass_count": 0
+  },
+  "baseline_eval_wf2400_aggregate_subset": {
+    "n_seeds": 3,
+    "mean_test_return_pct": -0.606583522756791,
+    "mean_test_profit_factor": 0.7689770702940099,
+    "mean_test_trades": 20.0,
+    "positive_pf_gt_1_count": 1,
+    "wf_pass_count": 1
+  },
+  "prior_gate03_eval_wf2400_aggregate": {
+    "n_seeds": 3,
+    "mean_test_return_pct": 0.7199184445777421,
+    "mean_test_profit_factor": 1.6858975298054109,
+    "mean_test_trades": 21.333333333333332,
+    "positive_pf_gt_1_count": 2,
+    "wf_pass_count": 1
+  },
+  "delta_new_minus_baseline": {
+    "mean_test_return_pct": 0.9325562757240797,
+    "mean_test_profit_factor": 0.3694374938646944,
+    "mean_test_trades": 5.0,
+    "positive_pf_gt_1_count": 0,
+    "wf_pass_count": -1
+  },
+  "delta_new_minus_prior_gate03": {
+    "mean_test_return_pct": -0.3939456916104533,
+    "mean_test_profit_factor": -0.5474829656467066,
+    "mean_test_trades": 3.666666666666668,
+    "positive_pf_gt_1_count": -1,
+    "wf_pass_count": -1
+  }
+}

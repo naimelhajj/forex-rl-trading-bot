@@ -1,0 +1,64 @@
+{
+  "generated_at_utc": "2026-02-18T20:35:27Z",
+  "tag": "oos_stress_guardB10_20260218_221913",
+  "base_run_prefix": "fric_guardB_blind10ep_20260218_134723",
+  "source": "eval_wffull",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 1.5409833200443461,
+  "mean_profit_factor": 1.9123762432952638,
+  "mean_total_trades": 23.0,
+  "mean_steps": 10035.666666666666,
+  "mean_spr": 0.1368007428895765,
+  "mean_max_drawdown_pct": -1.5097067180711454,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed1011/eval_wffull_oos_stress_guardB10_20260218_221913/results/test_results.json",
+      "return_pct": 3.2094959294431957,
+      "profit_factor": 3.1412108466073776,
+      "total_trades": 22,
+      "steps": 323,
+      "spr": 0.4104007414997763,
+      "max_drawdown_pct": -1.3348907939163732,
+      "walkforward_pass": false,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.36683417085427134
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed2027/eval_wffull_oos_stress_guardB10_20260218_221913/results/test_results.json",
+      "return_pct": 0.7940278887845986,
+      "profit_factor": 1.2488249990704774,
+      "total_trades": 22,
+      "steps": 14892,
+      "spr": 1.546049914095968e-06,
+      "max_drawdown_pct": -1.835149321538275,
+      "walkforward_pass": false,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": -0.0006800561932743857,
+      "walkforward_positive_frac": 0.45226130653266333
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed3039/eval_wffull_oos_stress_guardB10_20260218_221913/results/test_results.json",
+      "return_pct": 0.6194261419052438,
+      "profit_factor": 1.3470928842079364,
+      "total_trades": 25,
+      "steps": 14892,
+      "spr": -5.888096089062112e-08,
+      "max_drawdown_pct": -1.359080038758788,
+      "walkforward_pass": false,
+      "walkforward_windows": 199,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.36683417085427134
+    }
+  ]
+}

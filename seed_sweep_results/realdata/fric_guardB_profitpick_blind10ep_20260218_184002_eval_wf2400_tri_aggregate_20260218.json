@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T18:03:37Z",
+  "run_prefix": "fric_guardB_profitpick_blind10ep_20260218_184002",
+  "source": "eval_wf2400",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 1.2741332270521248,
+  "mean_profit_factor": 1.9104388923732094,
+  "mean_total_trades": 22.666666666666668,
+  "mean_spr": 0.00448026135389397,
+  "mean_max_drawdown_pct": -1.814062806945113,
+  "walkforward_pass_count": 1,
+  "walkforward_pass_rate": 0.3333333333333333,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_profitpick_blind10ep_20260218_184002_seed1011/eval_wf2400/results/test_results.json",
+      "return_pct": 3.530893364233134,
+      "profit_factor": 3.573248028699484,
+      "total_trades": 18,
+      "spr": 0.0004990433905034689,
+      "max_drawdown_pct": -1.0602732144219535,
+      "walkforward_pass": false,
+      "walkforward_windows": 26,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.38461538461538464
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_profitpick_blind10ep_20260218_184002_seed2027/eval_wf2400/results/test_results.json",
+      "return_pct": -1.649971710855358,
+      "profit_factor": 0.545005366798684,
+      "total_trades": 26,
+      "spr": -5.70258580855994e-05,
+      "max_drawdown_pct": -2.7183470709714754,
+      "walkforward_pass": false,
+      "walkforward_windows": 26,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.38461538461538464
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_profitpick_blind10ep_20260218_184002_seed3039/eval_wf2400/results/test_results.json",
+      "return_pct": 1.9414780277785981,
+      "profit_factor": 1.6130632816214605,
+      "total_trades": 24,
+      "spr": 0.01299876652926404,
+      "max_drawdown_pct": -1.6635681354419098,
+      "walkforward_pass": true,
+      "walkforward_windows": 26,
+      "walkforward_median_spr": 0.02540990944598457,
+      "walkforward_positive_frac": 0.5
+    }
+  ]
+}

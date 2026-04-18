@@ -1,0 +1,62 @@
+{
+  "run_prefix": "parityfix_hfm_nogate_noprefill_4ep",
+  "timestamp": "20260217_215317",
+  "episodes": 4,
+  "max_steps_per_episode": 600,
+  "broker_profile": "hfm-premium",
+  "note": "validation/test policy parity patch active",
+  "seeds_requested": [
+    456,
+    777,
+    789
+  ],
+  "seeds_completed": [
+    456,
+    777,
+    789
+  ],
+  "results": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_4ep_20260217_215317_seed456",
+      "test_results": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_4ep_20260217_215317_seed456/results/test_results.json",
+      "return_pct": 0.0042886888953486135,
+      "profit_factor": 1.0010581169983346,
+      "total_trades": 29,
+      "spr_score": 0.03179819565019135,
+      "max_drawdown_pct": -2.596261605872568,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_4ep_20260217_215317_seed777",
+      "test_results": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_4ep_20260217_215317_seed777/results/test_results.json",
+      "return_pct": 1.6916219851716985,
+      "profit_factor": 4.212322431401625,
+      "total_trades": 8,
+      "spr_score": 0.488273639293833,
+      "max_drawdown_pct": -0.4308031180185082,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_4ep_20260217_215317_seed789",
+      "test_results": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_4ep_20260217_215317_seed789/results/test_results.json",
+      "return_pct": -0.4109009621556581,
+      "profit_factor": 0.9002819433308763,
+      "total_trades": 31,
+      "spr_score": 0.0034770103274361663,
+      "max_drawdown_pct": -2.7986772529189845,
+      "walkforward_pass": false
+    }
+  ],
+  "summary": {
+    "num_seeds": 3,
+    "mean_return_pct": 0.42833657063712965,
+    "mean_profit_factor": 2.037887497243612,
+    "mean_total_trades": 22.666666666666668,
+    "mean_spr_score": 0.1745162817571535,
+    "mean_max_drawdown_pct": -1.9419139922700202,
+    "walkforward_pass_count": 0
+  }
+}

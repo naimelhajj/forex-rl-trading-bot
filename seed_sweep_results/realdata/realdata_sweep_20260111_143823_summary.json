@@ -1,0 +1,75 @@
+{
+  "timestamp": "20260111_143823",
+  "config": {
+    "seeds": [
+      789
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "realdata_sweep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": null,
+    "flip_penalty": 0.001,
+    "cooldown_bars": null,
+    "min_hold_bars": null,
+    "max_trades_per_episode": 60
+  },
+  "runs": [
+    {
+      "seed": 789,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260111_143823_seed789",
+      "results": {
+        "test_reward": -0.08517915634635234,
+        "test_steps": 1000,
+        "test_final_equity": 950.8070237279211,
+        "test_return": -4.919297627207886,
+        "test_max_drawdown_pct": -6.372393174777244,
+        "test_total_trades": 42,
+        "test_trades": 42,
+        "test_winning_trades": 8,
+        "test_losing_trades": 34,
+        "test_win_rate": 0.19047619047619047,
+        "test_total_pnl": -42.262976272078085,
+        "test_avg_win": 5.205983869888815,
+        "test_avg_loss": -2.467966095034959,
+        "test_profit_factor": 0.49633476878577565,
+        "test_sharpe": -3.640746863642422,
+        "test_cagr": -0.33173825530869405,
+        "test_stagnation": 0.9666666666666667,
+        "test_loss_years": 0,
+        "test_fitness": -1.6131524086700193,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 950.8070237279211,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -4.919297627207886,
+      "std": 0.0,
+      "count": 1
+    },
+    "profit_factor": {
+      "mean": 0.49633476878577565,
+      "std": 0.0,
+      "count": 1
+    },
+    "fitness": {
+      "mean": -1.6131524086700193,
+      "std": 0.0,
+      "count": 1
+    }
+  }
+}

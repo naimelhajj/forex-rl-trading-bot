@@ -1,0 +1,84 @@
+{
+  "generated_at": "2026-02-24T00:24:46",
+  "profile": "guardbA_20ep_probe (same friction/gating profile as guardbA 10ep, episodes=20)",
+  "seeds": [
+    10007,
+    5051,
+    9091
+  ],
+  "probe20_aggregate": {
+    "count": 3,
+    "mean_return_pct": 0.5863139040097498,
+    "median_return_pct": 0.3590676584315444,
+    "mean_pf": 1.395867886423071,
+    "median_pf": 1.1175419664738961,
+    "wf_pass_count": 0,
+    "positive_pf_ge1_count": 2
+  },
+  "baseline10_aggregate": {
+    "count": 3,
+    "mean_return_pct": -2.186706710185963,
+    "median_return_pct": -2.032767641334454,
+    "mean_pf": 0.48689717099875507,
+    "median_pf": 0.5309088505603673,
+    "wf_pass_count": 2,
+    "positive_pf_ge1_count": 0
+  },
+  "delta_vs_baseline10": {
+    "mean_return_pct": 2.7730206141957128,
+    "mean_pf": 0.9089707154243157,
+    "wf_pass_count": -2,
+    "improved_return_seeds": 3,
+    "improved_pf_seeds": 3
+  },
+  "rows": [
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results/realdata/guardbA_20ep_probe_20260224_000603_seed10007",
+      "return_pct": 0.3590676584315444,
+      "profit_factor": 1.1175419664738961,
+      "total_trades": 17.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 1.1175419664738961,
+      "walkforward_positive_frac": 1.0,
+      "baseline_return_pct": -2.032767641334454,
+      "baseline_pf": 0.5309088505603673,
+      "baseline_wf_pass": true,
+      "delta_return_pct": 2.3918352997659986,
+      "delta_pf": 0.5866331159135288,
+      "delta_wf_pass": -1
+    },
+    {
+      "seed": 5051,
+      "run_dir": "seed_sweep_results/realdata/guardbA_20ep_probe_20260224_001144_seed5051",
+      "return_pct": 2.4238547837295066,
+      "profit_factor": 2.318222421845051,
+      "total_trades": 27.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 2.318222421845051,
+      "walkforward_positive_frac": 1.0,
+      "baseline_return_pct": -3.22182736950386,
+      "baseline_pf": 0.33694624059996675,
+      "baseline_wf_pass": true,
+      "delta_return_pct": 5.645682153233366,
+      "delta_pf": 1.981276181245084,
+      "delta_wf_pass": -1
+    },
+    {
+      "seed": 9091,
+      "run_dir": "seed_sweep_results/realdata/guardbA_20ep_probe_20260224_001144_seed9091",
+      "return_pct": -1.0239807301318016,
+      "profit_factor": 0.7518392709502655,
+      "total_trades": 24.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 0.7518392709502655,
+      "walkforward_positive_frac": 0.0,
+      "baseline_return_pct": -1.305525119719575,
+      "baseline_pf": 0.5928364218359311,
+      "baseline_wf_pass": false,
+      "delta_return_pct": 0.2815443895877734,
+      "delta_pf": 0.15900284911433438,
+      "delta_wf_pass": 0
+    }
+  ]
+}

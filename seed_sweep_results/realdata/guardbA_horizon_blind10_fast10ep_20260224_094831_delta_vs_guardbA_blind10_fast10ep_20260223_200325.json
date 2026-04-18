@@ -1,0 +1,131 @@
+{
+  "baseline_summary": "seed_sweep_results/realdata/guardbA_blind10_fast10ep_20260223_200325_summary.json",
+  "candidate_summary": "seed_sweep_results/realdata/guardbA_horizon_blind10_fast10ep_20260224_094831_summary.json",
+  "generated_at": "2026-02-24T12:41:17",
+  "aggregate": {
+    "seed_count": 10,
+    "old_mean_return_pct": 0.7413825566038823,
+    "new_mean_return_pct": 1.5682644697275627,
+    "delta_mean_return_pct": 0.8268819131236804,
+    "old_mean_profit_factor": 1.8728937554035947,
+    "new_mean_profit_factor": 2.2969318632483606,
+    "delta_mean_profit_factor": 0.4240381078447659,
+    "old_positive_pf_gt_1_count": 7,
+    "new_positive_pf_ge_1_count": 8,
+    "return_improved_seed_count": 4,
+    "pf_improved_seed_count": 4,
+    "horizon_switched_count": 5
+  },
+  "rows": [
+    {
+      "seed": 1011,
+      "old_return_pct": 1.54663960275927,
+      "new_return_pct": 2.0454614568212737,
+      "delta_return_pct": 0.49882185406200374,
+      "old_profit_factor": 1.6386375152358625,
+      "new_profit_factor": 1.9692343389623934,
+      "delta_profit_factor": 0.3305968237265309,
+      "horizon_switched": true,
+      "selector_mode": "tail_holdout+horizon"
+    },
+    {
+      "seed": 2027,
+      "old_return_pct": 1.3381530634406058,
+      "new_return_pct": 1.3381530634406058,
+      "delta_return_pct": 0.0,
+      "old_profit_factor": 1.643983963140738,
+      "new_profit_factor": 1.643983963140738,
+      "delta_profit_factor": 0.0,
+      "horizon_switched": false,
+      "selector_mode": "tail_holdout"
+    },
+    {
+      "seed": 3039,
+      "old_return_pct": 1.8087762786759942,
+      "new_return_pct": 2.2144259468687144,
+      "delta_return_pct": 0.4056496681927202,
+      "old_profit_factor": 1.7521255465503118,
+      "new_profit_factor": 2.936661884269999,
+      "delta_profit_factor": 1.1845363377196871,
+      "horizon_switched": true,
+      "selector_mode": "tail_holdout+horizon"
+    },
+    {
+      "seed": 4049,
+      "old_return_pct": 0.19205603979215446,
+      "new_return_pct": -1.6332783401481255,
+      "delta_return_pct": -1.82533437994028,
+      "old_profit_factor": 1.084666547598163,
+      "new_profit_factor": 0.4255384579358795,
+      "delta_profit_factor": -0.6591280896622834,
+      "horizon_switched": true,
+      "selector_mode": "tail_holdout+horizon"
+    },
+    {
+      "seed": 5051,
+      "old_return_pct": -3.22182736950386,
+      "new_return_pct": 1.1777005536348417,
+      "delta_return_pct": 4.399527923138702,
+      "old_profit_factor": 0.33694624059996675,
+      "new_profit_factor": 1.5601224246009613,
+      "delta_profit_factor": 1.2231761840009945,
+      "horizon_switched": true,
+      "selector_mode": "tail_holdout+horizon"
+    },
+    {
+      "seed": 6067,
+      "old_return_pct": 1.8817975269340481,
+      "new_return_pct": 1.8817975269340481,
+      "delta_return_pct": 0.0,
+      "old_profit_factor": 2.11769709631358,
+      "new_profit_factor": 2.11769709631358,
+      "delta_profit_factor": 0.0,
+      "horizon_switched": false,
+      "selector_mode": "tail_holdout"
+    },
+    {
+      "seed": 7079,
+      "old_return_pct": 4.9119324599633085,
+      "new_return_pct": 4.9119324599633085,
+      "delta_return_pct": 0.0,
+      "old_profit_factor": 6.202232107310309,
+      "new_profit_factor": 6.202232107310309,
+      "delta_profit_factor": 0.0,
+      "horizon_switched": false,
+      "selector_mode": "tail_holdout"
+    },
+    {
+      "seed": 8087,
+      "old_return_pct": 2.0602445904850164,
+      "new_return_pct": 2.0602445904850164,
+      "delta_return_pct": 0.0,
+      "old_profit_factor": 2.8244132113800315,
+      "new_profit_factor": 2.8244132113800315,
+      "delta_profit_factor": 0.0,
+      "horizon_switched": false,
+      "selector_mode": "tail_holdout"
+    },
+    {
+      "seed": 9091,
+      "old_return_pct": -1.2828795098623669,
+      "new_return_pct": -1.2828795098623669,
+      "delta_return_pct": 0.0,
+      "old_profit_factor": 0.5580610657156961,
+      "new_profit_factor": 0.5580610657156961,
+      "delta_profit_factor": 0.0,
+      "horizon_switched": false,
+      "selector_mode": "tail_holdout"
+    },
+    {
+      "seed": 10007,
+      "old_return_pct": -1.8210671166453474,
+      "new_return_pct": 2.969086949138311,
+      "delta_return_pct": 4.790154065783659,
+      "old_profit_factor": 0.570174260191288,
+      "new_profit_factor": 2.731374082854019,
+      "delta_profit_factor": 2.1611998226627307,
+      "horizon_switched": true,
+      "selector_mode": "tail_holdout+horizon"
+    }
+  ]
+}

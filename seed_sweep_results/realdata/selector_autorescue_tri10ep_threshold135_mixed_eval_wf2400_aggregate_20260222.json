@@ -1,0 +1,44 @@
+{
+  "created_at": "2026-02-22T15:49:12",
+  "label": "auto_rescue_tri10ep_threshold135_mixed_wf2400",
+  "runs": [
+    {
+      "seed": 10007,
+      "status": "ok",
+      "path": "seed_sweep_results/realdata/selector_autorescue_seed10007_recheck10ep_20260222_153317_seed10007/eval_wf2400/results/test_results.json",
+      "tag": "recheck_after_threshold_tune",
+      "test_return": 0.6520643227142076,
+      "test_profit_factor": 1.2618556645220724,
+      "test_walkforward_pass": false,
+      "test_total_trades": 21.0
+    },
+    {
+      "seed": 4049,
+      "status": "ok",
+      "path": "seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_seed4049/eval_wf2400/results/test_results.json",
+      "tag": "from_raw_tri",
+      "test_return": 2.3608933092814866,
+      "test_profit_factor": 2.410369912402805,
+      "test_walkforward_pass": false,
+      "test_total_trades": 22.0
+    },
+    {
+      "seed": 8087,
+      "status": "ok",
+      "path": "seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_seed8087/eval_wf2400/results/test_results.json",
+      "tag": "from_raw_tri",
+      "test_return": 0.7507186089292572,
+      "test_profit_factor": 1.354911981558095,
+      "test_walkforward_pass": true,
+      "test_total_trades": 21.0
+    }
+  ],
+  "aggregate": {
+    "count": 3,
+    "return_mean": 1.2545587469749837,
+    "profit_factor_mean": 1.675712519494324,
+    "positive_pf_gt1_count": 3,
+    "walkforward_pass_count": 1,
+    "walkforward_pass_rate": 0.3333333333333333
+  }
+}

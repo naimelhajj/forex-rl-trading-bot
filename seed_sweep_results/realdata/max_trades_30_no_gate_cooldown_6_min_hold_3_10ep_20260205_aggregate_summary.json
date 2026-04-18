@@ -1,0 +1,37 @@
+{
+  "entries": [
+    {
+      "path": "seed_sweep_results\\realdata\\max_trades_30_no_gate_cooldown_6_min_hold_3_10ep_20260205_111042_seed456\\results\\test_results.json",
+      "test_return": -1.9107538965609017,
+      "test_profit_factor": 0.5392580179779534,
+      "test_fitness": 0.0
+    },
+    {
+      "path": "seed_sweep_results\\realdata\\max_trades_30_no_gate_cooldown_6_min_hold_3_10ep_20260205_124931_seed777\\results\\test_results.json",
+      "test_return": -0.4265449569730295,
+      "test_profit_factor": 0.9613808103598748,
+      "test_fitness": 0.0033466250448064777
+    },
+    {
+      "path": "seed_sweep_results\\realdata\\max_trades_30_no_gate_cooldown_6_min_hold_3_10ep_20260205_132233_seed789\\results\\test_results.json",
+      "test_return": -1.1106142987836298,
+      "test_profit_factor": 0.7674697803486029,
+      "test_fitness": 0.0
+    }
+  ],
+  "return_pct": {
+    "mean": -1.1493043841058537,
+    "std": 0.6065430658603007,
+    "count": 3
+  },
+  "profit_factor": {
+    "mean": 0.756036202895477,
+    "std": 0.17252044899491414,
+    "count": 3
+  },
+  "fitness": {
+    "mean": 0.0011155416816021593,
+    "std": 0.0015776141755142626,
+    "count": 3
+  }
+}

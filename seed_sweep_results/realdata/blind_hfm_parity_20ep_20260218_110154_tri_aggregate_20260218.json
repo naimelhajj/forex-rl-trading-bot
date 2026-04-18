@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T10:13:35Z",
+  "run_prefix": "blind_hfm_parity_20ep_20260218_110154",
+  "source": "test_600",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 0.3976766485572288,
+  "mean_profit_factor": 1.2349748965565703,
+  "mean_total_trades": 29.333333333333332,
+  "mean_spr": 0.03281732835482171,
+  "mean_max_drawdown_pct": -2.320287294575511,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/blind_hfm_parity_20ep_20260218_110154_seed1011/results/test_results.json",
+      "return_pct": 1.5247219144074897,
+      "profit_factor": 1.6987068303342667,
+      "total_trades": 29,
+      "spr": 0.06596164846957588,
+      "max_drawdown_pct": -2.01484514074056,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.06596164846957588,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/blind_hfm_parity_20ep_20260218_110154_seed2027/results/test_results.json",
+      "return_pct": 0.3115422764318865,
+      "profit_factor": 1.1254825365630263,
+      "total_trades": 34,
+      "spr": 0.01542039246248605,
+      "max_drawdown_pct": -2.4544310758319288,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.01542039246248605,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/blind_hfm_parity_20ep_20260218_110154_seed3039/results/test_results.json",
+      "return_pct": -0.6432342451676898,
+      "profit_factor": 0.8807353227724177,
+      "total_trades": 25,
+      "spr": 0.017069944132403213,
+      "max_drawdown_pct": -2.491585667154044,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.017069944132403213,
+      "walkforward_positive_frac": 1.0
+    }
+  ]
+}

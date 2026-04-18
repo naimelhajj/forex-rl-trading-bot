@@ -1,0 +1,42 @@
+{
+  "date": "2026-03-28",
+  "topic": "costgate4 selected-pass proof set",
+  "runs": [
+    {
+      "label": "default_8087_probe",
+      "path": "seed_sweep_results/realdata/seed8087_default_costgate4_train10ep_autorescue_alignq25_20260326_171631_seed8087/results/test_results.json",
+      "return_pct": 2.1525890199728392,
+      "profit_factor": 2.3362084037357196,
+      "trades": 19,
+      "max_drawdown_pct": -0.8865906931413182,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.542713567839196
+    },
+    {
+      "label": "regimeB_8087_pfmmr",
+      "path": "seed_sweep_results/realdata/seed8087_regimeB_costgate4_train10ep_pfmmr_20260327_20260327_132516_seed8087/results/test_results.json",
+      "return_pct": 0.4430772683991613,
+      "profit_factor": 1.2410555056586134,
+      "trades": 17,
+      "max_drawdown_pct": -1.5227950532753358,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.5535714285714286
+    },
+    {
+      "label": "regimeB_2027_pfmmr_mmrguard",
+      "path": "seed_sweep_results/realdata/seed2027_regimeB_costgate4_train10ep_pfmmr_mmrguard_20260327_183810_seed2027/results/test_results.json",
+      "return_pct": 0.3055900294390401,
+      "profit_factor": 1.1065640237205925,
+      "trades": 21,
+      "max_drawdown_pct": -1.6344443868445524,
+      "walkforward_pass": true,
+      "walkforward_positive_frac": 0.7321428571428571
+    }
+  ],
+  "aggregate": {
+    "count": 3,
+    "mean_return_pct": 0.9670854392703468,
+    "mean_profit_factor": 1.5612759777049752,
+    "walkforward_passes": 3
+  }
+}

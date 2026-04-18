@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-02-23T22:46:25",
+  "comparison": [
+    {
+      "seed": 5051,
+      "base": {
+        "test_return_pct": -3.22182736950386,
+        "test_profit_factor": 0.33694624059996675,
+        "test_total_trades": 23,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5769230769230769
+      },
+      "new": {
+        "test_return_pct": -3.22182736950386,
+        "test_profit_factor": 0.33694624059996675,
+        "test_total_trades": 23,
+        "test_walkforward_pass": true
+      },
+      "delta": {
+        "ret": 0.0,
+        "pf": 0.0,
+        "trades": 0,
+        "wf": 0
+      }
+    },
+    {
+      "seed": 10007,
+      "base": {
+        "test_return_pct": -2.032767641334454,
+        "test_profit_factor": 0.5309088505603673,
+        "test_total_trades": 24,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "new": {
+        "test_return_pct": -2.032767641334454,
+        "test_profit_factor": 0.5309088505603673,
+        "test_total_trades": 24,
+        "test_walkforward_pass": true
+      },
+      "delta": {
+        "ret": 0.0,
+        "pf": 0.0,
+        "trades": 0,
+        "wf": 0
+      }
+    }
+  ]
+}

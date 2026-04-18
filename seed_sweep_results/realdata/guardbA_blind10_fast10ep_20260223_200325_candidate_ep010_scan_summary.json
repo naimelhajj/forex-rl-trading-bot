@@ -1,0 +1,105 @@
+{
+  "generated_at": "2026-02-24T00:04:58",
+  "rows": [
+    {
+      "seed": 1011,
+      "status": "ok",
+      "return_pct": 1.54663960275927,
+      "profit_factor": 1.6386375152358625,
+      "total_trades": 24.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 1.0885100314951148,
+      "walkforward_positive_frac": 0.46153846153846156
+    },
+    {
+      "seed": 2027,
+      "status": "ok",
+      "return_pct": -0.832891056570062,
+      "profit_factor": 0.6456908314168487,
+      "total_trades": 22.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 0.8452653512628425,
+      "walkforward_positive_frac": 0.2692307692307692
+    },
+    {
+      "seed": 3039,
+      "status": "ok",
+      "return_pct": -0.11653696892403032,
+      "profit_factor": 0.9646233817459327,
+      "total_trades": 21.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 0.9824828596700548,
+      "walkforward_positive_frac": 0.19230769230769232
+    },
+    {
+      "seed": 4049,
+      "status": "ok",
+      "return_pct": 0.7281393901120037,
+      "profit_factor": 1.2055648823373848,
+      "total_trades": 22.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 0.5833906723157102,
+      "walkforward_positive_frac": 0.23076923076923078
+    },
+    {
+      "seed": 5051,
+      "status": "ok",
+      "return_pct": 2.764500416502713,
+      "profit_factor": 2.3370756373352144,
+      "total_trades": 21.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 0.9634079425429359,
+      "walkforward_positive_frac": 0.5
+    },
+    {
+      "seed": 6067,
+      "status": "ok",
+      "return_pct": 0.850551770667618,
+      "profit_factor": 1.3117658067781541,
+      "total_trades": 26.0,
+      "walkforward_pass": true,
+      "walkforward_median_pf": 1.4417995207483136,
+      "walkforward_positive_frac": 0.6538461538461539
+    },
+    {
+      "seed": 7079,
+      "status": "ok",
+      "return_pct": 1.461544236587109,
+      "profit_factor": 1.606640005748968,
+      "total_trades": 23.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 1.3345802200736787,
+      "walkforward_positive_frac": 0.4230769230769231
+    },
+    {
+      "seed": 8087,
+      "status": "ok",
+      "return_pct": -0.5066392604231917,
+      "profit_factor": 0.7972680168608149,
+      "total_trades": 23.0,
+      "walkforward_pass": true,
+      "walkforward_median_pf": 1.0386440448860104,
+      "walkforward_positive_frac": 0.5384615384615384
+    },
+    {
+      "seed": 9091,
+      "status": "ok",
+      "return_pct": 1.5546213858322666,
+      "profit_factor": 1.4743597647144784,
+      "total_trades": 23.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 1.2329887086576288,
+      "walkforward_positive_frac": 0.4230769230769231
+    },
+    {
+      "seed": 10007,
+      "status": "ok",
+      "return_pct": 2.969086949138311,
+      "profit_factor": 2.731374082854019,
+      "total_trades": 25.0,
+      "walkforward_pass": false,
+      "walkforward_median_pf": 1.1918911393276792,
+      "walkforward_positive_frac": 0.34615384615384615
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+﻿{
+    "timestamp":  "2026-02-17T12:55:47",
+    "run_prefix":  "pivot_nogate_noprefill_8ep",
+    "episodes":  8,
+    "max_steps_per_episode":  600,
+    "config":  {
+                   "no_symmetry_loss":  true,
+                   "no_dual_controller":  true,
+                   "prefill_policy":  "none",
+                   "trade_penalty":  0,
+                   "flip_penalty":  0.0003,
+                   "cooldown_bars":  6,
+                   "min_hold_bars":  3,
+                   "max_trades_per_episode":  40,
+                   "trade_gate":  "disabled"
+               },
+    "runs":  [
+                 {
+                     "seed":  456,
+                     "run_dir":  "seed_sweep_results/realdata/pivot_nogate_noprefill_8ep_20260217_122324_seed456",
+                     "log":  "logs/pivot_nogate_noprefill_8ep_seed456_20260217_122324.log",
+                     "results_path":  "seed_sweep_results\\realdata\\pivot_nogate_noprefill_8ep_20260217_122324_seed456\\results\\test_results.json",
+                     "test_return":  -0.14951493594933529,
+                     "test_profit_factor":  1.0732928095181824,
+                     "test_total_trades":  26,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  -0.070368153897131691,
+                     "test_walkforward_median_pf":  1.0732928095181822
+                 },
+                 {
+                     "seed":  777,
+                     "run_dir":  "seed_sweep_results/realdata/pivot_nogate_noprefill_8ep_20260217_123923_seed777",
+                     "log":  "logs/pivot_nogate_noprefill_8ep_seed777_20260217_123923.log",
+                     "results_path":  "seed_sweep_results\\realdata\\pivot_nogate_noprefill_8ep_20260217_123923_seed777\\results\\test_results.json",
+                     "test_return":  1.2342905463130105,
+                     "test_profit_factor":  1.4361720537326177,
+                     "test_total_trades":  24,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  0.82886256931775282,
+                     "test_walkforward_median_pf":  1.4361720537326172
+                 },
+                 {
+                     "seed":  789,
+                     "run_dir":  "seed_sweep_results/realdata/pivot_nogate_noprefill_8ep_20260217_120748_seed789",
+                     "log":  "logs/pivot_nogate_noprefill_8ep_seed789_20260217_120748.log",
+                     "results_path":  "seed_sweep_results\\realdata\\pivot_nogate_noprefill_8ep_20260217_120748_seed789\\results\\test_results.json",
+                     "test_return":  -1.5777339189991912,
+                     "test_profit_factor":  0.7410224231781859,
+                     "test_total_trades":  25,
+                     "test_walkforward_pass":  false,
+                     "test_walkforward_median_spr":  -0.056497626751368088,
+                     "test_walkforward_median_pf":  0.74102242317818579
+                 }
+             ],
+    "aggregate":  {
+                      "seeds":  3,
+                      "return_mean":  -0.16431943621183867,
+                      "return_std":  1.1480519089018029,
+                      "pf_mean":  1.0834957621429953,
+                      "pf_std":  0.28388533764730778,
+                      "trades_mean":  25,
+                      "walkforward_pass_count":  0,
+                      "walkforward_pass_frac":  0,
+                      "positive_return_count":  1,
+                      "pf_ge_1_count":  2
+                  },
+    "comparison":  {
+                       "baseline_prefill_aggregate":  "seed_sweep_results/realdata/pivot_nogate_recheck_8ep_tri_manual_aggregate_20260217.json",
+                       "expected_direction":  "improve"
+                   },
+    "decision":  {
+                     "status":  "promising_not_confirmed",
+                     "reason":  "Large improvement vs prefill branch (near breakeven return, PF mean \u003e 1), but still 0/3 walk-forward pass at short 8-episode horizon."
+                 }
+}

@@ -1,0 +1,43 @@
+{
+  "trade_penalty": 0.0001,
+  "runs": [
+    {
+      "seed": 789,
+      "summary": "seed_sweep_results\\realdata\\realdata_sweep_20260109_214017_summary.json",
+      "test_return": 4.936787046598057,
+      "test_profit_factor": 1.642476945375548,
+      "test_fitness": 2.8283280884758306
+    },
+    {
+      "seed": 456,
+      "summary": "seed_sweep_results\\realdata\\realdata_sweep_20260109_220712_summary.json",
+      "test_return": -5.4902044369312675,
+      "test_profit_factor": 0.623935063894534,
+      "test_fitness": -1.6398902577363867
+    },
+    {
+      "seed": 777,
+      "summary": "seed_sweep_results\\realdata\\realdata_sweep_20260109_223419_summary.json",
+      "test_return": -2.0145469925255677,
+      "test_profit_factor": 0.9292699369100497,
+      "test_fitness": -0.8316462306077443
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -0.8559881276195928,
+      "std": 4.334914980480196,
+      "count": 3
+    },
+    "profit_factor": {
+      "mean": 1.0652273153933771,
+      "std": 0.4267865958967979,
+      "count": 3
+    },
+    "fitness": {
+      "mean": 0.11893053337723318,
+      "std": 1.9440406263806962,
+      "count": 3
+    }
+  }
+}

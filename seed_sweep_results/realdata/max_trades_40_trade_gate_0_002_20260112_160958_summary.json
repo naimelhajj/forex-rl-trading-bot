@@ -1,0 +1,75 @@
+{
+  "timestamp": "20260112_160958",
+  "config": {
+    "seeds": [
+      789
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "max_trades_40_trade_gate_0_002",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": true,
+    "strengths_pair_only": false,
+    "trade_penalty": null,
+    "flip_penalty": null,
+    "cooldown_bars": null,
+    "min_hold_bars": null,
+    "max_trades_per_episode": 40
+  },
+  "runs": [
+    {
+      "seed": 789,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_trade_gate_0_002_20260112_160958_seed789",
+      "results": {
+        "test_reward": -0.028657338422739556,
+        "test_steps": 1000,
+        "test_final_equity": 998.6685487460516,
+        "test_return": -0.13314512539484014,
+        "test_max_drawdown_pct": -2.366276953539848,
+        "test_total_trades": 27,
+        "test_trades": 27,
+        "test_winning_trades": 8,
+        "test_losing_trades": 19,
+        "test_win_rate": 0.2962962962962963,
+        "test_total_pnl": 3.708548746051794,
+        "test_avg_win": 5.578988142305545,
+        "test_avg_loss": -2.153860862757504,
+        "test_profit_factor": 1.0906218128956107,
+        "test_sharpe": -0.9029022131597533,
+        "test_cagr": -0.03645590299578183,
+        "test_stagnation": 0.9,
+        "test_loss_years": 0,
+        "test_fitness": -0.03664344258980318,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 998.6685487460516,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -0.13314512539484014,
+      "std": 0.0,
+      "count": 1
+    },
+    "profit_factor": {
+      "mean": 1.0906218128956107,
+      "std": 0.0,
+      "count": 1
+    },
+    "fitness": {
+      "mean": -0.03664344258980318,
+      "std": 0.0,
+      "count": 1
+    }
+  }
+}

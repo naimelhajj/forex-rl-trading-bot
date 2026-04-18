@@ -1,0 +1,79 @@
+{
+  "timestamp": "20260113_191919",
+  "config": {
+    "seeds": [
+      789
+    ],
+    "episodes": 20,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "max_trades_40_flip_0_0003_trade_penalty_0_20ep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 0.0,
+    "flip_penalty": 0.0003,
+    "cooldown_bars": null,
+    "min_hold_bars": null,
+    "max_trades_per_episode": 40,
+    "hold_tie_tau": null,
+    "hold_break_after": null,
+    "trade_gate_margin": null,
+    "trade_gate_z": null
+  },
+  "runs": [
+    {
+      "seed": 789,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_20ep_20260113_191919_seed789",
+      "results": {
+        "test_reward": -0.006713000118441414,
+        "test_steps": 1000,
+        "test_final_equity": 1017.0303912770789,
+        "test_return": 1.7030391277078838,
+        "test_max_drawdown_pct": -1.503926010052578,
+        "test_total_trades": 23,
+        "test_trades": 23,
+        "test_winning_trades": 11,
+        "test_losing_trades": 12,
+        "test_win_rate": 0.4782608695652174,
+        "test_total_pnl": 21.300391277078827,
+        "test_avg_win": 4.224234896352423,
+        "test_avg_loss": -2.0971827152331515,
+        "test_profit_factor": 1.8463891074106529,
+        "test_sharpe": 1.0777760208434422,
+        "test_cagr": 0.09383123652021763,
+        "test_stagnation": 0.8666666666666667,
+        "test_loss_years": 0,
+        "test_fitness": 1.0305174942660964,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 1017.0303912770789,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 1.7030391277078838,
+      "std": 0.0,
+      "count": 1
+    },
+    "profit_factor": {
+      "mean": 1.8463891074106529,
+      "std": 0.0,
+      "count": 1
+    },
+    "fitness": {
+      "mean": 1.0305174942660964,
+      "std": 0.0,
+      "count": 1
+    }
+  }
+}

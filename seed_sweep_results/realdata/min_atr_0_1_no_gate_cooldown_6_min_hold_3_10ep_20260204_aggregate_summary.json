@@ -1,0 +1,37 @@
+{
+  "entries": [
+    {
+      "path": "seed_sweep_results\\realdata\\min_atr_0_1_no_gate_cooldown_6_min_hold_3_10ep_20260202_180544_seed456\\results\\test_results.json",
+      "test_return": -3.5349274540966147,
+      "test_profit_factor": 0.7922900485833596,
+      "test_fitness": -0.011777453219999994
+    },
+    {
+      "path": "seed_sweep_results\\realdata\\min_atr_0_1_no_gate_cooldown_6_min_hold_3_10ep_20260204_191649_seed777\\results\\test_results.json",
+      "test_return": -1.8522830589062678,
+      "test_profit_factor": 0.8884140612883592,
+      "test_fitness": -0.0010484039761304638
+    },
+    {
+      "path": "seed_sweep_results\\realdata\\min_atr_0_1_no_gate_cooldown_6_min_hold_3_10ep_20260204_193200_seed789\\results\\test_results.json",
+      "test_return": -4.000205738918162,
+      "test_profit_factor": 0.7281551512157416,
+      "test_fitness": -0.01149555590579523
+    }
+  ],
+  "return_pct": {
+    "mean": -3.129138750640348,
+    "std": 0.9226379982481058,
+    "count": 3
+  },
+  "profit_factor": {
+    "mean": 0.8029530870291535,
+    "std": 0.06585845861182496,
+    "count": 3
+  },
+  "fitness": {
+    "mean": -0.008107137700641896,
+    "std": 0.004992605056087469,
+    "count": 3
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "generated_at": "2026-02-24T02:54:06",
+  "tag": "guardbA_horizon_tuned_pilot3",
+  "rows": [
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon_tuned_10ep_20260224_024819_seed10007",
+      "return_pct": 2.969086949138311,
+      "profit_factor": 2.731374082854019,
+      "total_trades": 25.0,
+      "walkforward_pass": false,
+      "selected_mode": "tail_holdout+horizon",
+      "selected_checkpoint": "candidate_ep010.pt",
+      "horizon_switched": true,
+      "horizon_incumbent": "candidate_ep008.pt",
+      "horizon_challenger": "candidate_ep010.pt",
+      "horizon_return_edge": 0.827494467219094,
+      "horizon_pf_edge": 0.4173743506467402,
+      "baseline_return_pct": -2.032767641334454,
+      "baseline_pf": 0.5309088505603673,
+      "baseline_wf_pass": true,
+      "delta_return_pct": 5.001854590472766,
+      "delta_pf": 2.2004652322936518,
+      "delta_wf_pass": -1
+    },
+    {
+      "seed": 5051,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon_tuned_10ep_20260224_023734_seed5051",
+      "return_pct": 1.1777005536348417,
+      "profit_factor": 1.5601224246009613,
+      "total_trades": 17.0,
+      "walkforward_pass": false,
+      "selected_mode": "tail_holdout+horizon",
+      "selected_checkpoint": "candidate_ep004.pt",
+      "horizon_switched": true,
+      "horizon_incumbent": "candidate_ep006.pt",
+      "horizon_challenger": "candidate_ep004.pt",
+      "horizon_return_edge": 0.6296866927235669,
+      "horizon_pf_edge": 0.15838720027567876,
+      "baseline_return_pct": -3.22182736950386,
+      "baseline_pf": 0.33694624059996675,
+      "baseline_wf_pass": true,
+      "delta_return_pct": 4.399527923138702,
+      "delta_pf": 1.2231761840009945,
+      "delta_wf_pass": -1
+    },
+    {
+      "seed": 7079,
+      "run_dir": "seed_sweep_results/realdata/guardbA_horizon_tuned_10ep_20260224_024251_seed7079",
+      "return_pct": 4.9119324599633085,
+      "profit_factor": 6.202232107310309,
+      "total_trades": 25.0,
+      "walkforward_pass": false,
+      "selected_mode": "tail_holdout",
+      "selected_checkpoint": "candidate_ep004.pt",
+      "horizon_switched": false,
+      "horizon_incumbent": "candidate_ep004.pt",
+      "horizon_challenger": "candidate_ep006.pt",
+      "horizon_return_edge": 0.9667383476364648,
+      "horizon_pf_edge": 0.775498260105703,
+      "baseline_return_pct": 4.9119324599633085,
+      "baseline_pf": 6.202232107310309,
+      "baseline_wf_pass": true,
+      "delta_return_pct": 0.0,
+      "delta_pf": 0.0,
+      "delta_wf_pass": -1
+    }
+  ],
+  "aggregate": {
+    "count": 3,
+    "mean_return_pct": 3.0195733209121536,
+    "mean_pf": 3.4979095382550964,
+    "wf_pass_count": 0,
+    "positive_pf_ge1_count": 3
+  },
+  "delta_vs_baseline": {
+    "mean_return_pct": 3.1337941712038226,
+    "mean_pf": 1.1412138054315488,
+    "wf_pass_count": -3,
+    "improved_return_seeds": 2,
+    "improved_pf_seeds": 2
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-04-15T08:48:16+00:00",
+  "mode": "evaluate",
+  "seed": 1011,
+  "episodes": 500,
+  "output_dir": "seed_sweep_results\\realdata\\seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011",
+  "checkpoint_dir": "seed_sweep_results\\realdata\\seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011\\checkpoints",
+  "log_dir": "seed_sweep_results\\realdata\\seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011\\logs",
+  "results_dir": "seed_sweep_results\\realdata\\seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011\\results",
+  "argv": [
+    "main.py",
+    "--mode",
+    "evaluate",
+    "--data-mode",
+    "csv",
+    "--pair-files",
+    "pair_files_real.json",
+    "--seed",
+    "1011",
+    "--checkpoint",
+    "seed_sweep_results\\realdata\\seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011\\checkpoints\\candidate_ep017.pt",
+    "--output-dir",
+    "seed_sweep_results\\realdata\\seed1011_default_traincg20_evalcg30_train17ep_absatrrescue_rerun_20260410_1805_seed1011",
+    "--eval-min-atr-cost-ratio",
+    "3.0",
+    "--eval-min-atr-pips-absolute",
+    "8.1714"
+  ],
+  "git_commit": "6cffc26945b63414c4fa6946f329c12fe8012f7d"
+}

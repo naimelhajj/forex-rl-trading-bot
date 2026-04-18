@@ -1,0 +1,1170 @@
+{
+  "created_at": "2026-02-23T02:55:09",
+  "run_prefix": "autorescue_blind10_fast10ep_20260222_155708",
+  "candidate_set": [
+    "candidate_ep002",
+    "candidate_ep004",
+    "candidate_ep006",
+    "candidate_ep008",
+    "candidate_ep010"
+  ],
+  "policy_results_ranked": [
+    {
+      "policy": "max_base_return",
+      "mean_test_return": 1.2549421597963062,
+      "mean_test_profit_factor": 1.6252452539999882,
+      "positive_and_pf_ge_1_count": 9,
+      "walkforward_pass_count": 2,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep006",
+          "test_return": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep004",
+          "test_return": 0.7326370952406291,
+          "test_profit_factor": 1.4975592440273888,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep008",
+          "test_return": 1.6598182786025095,
+          "test_profit_factor": 1.8015088007402846,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep006",
+          "test_return": 2.3838342962348325,
+          "test_profit_factor": 1.8944979247964147,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep008",
+          "test_return": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep004",
+          "test_return": 0.9222050987365504,
+          "test_profit_factor": 1.4023322156984406,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_base_combo",
+      "mean_test_return": 1.2549421597963062,
+      "mean_test_profit_factor": 1.6252452539999882,
+      "positive_and_pf_ge_1_count": 9,
+      "walkforward_pass_count": 2,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep006",
+          "test_return": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep004",
+          "test_return": 0.7326370952406291,
+          "test_profit_factor": 1.4975592440273888,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep008",
+          "test_return": 1.6598182786025095,
+          "test_profit_factor": 1.8015088007402846,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep006",
+          "test_return": 2.3838342962348325,
+          "test_profit_factor": 1.8944979247964147,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep008",
+          "test_return": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep004",
+          "test_return": 0.9222050987365504,
+          "test_profit_factor": 1.4023322156984406,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_base_combo_heavy_pf",
+      "mean_test_return": 1.2549421597963062,
+      "mean_test_profit_factor": 1.6252452539999882,
+      "positive_and_pf_ge_1_count": 9,
+      "walkforward_pass_count": 2,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep006",
+          "test_return": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep004",
+          "test_return": 0.7326370952406291,
+          "test_profit_factor": 1.4975592440273888,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep008",
+          "test_return": 1.6598182786025095,
+          "test_profit_factor": 1.8015088007402846,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep006",
+          "test_return": 2.3838342962348325,
+          "test_profit_factor": 1.8944979247964147,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep008",
+          "test_return": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep004",
+          "test_return": 0.9222050987365504,
+          "test_profit_factor": 1.4023322156984406,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_alt_return",
+      "mean_test_return": 1.2090986838188011,
+      "mean_test_profit_factor": 1.6155798778245418,
+      "positive_and_pf_ge_1_count": 9,
+      "walkforward_pass_count": 0,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep002",
+          "test_return": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep006",
+          "test_return": 0.47342154221574617,
+          "test_profit_factor": 1.1985039160368238,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep006/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep004",
+          "test_return": -0.4965785474928097,
+          "test_profit_factor": 0.8139712900714494,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep006",
+          "test_return": 0.8837535848800426,
+          "test_profit_factor": 1.2989158403673757,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep004",
+          "test_return": 0.9222050987365504,
+          "test_profit_factor": 1.4023322156984406,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "selected_current",
+      "mean_test_return": 0.9793536029035765,
+      "mean_test_profit_factor": 1.530930493411742,
+      "positive_and_pf_ge_1_count": 8,
+      "walkforward_pass_count": 1,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep002",
+          "test_return": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep002",
+          "test_return": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep008",
+          "test_return": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep008",
+          "test_return": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_composite",
+      "mean_test_return": 0.7918716033767592,
+      "mean_test_profit_factor": 1.4630335286115752,
+      "positive_and_pf_ge_1_count": 7,
+      "walkforward_pass_count": 1,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep006",
+          "test_return": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep002",
+          "test_return": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep008",
+          "test_return": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep008",
+          "test_return": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_base_pf",
+      "mean_test_return": 0.637373549205339,
+      "mean_test_profit_factor": 1.3772314436635624,
+      "positive_and_pf_ge_1_count": 7,
+      "walkforward_pass_count": 0,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep006",
+          "test_return": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep004",
+          "test_return": 0.7326370952406291,
+          "test_profit_factor": 1.4975592440273888,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep002",
+          "test_return": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep010",
+          "test_return": -1.6144674923103897,
+          "test_profit_factor": 0.4640829888373633,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep004",
+          "test_return": 0.9222050987365504,
+          "test_profit_factor": 1.4023322156984406,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_tail_return",
+      "mean_test_return": 0.5878809785830652,
+      "mean_test_profit_factor": 1.3559322803728588,
+      "positive_and_pf_ge_1_count": 7,
+      "walkforward_pass_count": 2,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep004",
+          "test_return": 0.14132952300036639,
+          "test_profit_factor": 1.039753729579041,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep008",
+          "test_return": 1.6598182786025095,
+          "test_profit_factor": 1.8015088007402846,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep004",
+          "test_return": -1.2429807994482789,
+          "test_profit_factor": 0.6232976165996762,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep008",
+          "test_return": 3.866929119964424,
+          "test_profit_factor": 2.770816554780992,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep004",
+          "test_return": -2.084868007324392,
+          "test_profit_factor": 0.35146342063621056,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep008",
+          "test_return": 1.3837915891394825,
+          "test_profit_factor": 1.574824896274431,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep008",
+          "test_return": 0.7507186089292572,
+          "test_profit_factor": 1.354911981558095,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep008",
+          "test_return": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "episode_earliest",
+      "mean_test_return": 0.5164867108630855,
+      "mean_test_profit_factor": 1.498799459998217,
+      "positive_and_pf_ge_1_count": 6,
+      "walkforward_pass_count": 1,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep002",
+          "test_return": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep002",
+          "test_return": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep002",
+          "test_return": -0.9356314458355497,
+          "test_profit_factor": 0.7256693059127844,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep002",
+          "test_return": 1.9825881365093112,
+          "test_profit_factor": 3.0425657319877453,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep002",
+          "test_return": -0.8944267560827779,
+          "test_profit_factor": 0.6978088527971744,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep002",
+          "test_return": 2.0267797037465396,
+          "test_profit_factor": 2.039952612875397,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep002",
+          "test_return": -2.5888930163675217,
+          "test_profit_factor": 0.35753030481725007,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep002",
+          "test_return": 1.3002847775944737,
+          "test_profit_factor": 1.4443793120474366,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_forward_pf_min",
+      "mean_test_return": 0.3462087322409191,
+      "mean_test_profit_factor": 1.2677423415127418,
+      "positive_and_pf_ge_1_count": 7,
+      "walkforward_pass_count": 1,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep002",
+          "test_return": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep004",
+          "test_return": 1.0123944816704533,
+          "test_profit_factor": 1.7280089613754674,
+          "test_walkforward_pass": true,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep004",
+          "test_return": -1.2429807994482789,
+          "test_profit_factor": 0.6232976165996762,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep004",
+          "test_return": -2.084868007324392,
+          "test_profit_factor": 0.35146342063621056,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep006",
+          "test_return": 0.8837535848800426,
+          "test_profit_factor": 1.2989158403673757,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep008",
+          "test_return": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "episode_latest",
+      "mean_test_return": 0.2060266722284121,
+      "mean_test_profit_factor": 1.224256273927304,
+      "positive_and_pf_ge_1_count": 6,
+      "walkforward_pass_count": 0,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep010",
+          "test_return": -2.35239968501173,
+          "test_profit_factor": 0.43274735235667655,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep010",
+          "test_return": 0.06685451003969334,
+          "test_profit_factor": 1.0297509444549686,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep010",
+          "test_return": -1.6673747243531878,
+          "test_profit_factor": 0.6825975455230744,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep010",
+          "test_return": 2.029913249578108,
+          "test_profit_factor": 2.2158412599443706,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep010",
+          "test_return": 1.9103817699728687,
+          "test_profit_factor": 1.690261855112846,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep010",
+          "test_return": 2.860084915483996,
+          "test_profit_factor": 2.3218860562787262,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep010",
+          "test_return": 0.47979924230685533,
+          "test_profit_factor": 1.166993219441866,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep010",
+          "test_return": -1.6144674923103897,
+          "test_profit_factor": 0.4640829888373633,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep010",
+          "test_return": -0.9576265008797491,
+          "test_profit_factor": 0.6781033101590863,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_future_composite",
+      "mean_test_return": 0.13777439734483976,
+      "mean_test_profit_factor": 1.1495813861481057,
+      "positive_and_pf_ge_1_count": 6,
+      "walkforward_pass_count": 0,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep002",
+          "test_return": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep002",
+          "test_return": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep004",
+          "test_return": -1.2429807994482789,
+          "test_profit_factor": 0.6232976165996762,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep004",
+          "test_return": -2.084868007324392,
+          "test_profit_factor": 0.35146342063621056,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep006",
+          "test_return": 0.8837535848800426,
+          "test_profit_factor": 1.2989158403673757,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep008",
+          "test_return": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        }
+      ]
+    },
+    {
+      "policy": "max_forward_return_min",
+      "mean_test_return": 0.13777439734483976,
+      "mean_test_profit_factor": 1.1495813861481057,
+      "positive_and_pf_ge_1_count": 6,
+      "walkforward_pass_count": 0,
+      "picks": [
+        {
+          "seed": 10007,
+          "candidate": "candidate_ep002",
+          "test_return": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed10007/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 1011,
+          "candidate": "candidate_ep002",
+          "test_return": 2.3331569443610256,
+          "test_profit_factor": 2.461463494890398,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed1011/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 2027,
+          "candidate": "candidate_ep002",
+          "test_return": -1.07194886729034,
+          "test_profit_factor": 0.5463994077291072,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed2027/candidate_probe_oracle_wf2400/candidate_ep002/results/test_results.json"
+        },
+        {
+          "seed": 3039,
+          "candidate": "candidate_ep004",
+          "test_return": 0.5694348385155479,
+          "test_profit_factor": 1.1756624870746308,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed3039/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 4049,
+          "candidate": "candidate_ep004",
+          "test_return": -1.2429807994482789,
+          "test_profit_factor": 0.6232976165996762,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed4049/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 5051,
+          "candidate": "candidate_ep010",
+          "test_return": 1.3051014374576564,
+          "test_profit_factor": 1.5602982071640628,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed5051/candidate_probe_oracle_wf2400/candidate_ep010/results/test_results.json"
+        },
+        {
+          "seed": 6067,
+          "candidate": "candidate_ep004",
+          "test_return": -2.084868007324392,
+          "test_profit_factor": 0.35146342063621056,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed6067/candidate_probe_oracle_wf2400/candidate_ep004/results/test_results.json"
+        },
+        {
+          "seed": 7079,
+          "candidate": "candidate_ep006",
+          "test_return": 1.5325508294922185,
+          "test_profit_factor": 1.8108379009026963,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed7079/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 8087,
+          "candidate": "candidate_ep006",
+          "test_return": 0.8837535848800426,
+          "test_profit_factor": 1.2989158403673757,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed8087/candidate_probe_fixed_ep006_wf2400/results/test_results.json"
+        },
+        {
+          "seed": 9091,
+          "candidate": "candidate_ep008",
+          "test_return": -1.4985203099092903,
+          "test_profit_factor": 0.4056198215948277,
+          "test_walkforward_pass": false,
+          "results_path": "seed_sweep_results/realdata/autorescue_blind10_fast10ep_20260222_155708_seed9091/candidate_probe_oracle_wf2400/candidate_ep008/results/test_results.json"
+        }
+      ]
+    }
+  ]
+}

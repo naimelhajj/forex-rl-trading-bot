@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-17T21:27:58Z",
+  "run_prefix": "parityfix_hfm_nogate_noprefill_12ep_20260217_230207",
+  "source": ".",
+  "seeds": [
+    456,
+    777,
+    789
+  ],
+  "count": 3,
+  "mean_return_pct": 1.3139201100516436,
+  "mean_profit_factor": 4.697904245295974,
+  "mean_total_trades": 18.0,
+  "mean_spr": 0.43301731015480227,
+  "mean_max_drawdown_pct": -0.7933255667159315,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_12ep_20260217_230207_seed456",
+      "return_pct": 2.3878797374108585,
+      "profit_factor": 8.910420510501284,
+      "total_trades": 12,
+      "spr": 1.1214798363571343,
+      "max_drawdown_pct": -0.30245309670827825,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 1.1214798363571343,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_12ep_20260217_230207_seed777",
+      "return_pct": 1.6916219851716985,
+      "profit_factor": 4.212322431401625,
+      "total_trades": 8,
+      "spr": 0.488273639293833,
+      "max_drawdown_pct": -0.4308031180185082,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.488273639293833,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_12ep_20260217_230207_seed789",
+      "return_pct": -0.13774139242762606,
+      "profit_factor": 0.9709697939850137,
+      "total_trades": 34,
+      "spr": -0.31070154518656046,
+      "max_drawdown_pct": -1.646720485421008,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.31070154518656046,
+      "walkforward_positive_frac": 0.0
+    }
+  ]
+}

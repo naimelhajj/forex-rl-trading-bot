@@ -1,0 +1,118 @@
+{
+  "timestamp": "20260216_173958",
+  "config": {
+    "seeds": [
+      456
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "cost_guarded_probe",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": false,
+    "no_dual_controller": false,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 5e-05,
+    "flip_penalty": 0.0005,
+    "min_atr_cost_ratio": 0.2,
+    "use_regime_filter": null,
+    "regime_min_vol_z": null,
+    "regime_align_trend": null,
+    "regime_require_trending": null,
+    "cooldown_bars": 6,
+    "min_hold_bars": 3,
+    "max_trades_per_episode": 30,
+    "hold_tie_tau": 0.2,
+    "hold_break_after": 2,
+    "trade_gate_margin": null,
+    "trade_gate_z": 0.3,
+    "r_multiple_reward_weight": null,
+    "r_multiple_reward_clip": null
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\cost_guarded_probe_20260216_173958_seed456",
+      "results": {
+        "test_reward": -0.03784510166785245,
+        "test_steps": 600,
+        "test_final_equity": 980.2524860561945,
+        "test_return": -1.9747513943805584,
+        "test_max_drawdown_pct": -2.9768003098821514,
+        "test_total_trades": 16,
+        "test_trades": 16,
+        "test_winning_trades": 4,
+        "test_losing_trades": 12,
+        "test_win_rate": 0.25,
+        "test_total_pnl": -16.597513943805406,
+        "test_avg_win": 1.9901673402205873,
+        "test_avg_loss": -2.046515275390646,
+        "test_profit_factor": 0.32415546631101116,
+        "test_fitness": 0.0,
+        "test_spr": 0.0,
+        "test_spr_pf": 0.32415546631101116,
+        "test_spr_mdd_pct": 2.9768003098821514,
+        "test_spr_mmr_pct_mean": 0.0,
+        "test_spr_trades_per_year": 115.3373063170441,
+        "test_spr_significance": 0.9237982103105319,
+        "test_spr_stagnation_penalty": 0.04171632896305133,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": 0.0,
+              "pf": 0.32415546631101116,
+              "mdd_pct": 2.9768003098821514,
+              "mmr_pct_mean": 0.0,
+              "trades": 16
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": 0.0,
+            "median_pf": 0.32415546631101116,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": 0.0,
+        "test_walkforward_median_pf": 0.32415546631101116,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -1.9747513943805584,
+      "std": 0.0,
+      "count": 1
+    },
+    "profit_factor": {
+      "mean": 0.32415546631101116,
+      "std": 0.0,
+      "count": 1
+    },
+    "fitness": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 1
+    }
+  }
+}

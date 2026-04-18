@@ -1,0 +1,44 @@
+{
+  "timestamp": "20260228_1402",
+  "profile": "guardbA_horizon100_rrmin0_stage20_weakseed_pair",
+  "runs": [
+    {
+      "seed": 123,
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_stage20_seed123_20260228_095917_seed123",
+      "test_return": 1.9777489807029758,
+      "test_profit_factor": 2.6568642987361364,
+      "test_fitness": -0.05518558624589522,
+      "test_trades": 25,
+      "status": "ok",
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_stage20_seed123_20260228_095917_summary.json"
+    },
+    {
+      "seed": 2027,
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_stage20_seed2027_20260228_113534_seed2027",
+      "test_return": -0.8844794472953277,
+      "test_profit_factor": 0.6940780250971108,
+      "test_fitness": -0.025617404941758133,
+      "test_trades": 21,
+      "status": "ok",
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_stage20_seed2027_20260228_113534_summary.json"
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.546634766703824,
+      "std": 1.4311142139991517,
+      "count": 2
+    },
+    "profit_factor": {
+      "mean": 1.6754711619166236,
+      "std": 0.9813931368195128,
+      "count": 2
+    },
+    "fitness": {
+      "mean": -0.04040149559382668,
+      "std": 0.014784090652068545,
+      "count": 2
+    },
+    "positive_pf_ge_1": 1
+  }
+}

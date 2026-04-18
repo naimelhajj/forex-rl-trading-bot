@@ -1,0 +1,19 @@
+{
+  "return_pct": {
+    "mean": -1.6053086253818811,
+    "count": 3
+  },
+  "profit_factor": {
+    "mean": 0.7651436696526984,
+    "count": 3
+  },
+  "fitness": {
+    "mean": -0.013442088851359647,
+    "count": 3
+  },
+  "seeds": [
+    "gate_z0_3_cd6_hold3_atr0_2_100ep_20260208_130217_seed456/results/test_results.json",
+    "gate_z0_3_cd6_hold3_atr0_2_100ep_retry_20260209_192644_seed777/results/test_results.json",
+    "gate_z0_3_cd6_hold3_atr0_2_100ep_20260210_140139_seed789/results/test_results.json"
+  ]
+}

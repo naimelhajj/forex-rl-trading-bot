@@ -1,0 +1,24 @@
+﻿{
+    "generated_at_utc":  "2026-02-20T16:18:54Z",
+    "run_prefix":  "rescue8087_micro_10ep_20260220_174533_guard_",
+    "source":  "guard_center_wf2400",
+    "count":  2,
+    "mean_return_pct":  2.0208699072004954,
+    "mean_profit_factor":  1.9213939957011377,
+    "results":  [
+                    {
+                        "seed":  1011,
+                        "return_pct":  1.8925547095630657,
+                        "profit_factor":  1.8685437015626016,
+                        "total_trades":  20,
+                        "walkforward_pass":  false
+                    },
+                    {
+                        "seed":  4049,
+                        "return_pct":  2.1491851048379251,
+                        "profit_factor":  1.9742442898396739,
+                        "total_trades":  22,
+                        "walkforward_pass":  false
+                    }
+                ]
+}

@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-02-18T12:20:25Z",
+  "run_prefix": "fric_guardB_blind10ep_20260218_134723",
+  "source": "train_test",
+  "seeds": [
+    1011,
+    2027,
+    3039
+  ],
+  "count": 3,
+  "mean_return_pct": 1.4372744342677028,
+  "mean_profit_factor": 1.916150136732024,
+  "mean_total_trades": 20.0,
+  "mean_spr": 0.14051008810034624,
+  "mean_max_drawdown_pct": -1.4133035377876029,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed1011/results/test_results.json",
+      "return_pct": 3.2094959294431957,
+      "profit_factor": 3.1412108466073776,
+      "total_trades": 22,
+      "spr": 0.4104007414997763,
+      "max_drawdown_pct": -1.3348907939163732,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.4104007414997763,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed2027/results/test_results.json",
+      "return_pct": 0.4829012314546688,
+      "profit_factor": 1.2601466793807579,
+      "total_trades": 13,
+      "spr": 0.02310026835325279,
+      "max_drawdown_pct": -1.5459397806876476,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.02310026835325279,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/fric_guardB_blind10ep_20260218_134723_seed3039/results/test_results.json",
+      "return_pct": 0.6194261419052438,
+      "profit_factor": 1.3470928842079364,
+      "total_trades": 25,
+      "spr": -0.011970745551990332,
+      "max_drawdown_pct": -1.359080038758788,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.011970745551990332,
+      "walkforward_positive_frac": 0.0
+    }
+  ]
+}

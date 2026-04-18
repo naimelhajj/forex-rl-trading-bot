@@ -1,0 +1,54 @@
+{
+  "test_reward": 0.0,
+  "test_steps": 224,
+  "test_final_equity": 1000.0,
+  "test_return": 0.0,
+  "test_max_drawdown_pct": 0.0,
+  "test_total_trades": 0,
+  "test_winning_trades": 0,
+  "test_losing_trades": 0,
+  "test_win_rate": 0.0,
+  "test_total_pnl": 0.0,
+  "test_avg_win": 0.0,
+  "test_avg_loss": 0.0,
+  "test_profit_factor": 0.0,
+  "test_fitness": 0.0,
+  "test_spr": 0.0,
+  "test_spr_pf": 0.0,
+  "test_spr_mdd_pct": 1.5,
+  "test_spr_mmr_pct_mean": 0.0,
+  "test_spr_trades_per_year": 0.0,
+  "test_spr_significance": 0.0,
+  "test_spr_stagnation_penalty": 1.0,
+  "walkforward": {
+    "windows": [
+      {
+        "start_idx": 0,
+        "end_idx": 225,
+        "spr": 0.0,
+        "pf": 0.0,
+        "mdd_pct": 1.5,
+        "mmr_pct_mean": 0.0,
+        "trades": 0
+      }
+    ],
+    "summary": {
+      "windows": 1,
+      "median_spr": 0.0,
+      "median_pf": 0.0,
+      "positive_frac": 0.0
+    },
+    "pass": false,
+    "requirements": {
+      "min_windows": 3,
+      "min_spr": 0.0,
+      "min_pf": 1.0,
+      "min_positive_frac": 0.5
+    }
+  },
+  "test_walkforward_pass": false,
+  "test_walkforward_windows": 1,
+  "test_walkforward_median_spr": 0.0,
+  "test_walkforward_median_pf": 0.0,
+  "test_walkforward_positive_frac": 0.0
+}

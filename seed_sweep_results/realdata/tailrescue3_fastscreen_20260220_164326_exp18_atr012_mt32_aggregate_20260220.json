@@ -1,0 +1,50 @@
+﻿{
+    "generated_at_utc":  "2026-02-20T14:58:57Z",
+    "run_prefix":  "tailrescue3_fastscreen_20260220_164326_exp18_atr012_mt32",
+    "source":  "train_test_fastscreen",
+    "seeds":  [
+                  6067,
+                  9091,
+                  10007
+              ],
+    "count":  3,
+    "mean_return_pct":  1.9321050475066788,
+    "mean_profit_factor":  1.7770146325866818,
+    "mean_total_trades":  25,
+    "mean_spr":  0.12201949611032663,
+    "mean_max_drawdown_pct":  -1.6333683139271375,
+    "walkforward_pass_count":  0,
+    "walkforward_pass_rate":  0,
+    "results":  [
+                    {
+                        "seed":  6067,
+                        "result_file":  "seed_sweep_results\\realdata\\tailrescue3_fastscreen_20260220_164326_exp18_atr012_mt32_seed6067\\results\\test_results.json",
+                        "return_pct":  2.8959261275822268,
+                        "profit_factor":  2.3021124459397919,
+                        "total_trades":  23,
+                        "spr":  -0.089439813458306358,
+                        "max_drawdown_pct":  -1.254935572345143,
+                        "walkforward_pass":  false
+                    },
+                    {
+                        "seed":  9091,
+                        "result_file":  "seed_sweep_results\\realdata\\tailrescue3_fastscreen_20260220_164326_exp18_atr012_mt32_seed9091\\results\\test_results.json",
+                        "return_pct":  2.6490398367758461,
+                        "profit_factor":  1.8909911027654831,
+                        "total_trades":  28,
+                        "spr":  0.96128087270296525,
+                        "max_drawdown_pct":  -1.4131470680034071,
+                        "walkforward_pass":  false
+                    },
+                    {
+                        "seed":  10007,
+                        "result_file":  "seed_sweep_results\\realdata\\tailrescue3_fastscreen_20260220_164326_exp18_atr012_mt32_seed10007\\results\\test_results.json",
+                        "return_pct":  0.25134917816196367,
+                        "profit_factor":  1.1379403490547708,
+                        "total_trades":  24,
+                        "spr":  -0.50578257091367906,
+                        "max_drawdown_pct":  -2.232022301432862,
+                        "walkforward_pass":  false
+                    }
+                ]
+}

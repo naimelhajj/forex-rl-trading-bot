@@ -1,0 +1,35 @@
+{
+  "config": "selector_calib_tailstrict_tri10ep_20260221_120934",
+  "n_seeds": 3,
+  "mean_test_return_pct": -0.6321005444955655,
+  "mean_test_profit_factor": 0.7939487067315697,
+  "mean_test_trades": 22.333333333333332,
+  "positive_pf_gt_1_count": 1,
+  "wf_pass_count": 0,
+  "runs": [
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results\\realdata\\selector_calib_tailstrict_tri10ep_20260221_120934_seed10007",
+      "test_return_pct": -1.2227556725539657,
+      "test_profit_factor": 0.5828860165204021,
+      "test_total_trades": 26,
+      "test_walkforward_pass": false
+    },
+    {
+      "seed": 4049,
+      "run_dir": "seed_sweep_results\\realdata\\selector_calib_tailstrict_tri10ep_20260221_120934_seed4049",
+      "test_return_pct": -1.2429807994482789,
+      "test_profit_factor": 0.6232976165996762,
+      "test_total_trades": 17,
+      "test_walkforward_pass": false
+    },
+    {
+      "seed": 3039,
+      "run_dir": "seed_sweep_results\\realdata\\selector_calib_tailstrict_tri10ep_20260221_120934_seed3039",
+      "test_return_pct": 0.5694348385155479,
+      "test_profit_factor": 1.1756624870746308,
+      "test_total_trades": 24,
+      "test_walkforward_pass": false
+    }
+  ]
+}

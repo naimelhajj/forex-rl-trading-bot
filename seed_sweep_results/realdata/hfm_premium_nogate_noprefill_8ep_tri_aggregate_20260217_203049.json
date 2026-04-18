@@ -1,0 +1,61 @@
+{
+  "run_prefix": "hfm_premium_nogate_noprefill_8ep",
+  "timestamp": "20260217_203049",
+  "episodes": 8,
+  "max_steps_per_episode": 600,
+  "broker_profile": "hfm-premium",
+  "seeds_requested": [
+    456,
+    777,
+    789
+  ],
+  "seeds_completed": [
+    456,
+    777,
+    789
+  ],
+  "results": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results/realdata/hfm_premium_nogate_noprefill_8ep_20260217_203049_seed456",
+      "test_results": "seed_sweep_results/realdata/hfm_premium_nogate_noprefill_8ep_20260217_203049_seed456/results/test_results.json",
+      "return_pct": -2.877766012642058,
+      "profit_factor": 0.3429559194505345,
+      "total_trades": 23,
+      "spr_score": -0.0013250923468053634,
+      "max_drawdown_pct": -3.441679553297078,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results/realdata/hfm_premium_nogate_noprefill_8ep_20260217_203049_seed777",
+      "test_results": "seed_sweep_results/realdata/hfm_premium_nogate_noprefill_8ep_20260217_203049_seed777/results/test_results.json",
+      "return_pct": 0.0,
+      "profit_factor": 0.0,
+      "total_trades": 0,
+      "spr_score": 0.0,
+      "max_drawdown_pct": 0.0,
+      "walkforward_pass": false
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results/realdata/hfm_premium_nogate_noprefill_8ep_20260217_203049_seed789",
+      "test_results": "seed_sweep_results/realdata/hfm_premium_nogate_noprefill_8ep_20260217_203049_seed789/results/test_results.json",
+      "return_pct": -2.6010922083287924,
+      "profit_factor": 0.37924820617555743,
+      "total_trades": 24,
+      "spr_score": -0.01118117555569495,
+      "max_drawdown_pct": -3.6786374919060436,
+      "walkforward_pass": false
+    }
+  ],
+  "summary": {
+    "num_seeds": 3,
+    "mean_return_pct": -1.8262860736569502,
+    "mean_profit_factor": 0.24073470854203063,
+    "mean_total_trades": 15.666666666666666,
+    "mean_spr_score": -0.004168755967500104,
+    "mean_max_drawdown_pct": -2.3734390150677074,
+    "walkforward_pass_count": 0
+  }
+}

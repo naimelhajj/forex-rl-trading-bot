@@ -1,0 +1,68 @@
+{
+  "timestamp": "20260109_193500",
+  "config": {
+    "seeds": [
+      456,
+      777,
+      789
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": null,
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "realdata_sweep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 1,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193500_seed456",
+      "results": {
+        "status": "missing_results",
+        "results_path": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193500_seed456\\results\\test_results.json"
+      }
+    },
+    {
+      "seed": 777,
+      "exit_code": 1,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193500_seed777",
+      "results": {
+        "status": "missing_results",
+        "results_path": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193500_seed777\\results\\test_results.json"
+      }
+    },
+    {
+      "seed": 789,
+      "exit_code": 1,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193500_seed789",
+      "results": {
+        "status": "missing_results",
+        "results_path": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193500_seed789\\results\\test_results.json"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    },
+    "profit_factor": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    },
+    "fitness": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-02-12T17:30:43+00:00",
+  "mode": "both",
+  "seed": 777,
+  "episodes": 10,
+  "output_dir": "seed_sweep_results/synthetic/sanity_10ep_20260212_193041",
+  "checkpoint_dir": "seed_sweep_results\\synthetic\\sanity_10ep_20260212_193041\\checkpoints",
+  "log_dir": "seed_sweep_results\\synthetic\\sanity_10ep_20260212_193041\\logs",
+  "results_dir": "seed_sweep_results\\synthetic\\sanity_10ep_20260212_193041\\results",
+  "argv": [
+    "main.py",
+    "--mode",
+    "both",
+    "--episodes",
+    "10",
+    "--data-mode",
+    "synthetic",
+    "--output-dir",
+    "seed_sweep_results/synthetic/sanity_10ep_20260212_193041",
+    "--trade-penalty",
+    "0",
+    "--flip-penalty",
+    "0",
+    "--min-atr-cost-ratio",
+    "0",
+    "--no-symmetry-loss",
+    "--no-dual-controller"
+  ],
+  "git_commit": "cbb108bb058a4f73ae02bc42f1e9c0b92ea6d8d7"
+}

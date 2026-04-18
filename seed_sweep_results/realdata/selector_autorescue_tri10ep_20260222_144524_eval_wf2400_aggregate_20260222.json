@@ -1,0 +1,44 @@
+{
+  "created_at": "2026-02-22T15:49:12",
+  "label": "auto_rescue_tri10ep_raw_wf2400",
+  "runs": [
+    {
+      "seed": 10007,
+      "status": "ok",
+      "path": "seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_seed10007/eval_wf2400/results/test_results.json",
+      "tag": "",
+      "test_return": -1.2227556725539657,
+      "test_profit_factor": 0.5828860165204021,
+      "test_walkforward_pass": false,
+      "test_total_trades": 26.0
+    },
+    {
+      "seed": 4049,
+      "status": "ok",
+      "path": "seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_seed4049/eval_wf2400/results/test_results.json",
+      "tag": "",
+      "test_return": 2.3608933092814866,
+      "test_profit_factor": 2.410369912402805,
+      "test_walkforward_pass": false,
+      "test_total_trades": 22.0
+    },
+    {
+      "seed": 8087,
+      "status": "ok",
+      "path": "seed_sweep_results/realdata/selector_autorescue_tri10ep_20260222_144524_seed8087/eval_wf2400/results/test_results.json",
+      "tag": "",
+      "test_return": 0.7507186089292572,
+      "test_profit_factor": 1.354911981558095,
+      "test_walkforward_pass": true,
+      "test_total_trades": 21.0
+    }
+  ],
+  "aggregate": {
+    "count": 3,
+    "return_mean": 0.6296187485522594,
+    "profit_factor_mean": 1.4493893034937675,
+    "positive_pf_gt1_count": 2,
+    "walkforward_pass_count": 1,
+    "walkforward_pass_rate": 0.3333333333333333
+  }
+}

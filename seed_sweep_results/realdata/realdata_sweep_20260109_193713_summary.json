@@ -1,0 +1,128 @@
+{
+  "timestamp": "20260109_193713",
+  "config": {
+    "seeds": [
+      456,
+      777,
+      789
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "realdata_sweep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193713_seed456",
+      "results": {
+        "test_reward": -0.0968171963720243,
+        "test_steps": 1000,
+        "test_final_equity": 976.5764944804395,
+        "test_return": -2.3423505519560517,
+        "test_max_drawdown_pct": -5.50132551171776,
+        "test_total_trades": 63,
+        "test_trades": 63,
+        "test_winning_trades": 19,
+        "test_losing_trades": 44,
+        "test_win_rate": 0.30158730158730157,
+        "test_total_pnl": -11.733505519559898,
+        "test_avg_win": 5.642467099265196,
+        "test_avg_loss": -2.703190463763605,
+        "test_profit_factor": 0.9013496889824342,
+        "test_sharpe": -1.8877766538828025,
+        "test_cagr": -0.20354005386545215,
+        "test_stagnation": 0.9,
+        "test_loss_years": 0,
+        "test_fitness": -0.6741807681132915,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 976.5764944804395,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 777,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193713_seed777",
+      "results": {
+        "test_reward": -0.07732511189507517,
+        "test_steps": 1000,
+        "test_final_equity": 982.9911991813159,
+        "test_return": -1.7008800818684056,
+        "test_max_drawdown_pct": -4.992318896811994,
+        "test_total_trades": 60,
+        "test_trades": 60,
+        "test_winning_trades": 24,
+        "test_losing_trades": 36,
+        "test_win_rate": 0.4,
+        "test_total_pnl": -4.898800818684153,
+        "test_avg_win": 3.515716226859935,
+        "test_avg_loss": -2.479888618425628,
+        "test_profit_factor": 0.9451274547139162,
+        "test_sharpe": -2.271108477478459,
+        "test_cagr": -0.20477047398350057,
+        "test_stagnation": 0.9333333333333333,
+        "test_loss_years": 0,
+        "test_fitness": -0.8445361111875279,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 982.9911991813159,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 789,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260109_193713_seed789",
+      "results": {
+        "test_reward": -0.0721895054100079,
+        "test_steps": 1000,
+        "test_final_equity": 989.1264876881968,
+        "test_return": -1.0873512311803224,
+        "test_max_drawdown_pct": -5.649003460702829,
+        "test_total_trades": 57,
+        "test_trades": 57,
+        "test_winning_trades": 18,
+        "test_losing_trades": 39,
+        "test_win_rate": 0.3157894736842105,
+        "test_total_pnl": 0.0464876881981926,
+        "test_avg_win": 5.569937987222762,
+        "test_avg_loss": -2.5695486174823463,
+        "test_profit_factor": 1.0004638915944117,
+        "test_sharpe": -0.24291515995325216,
+        "test_cagr": -0.03250627772334003,
+        "test_stagnation": 0.9666666666666667,
+        "test_loss_years": 0,
+        "test_fitness": 0.318390493112255,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 989.1264876881968,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -1.7101939550015934,
+      "std": 0.5123936539819368,
+      "count": 3
+    },
+    "profit_factor": {
+      "mean": 0.9489803450969206,
+      "std": 0.04055481774158381,
+      "count": 3
+    },
+    "fitness": {
+      "mean": -0.40010879539618815,
+      "std": 0.512793757384545,
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "timestamp": "20260119_151026",
+  "seeds": [
+    456,
+    777,
+    789
+  ],
+  "runs": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_regime_trend_only_10ep_20260119_142647_seed456\\eval_fast_regime_trend_only",
+      "test_return": 0.5369831365438227,
+      "test_profit_factor": 1.2438822330139065,
+      "test_spr": -0.13056623217957136,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.010050251256281407
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_regime_trend_only_10ep_20260119_143950_seed777\\eval_fast_regime_trend_only",
+      "test_return": 1.1326929969451172,
+      "test_profit_factor": 1.487353743524569,
+      "test_spr": 0.05926758794576808,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.04522613065326633
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_regime_trend_only_10ep_20260119_145325_seed789\\eval_fast_regime_trend_only",
+      "test_return": -0.5739628105854044,
+      "test_profit_factor": 0.0,
+      "test_spr": 0.0,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.0
+    }
+  ],
+  "aggregate": {
+    "return_pct_mean": 0.3652377743011785,
+    "profit_factor_mean": 0.9104119921794919,
+    "spr_mean": -0.023766214744601093,
+    "walkforward_pass_count": 0
+  },
+  "note": "Trend-alignment regime filter without is_trending requirement; eval uses fast walk-forward slicing."
+}

@@ -1,0 +1,168 @@
+{
+  "prefix": "post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629",
+  "eval_profile": "wf2400_candidate_probe",
+  "seeds": [
+    {
+      "seed": 4049,
+      "run_dir": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049",
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049\\candidate_probe_wf2400\\candidate_ep002\\results\\test_results.json",
+          "test_return_pct": 2.3608933092814866,
+          "test_profit_factor": 2.410369912402805,
+          "test_total_trades": 22,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.2692307692307692,
+          "test_walkforward_median_pf": 1.576313757839971,
+          "test_walkforward_median_spr": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049\\candidate_probe_wf2400\\candidate_ep004\\results\\test_results.json",
+          "test_return_pct": -1.2429807994482789,
+          "test_profit_factor": 0.6232976165996762,
+          "test_total_trades": 17,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231,
+          "test_walkforward_median_pf": 1.342315096472436,
+          "test_walkforward_median_spr": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049\\candidate_probe_wf2400\\candidate_ep006\\results\\test_results.json",
+          "test_return_pct": -1.0720763648621512,
+          "test_profit_factor": 0.6790808754295873,
+          "test_total_trades": 17,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.0,
+          "test_walkforward_median_pf": 0.6884290605163677,
+          "test_walkforward_median_spr": -0.00011396870477180543
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049\\candidate_probe_wf2400\\candidate_ep008\\results\\test_results.json",
+          "test_return_pct": -0.9629127019700201,
+          "test_profit_factor": 0.7439646590994891,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.23076923076923078,
+          "test_walkforward_median_pf": 0.7450739715284457,
+          "test_walkforward_median_spr": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049\\candidate_probe_wf2400\\candidate_ep010\\results\\test_results.json",
+          "test_return_pct": 1.9103817699728687,
+          "test_profit_factor": 1.690261855112846,
+          "test_total_trades": 25,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231,
+          "test_walkforward_median_pf": 0.9312120342467916,
+          "test_walkforward_median_spr": -0.0073491445686995165
+        }
+      ],
+      "best_by_probe": {
+        "checkpoint": "candidate_ep002.pt",
+        "exit_code": 0,
+        "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed4049\\candidate_probe_wf2400\\candidate_ep002\\results\\test_results.json",
+        "test_return_pct": 2.3608933092814866,
+        "test_profit_factor": 2.410369912402805,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.2692307692307692,
+        "test_walkforward_median_pf": 1.576313757839971,
+        "test_walkforward_median_spr": 0.0
+      }
+    },
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007",
+      "candidates": [
+        {
+          "checkpoint": "candidate_ep002.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007\\candidate_probe_wf2400\\candidate_ep002\\results\\test_results.json",
+          "test_return_pct": 0.6520643227142076,
+          "test_profit_factor": 1.2618556645220724,
+          "test_total_trades": 21,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.15384615384615385,
+          "test_walkforward_median_pf": 1.0698868229372847,
+          "test_walkforward_median_spr": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep004.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007\\candidate_probe_wf2400\\candidate_ep004\\results\\test_results.json",
+          "test_return_pct": 0.14132952300036639,
+          "test_profit_factor": 1.039753729579041,
+          "test_total_trades": 23,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.34615384615384615,
+          "test_walkforward_median_pf": 0.9892044651120182,
+          "test_walkforward_median_spr": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep006.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007\\candidate_probe_wf2400\\candidate_ep006\\results\\test_results.json",
+          "test_return_pct": -1.2227556725539657,
+          "test_profit_factor": 0.5828860165204021,
+          "test_total_trades": 26,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.4230769230769231,
+          "test_walkforward_median_pf": 1.284699977183525,
+          "test_walkforward_median_spr": 0.0
+        },
+        {
+          "checkpoint": "candidate_ep008.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007\\candidate_probe_wf2400\\candidate_ep008\\results\\test_results.json",
+          "test_return_pct": -1.383327563249237,
+          "test_profit_factor": 0.6005554559749217,
+          "test_total_trades": 18,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.11538461538461539,
+          "test_walkforward_median_pf": 0.823246166725053,
+          "test_walkforward_median_spr": -0.00012525015655886755
+        },
+        {
+          "checkpoint": "candidate_ep010.pt",
+          "exit_code": 0,
+          "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007\\candidate_probe_wf2400\\candidate_ep010\\results\\test_results.json",
+          "test_return_pct": -2.35239968501173,
+          "test_profit_factor": 0.43274735235667655,
+          "test_total_trades": 20,
+          "test_walkforward_pass": false,
+          "test_walkforward_positive_frac": 0.19230769230769232,
+          "test_walkforward_median_pf": 1.074127497975608,
+          "test_walkforward_median_spr": -0.000994674579905457
+        }
+      ],
+      "best_by_probe": {
+        "checkpoint": "candidate_ep002.pt",
+        "exit_code": 0,
+        "results_path": "seed_sweep_results\\realdata\\post_seedfix_gz03_spreadval_blind10_fast10ep_20260220_212629_seed10007\\candidate_probe_wf2400\\candidate_ep002\\results\\test_results.json",
+        "test_return_pct": 0.6520643227142076,
+        "test_profit_factor": 1.2618556645220724,
+        "test_total_trades": 21,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.15384615384615385,
+        "test_walkforward_median_pf": 1.0698868229372847,
+        "test_walkforward_median_spr": 0.0
+      }
+    }
+  ],
+  "aggregate": {
+    "n_seeds": 2,
+    "mean_return_pct": 1.506478815997847,
+    "mean_pf": 1.8361127884624389,
+    "wf_pass_count": 0
+  }
+}

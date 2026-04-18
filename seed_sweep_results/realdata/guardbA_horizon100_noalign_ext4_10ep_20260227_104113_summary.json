@@ -1,0 +1,332 @@
+{
+  "timestamp": "20260227_104113",
+  "config": {
+    "seeds": [
+      123,
+      1011,
+      2027,
+      8087
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "guardbA_horizon100_noalign_ext4_10ep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 0.0,
+    "flip_penalty": 0.00045,
+    "min_atr_cost_ratio": 0.15,
+    "use_regime_filter": null,
+    "regime_min_vol_z": null,
+    "regime_align_trend": null,
+    "regime_require_trending": null,
+    "cooldown_bars": 8,
+    "min_hold_bars": 4,
+    "max_trades_per_episode": 28,
+    "hold_tie_tau": null,
+    "hold_break_after": null,
+    "trade_gate_margin": null,
+    "trade_gate_z": 0.3,
+    "r_multiple_reward_weight": null,
+    "r_multiple_reward_clip": null,
+    "anti_regression_top_k": 10,
+    "anti_regression_selector_mode": "auto_rescue",
+    "anti_regression_auto_rescue_enabled": true,
+    "anti_regression_rescue_winner_forward_return_max": 0.75,
+    "anti_regression_rescue_forward_return_edge_min": 0.1,
+    "anti_regression_rescue_forward_pf_edge_min": 0.1,
+    "anti_regression_rescue_challenger_base_return_max": 0.6,
+    "anti_regression_rescue_challenger_forward_pf_min": 1.35,
+    "anti_regression_horizon_rescue_enabled": true,
+    "anti_regression_horizon_window_bars": 2400,
+    "anti_regression_horizon_start_frac": 0.2,
+    "anti_regression_horizon_end_frac": 1.0,
+    "anti_regression_horizon_candidate_limit": 8,
+    "anti_regression_horizon_incumbent_return_max": 1.0,
+    "anti_regression_horizon_return_edge_min": 0.25,
+    "anti_regression_horizon_pf_edge_min": 0.1,
+    "anti_regression_horizon_challenger_base_return_max": 1.0,
+    "anti_regression_horizon_challenger_pf_min": 1.35,
+    "anti_regression_horizon_min_trades": 10.0,
+    "anti_regression_alignment_probe_enabled": false,
+    "anti_regression_alignment_probe_top_k": null,
+    "anti_regression_alignment_probe_window_bars": null,
+    "anti_regression_alignment_probe_stride_frac": null,
+    "anti_regression_alignment_probe_use_all_windows": null,
+    "anti_regression_alignment_probe_return_edge_min": null,
+    "anti_regression_alignment_probe_pf_edge_min": null,
+    "anti_regression_alignment_probe_min_trades": null,
+    "anti_regression_alignment_probe_require_pass": null
+  },
+  "runs": [
+    {
+      "seed": 123,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed123",
+      "results": {
+        "test_reward": -0.024865875378656088,
+        "test_steps": 600,
+        "test_final_equity": 998.0360556887263,
+        "test_return": -0.19639443112737798,
+        "test_max_drawdown_pct": -1.347549951292091,
+        "test_total_trades": 22,
+        "test_trades": 22,
+        "test_winning_trades": 9,
+        "test_losing_trades": 13,
+        "test_win_rate": 0.4090909090909091,
+        "test_total_pnl": -1.963944311273771,
+        "test_avg_win": 3.3286755705707027,
+        "test_avg_loss": -2.4555403420315463,
+        "test_profit_factor": 0.9384768245331434,
+        "test_fitness": 0.027889456608185148,
+        "test_spr": 0.027889456608185148,
+        "test_spr_pf": 0.9384768245331434,
+        "test_spr_mdd_pct": 1.5,
+        "test_spr_mmr_pct_mean": 0.06584478509328165,
+        "test_spr_trades_per_year": 158.58879618593562,
+        "test_spr_significance": 1.0,
+        "test_spr_stagnation_penalty": 0.6769964243146603,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": 0.027889456608185148,
+              "pf": 0.9384768245331434,
+              "mdd_pct": 1.5,
+              "mmr_pct_mean": 0.06584478509328165,
+              "trades": 22
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": 0.027889456608185148,
+            "median_pf": 0.9384768245331434,
+            "positive_frac": 1.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": 0.027889456608185148,
+        "test_walkforward_median_pf": 0.9384768245331434,
+        "test_walkforward_positive_frac": 1.0,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 1011,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed1011",
+      "results": {
+        "test_reward": -0.009477579382520418,
+        "test_steps": 600,
+        "test_final_equity": 1006.0405918524858,
+        "test_return": 0.6040591852485733,
+        "test_max_drawdown_pct": -1.683799820050493,
+        "test_total_trades": 22,
+        "test_trades": 22,
+        "test_winning_trades": 8,
+        "test_losing_trades": 14,
+        "test_win_rate": 0.36363636363636365,
+        "test_total_pnl": 6.040591852486166,
+        "test_avg_win": 4.032454255595954,
+        "test_avg_loss": -1.8727887280201045,
+        "test_profit_factor": 1.2303894935667956,
+        "test_fitness": -0.3188447868220779,
+        "test_spr": -0.3188447868220779,
+        "test_spr_pf": 1.2303894935667954,
+        "test_spr_mdd_pct": 1.683799820050493,
+        "test_spr_mmr_pct_mean": -0.9975233304949939,
+        "test_spr_trades_per_year": 158.58879618593562,
+        "test_spr_significance": 1.0,
+        "test_spr_stagnation_penalty": 0.4374255065554231,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": -0.3188447868220779,
+              "pf": 1.2303894935667954,
+              "mdd_pct": 1.683799820050493,
+              "mmr_pct_mean": -0.9975233304949939,
+              "trades": 22
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": -0.3188447868220779,
+            "median_pf": 1.2303894935667954,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": -0.3188447868220779,
+        "test_walkforward_median_pf": 1.2303894935667954,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 2027,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed2027",
+      "results": {
+        "test_reward": -0.023182775101805494,
+        "test_steps": 390,
+        "test_final_equity": 994.4825025095096,
+        "test_return": -0.5517497490490464,
+        "test_max_drawdown_pct": -2.017636606274699,
+        "test_total_trades": 21,
+        "test_trades": 21,
+        "test_winning_trades": 9,
+        "test_losing_trades": 12,
+        "test_win_rate": 0.42857142857142855,
+        "test_total_pnl": -5.5174974904903795,
+        "test_avg_win": 4.45532359644638,
+        "test_avg_loss": -3.8012841548756495,
+        "test_profit_factor": 0.8790431236372789,
+        "test_fitness": -0.47969940315638043,
+        "test_spr": -0.47969940315638043,
+        "test_spr_pf": 0.8790431236372789,
+        "test_spr_mdd_pct": 2.017636606274699,
+        "test_spr_mmr_pct_mean": -1.190370719502846,
+        "test_spr_trades_per_year": 238.2889305816135,
+        "test_spr_significance": 1.0,
+        "test_spr_stagnation_penalty": 0.924953095684803,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": -0.47969940315638043,
+              "pf": 0.8790431236372789,
+              "mdd_pct": 2.017636606274699,
+              "mmr_pct_mean": -1.190370719502846,
+              "trades": 21
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": -0.47969940315638043,
+            "median_pf": 0.8790431236372789,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": -0.47969940315638043,
+        "test_walkforward_median_pf": 0.8790431236372789,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 8087,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_noalign_ext4_10ep_20260227_104113_seed8087",
+      "results": {
+        "test_reward": -0.01734055030983943,
+        "test_steps": 600,
+        "test_final_equity": 1007.9577678876134,
+        "test_return": 0.7957767887613487,
+        "test_max_drawdown_pct": -1.3348042651660366,
+        "test_total_trades": 20,
+        "test_trades": 20,
+        "test_winning_trades": 9,
+        "test_losing_trades": 11,
+        "test_win_rate": 0.45,
+        "test_total_pnl": 7.957767887613301,
+        "test_avg_win": 4.984411139015133,
+        "test_avg_loss": -3.3547211239566277,
+        "test_profit_factor": 1.215646373453317,
+        "test_fitness": -0.3857084914299877,
+        "test_spr": -0.3857084914299877,
+        "test_spr_pf": 1.215646373453317,
+        "test_spr_mdd_pct": 1.5,
+        "test_spr_mmr_pct_mean": -0.7367257923975785,
+        "test_spr_trades_per_year": 144.1716328963051,
+        "test_spr_significance": 1.0,
+        "test_spr_stagnation_penalty": 0.6460071513706793,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": -0.3857084914299877,
+              "pf": 1.215646373453317,
+              "mdd_pct": 1.5,
+              "mmr_pct_mean": -0.7367257923975785,
+              "trades": 20
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": -0.3857084914299877,
+            "median_pf": 1.215646373453317,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": -0.3857084914299877,
+        "test_walkforward_median_pf": 1.215646373453317,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.1629229484583744,
+      "std": 0.5556462918148887,
+      "count": 4
+    },
+    "profit_factor": {
+      "mean": 1.0658889537976337,
+      "std": 0.15861346668733506,
+      "count": 4
+    },
+    "fitness": {
+      "mean": -0.2890908062000652,
+      "std": 0.19172141293142375,
+      "count": 4
+    }
+  }
+}

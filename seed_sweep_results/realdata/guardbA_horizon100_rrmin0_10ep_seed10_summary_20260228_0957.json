@@ -1,0 +1,95 @@
+{
+  "timestamp": "20260228_0957",
+  "profile": "guardbA_horizon100_rrmin0_mixed10ep",
+  "notes": "Combined aggregate after rrmin0 fix using latest summaries per seed.",
+  "source_summaries": [
+    "seed_sweep_results/realdata/guardbA_horizon100_noalign_10ep_defaulttri_summary_20260227_1051.json",
+    "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_summary.json",
+    "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_ext2_10ep_20260227_155020_summary.json",
+    "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_ext2b_10ep_20260227_223323_summary.json"
+  ],
+  "runs": [
+    {
+      "seed": 123,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_ext2_10ep_20260227_155020_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_ext2_10ep_20260227_155020_seed123",
+      "test_return": 1.5252930972453393,
+      "test_profit_factor": 1.8019028889771298,
+      "test_fitness": -0.10468163140206116,
+      "test_trades": 24
+    },
+    {
+      "seed": 1011,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_ext2b_10ep_20260227_223323_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_ext2b_10ep_20260227_223323_seed1011",
+      "test_return": 2.135737930599868,
+      "test_profit_factor": 2.1795744153044754,
+      "test_fitness": -0.2874545659075117,
+      "test_trades": 24
+    },
+    {
+      "seed": 2027,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_ext2_10ep_20260227_155020_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_ext2_10ep_20260227_155020_seed2027",
+      "test_return": 1.292692977446519,
+      "test_profit_factor": 1.46147958757588,
+      "test_fitness": -0.13263052252243498,
+      "test_trades": 23
+    },
+    {
+      "seed": 5051,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_seed5051",
+      "test_return": 1.0681745442516766,
+      "test_profit_factor": 1.3860064926358429,
+      "test_fitness": 0.12080396503748689,
+      "test_trades": 26
+    },
+    {
+      "seed": 8087,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_ext2b_10ep_20260227_223323_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_ext2b_10ep_20260227_223323_seed8087",
+      "test_return": 0.7957767887613487,
+      "test_profit_factor": 1.215646373453317,
+      "test_fitness": -0.3857084914299877,
+      "test_trades": 20
+    },
+    {
+      "seed": 9091,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_seed9091",
+      "test_return": 2.2312686910777035,
+      "test_profit_factor": 2.2228776913408566,
+      "test_fitness": 0.263160676271293,
+      "test_trades": 23
+    },
+    {
+      "seed": 10007,
+      "source_summary": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_summary.json",
+      "run_dir": "seed_sweep_results\\realdata\\guardbA_horizon100_rrmin0_weakseed_10ep_20260227_183700_seed10007",
+      "test_return": 0.9687268325785814,
+      "test_profit_factor": 1.4721311828238224,
+      "test_fitness": 0.07228817522174033,
+      "test_trades": 19
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 1.4310958374230052,
+      "std": 0.5228975324205642,
+      "count": 7
+    },
+    "profit_factor": {
+      "mean": 1.6770883760159034,
+      "std": 0.36880285951466374,
+      "count": 7
+    },
+    "fitness": {
+      "mean": -0.0648889135330679,
+      "std": 0.21365826832469847,
+      "count": 7
+    },
+    "positive_pf_ge_1": 7,
+    "positive_return": 7
+  }
+}

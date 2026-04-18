@@ -1,0 +1,95 @@
+{
+  "generated_at": "2026-02-24T00:03:38",
+  "rows": [
+    {
+      "seed": 1011,
+      "winner": "candidate_ep010.pt",
+      "status": "ok",
+      "return_pct": 1.54663960275927,
+      "profit_factor": 1.6386375152358625,
+      "trades": 24.0,
+      "wf_pass": false
+    },
+    {
+      "seed": 2027,
+      "winner": "candidate_ep008.pt",
+      "status": "ok",
+      "return_pct": -0.2865583353432677,
+      "profit_factor": 0.9061096085412879,
+      "trades": 22.0,
+      "wf_pass": true
+    },
+    {
+      "seed": 3039,
+      "winner": "candidate_ep006.pt",
+      "status": "ok",
+      "return_pct": 1.3100274628109698,
+      "profit_factor": 1.4919523357424749,
+      "trades": 26.0,
+      "wf_pass": false
+    },
+    {
+      "seed": 4049,
+      "winner": "candidate_ep006.pt",
+      "status": "ok",
+      "return_pct": 0.2425511012976056,
+      "profit_factor": 1.1071299311123324,
+      "trades": 23.0,
+      "wf_pass": false
+    },
+    {
+      "seed": 5051,
+      "winner": "candidate_ep006.pt",
+      "status": "ok",
+      "return_pct": -0.01931357224248531,
+      "profit_factor": 0.9921668934684893,
+      "trades": 21.0,
+      "wf_pass": true
+    },
+    {
+      "seed": 6067,
+      "winner": "candidate_ep002.pt",
+      "status": "ok",
+      "return_pct": -1.1796956427019056,
+      "profit_factor": 0.7023549875321367,
+      "trades": 22.0,
+      "wf_pass": false
+    },
+    {
+      "seed": 7079,
+      "winner": "candidate_ep004.pt",
+      "status": "ok",
+      "return_pct": 2.901500132327506,
+      "profit_factor": 3.086308020100966,
+      "trades": 21.0,
+      "wf_pass": true
+    },
+    {
+      "seed": 8087,
+      "winner": "candidate_ep004.pt",
+      "status": "ok",
+      "return_pct": 1.0590154948817654,
+      "profit_factor": 1.528244088266192,
+      "trades": 18.0,
+      "wf_pass": false
+    },
+    {
+      "seed": 9091,
+      "winner": "candidate_ep006.pt",
+      "status": "ok",
+      "return_pct": 3.668821112927745,
+      "profit_factor": 2.8242462090692673,
+      "trades": 25.0,
+      "wf_pass": true
+    },
+    {
+      "seed": 10007,
+      "winner": "candidate_ep008.pt",
+      "status": "ok",
+      "return_pct": -0.9458322814015818,
+      "profit_factor": 0.7748002588470773,
+      "trades": 24.0,
+      "wf_pass": true
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_stage20_seed1011_20260228_140303_seed1011",
+    "evaluated": [
+      {
+        "candidate": "candidate_ep013.pt",
+        "return_pct": -0.05354238833217284,
+        "pf": 0.9787265550663716,
+        "fitness": 0.00400288694513197,
+        "trades": 26
+      },
+      {
+        "candidate": "candidate_ep008.pt",
+        "return_pct": -0.7118700300846603,
+        "pf": 0.7810034802258339,
+        "fitness": -0.11607208523219376,
+        "trades": 25
+      },
+      {
+        "candidate": "candidate_ep009.pt",
+        "return_pct": 0.5148024134847828,
+        "pf": 1.1528945630044813,
+        "fitness": -0.056166360493323235,
+        "trades": 20
+      },
+      {
+        "candidate": "candidate_ep010.pt",
+        "return_pct": 1.129489679729323,
+        "pf": 1.4576773735783992,
+        "fitness": -0.03791848376071643,
+        "trades": 21
+      },
+      {
+        "candidate": "candidate_ep011.pt",
+        "return_pct": 2.2385222588667597,
+        "pf": 2.179477013504905,
+        "fitness": -0.10895800044623502,
+        "trades": 22
+      },
+      {
+        "candidate": "candidate_ep007.pt",
+        "return_pct": -2.3980693146017362,
+        "pf": 0.4008096789643098,
+        "fitness": -0.002008933579587501,
+        "trades": 23
+      },
+      {
+        "candidate": "candidate_ep012.pt",
+        "return_pct": -2.9126553807862,
+        "pf": 0.39329029647845815,
+        "fitness": -0.03540829772598137,
+        "trades": 22
+      }
+    ]
+  },
+  {
+    "run_dir": "seed_sweep_results/realdata/guardbA_horizon100_rrmin0_stage20_seed8087_20260228_161300_seed8087",
+    "evaluated": [
+      {
+        "candidate": "candidate_ep009.pt",
+        "return_pct": -0.9134612192170266,
+        "pf": 0.7664285437379689,
+        "fitness": 0.08194726693576986,
+        "trades": 22
+      },
+      {
+        "candidate": "candidate_ep012.pt",
+        "return_pct": -3.802305901750458,
+        "pf": 0.20507832975775123,
+        "fitness": -0.001977619475952661,
+        "trades": 24
+      },
+      {
+        "candidate": "candidate_ep013.pt",
+        "return_pct": -1.4767890479746582,
+        "pf": 0.632552688223373,
+        "fitness": 0.10691122303912225,
+        "trades": 21
+      },
+      {
+        "candidate": "candidate_ep015.pt",
+        "return_pct": 1.6094502929004273,
+        "pf": 2.0434716685551884,
+        "fitness": 0.73282069357016,
+        "trades": 22
+      },
+      {
+        "candidate": "candidate_ep014.pt",
+        "return_pct": -3.653157852209943,
+        "pf": 0.3076615954842116,
+        "fitness": -0.0016102163972713213,
+        "trades": 22
+      },
+      {
+        "candidate": "candidate_ep016.pt",
+        "return_pct": -2.9577960368509792,
+        "pf": 0.34325899386811604,
+        "fitness": 0.0007074616651655401,
+        "trades": 20
+      },
+      {
+        "candidate": "candidate_ep017.pt",
+        "return_pct": 1.8413810600294456,
+        "pf": 1.7092792227960028,
+        "fitness": 0.2636775419620748,
+        "trades": 20
+      }
+    ]
+  }
+]

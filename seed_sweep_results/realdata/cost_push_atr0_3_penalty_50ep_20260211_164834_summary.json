@@ -1,0 +1,377 @@
+{
+  "timestamp": "20260211_164834",
+  "config": {
+    "seeds": [
+      456,
+      777,
+      789
+    ],
+    "episodes": 50,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "cost_push_atr0_3_penalty_50ep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 0.0001,
+    "flip_penalty": 0.0006,
+    "min_atr_cost_ratio": 0.3,
+    "use_regime_filter": null,
+    "regime_min_vol_z": null,
+    "regime_align_trend": null,
+    "regime_require_trending": null,
+    "cooldown_bars": 6,
+    "min_hold_bars": 3,
+    "max_trades_per_episode": 25,
+    "hold_tie_tau": null,
+    "hold_break_after": null,
+    "trade_gate_margin": null,
+    "trade_gate_z": 0.3,
+    "r_multiple_reward_weight": null,
+    "r_multiple_reward_clip": null
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\cost_push_atr0_3_penalty_50ep_20260211_164834_seed456",
+      "results": {
+        "test_reward": -0.01500537615053003,
+        "test_steps": 1000,
+        "test_final_equity": 999.5947060032804,
+        "test_return": -0.04052939967196245,
+        "test_max_drawdown_pct": -1.3567585313785573,
+        "test_total_trades": 13,
+        "test_trades": 13,
+        "test_winning_trades": 6,
+        "test_losing_trades": 7,
+        "test_win_rate": 0.46153846153846156,
+        "test_total_pnl": 2.1847060032801715,
+        "test_avg_win": 2.3143897148451926,
+        "test_avg_loss": -1.6716617551129977,
+        "test_profit_factor": 1.1867009618763193,
+        "test_fitness": 0.0,
+        "test_spr": 0.0,
+        "test_spr_pf": 1.1867009618763193,
+        "test_spr_mdd_pct": 1.5,
+        "test_spr_mmr_pct_mean": 0.0,
+        "test_spr_trades_per_year": 56.850325379609544,
+        "test_spr_significance": 0.22444163165051922,
+        "test_spr_stagnation_penalty": 0.049891540130151846,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": 0.0,
+              "pf": 1.1867009618763193,
+              "mdd_pct": 1.5,
+              "mmr_pct_mean": 0.0,
+              "trades": 13
+            },
+            {
+              "start_idx": 72,
+              "end_idx": 672,
+              "spr": 0.0,
+              "pf": 0.22202668880417617,
+              "mdd_pct": 4.059614250079732,
+              "mmr_pct_mean": 0.0,
+              "trades": 16
+            },
+            {
+              "start_idx": 144,
+              "end_idx": 744,
+              "spr": 0.0,
+              "pf": 0.9892883763712759,
+              "mdd_pct": 2.023678492963964,
+              "mmr_pct_mean": 0.0,
+              "trades": 18
+            },
+            {
+              "start_idx": 216,
+              "end_idx": 816,
+              "spr": -0.05438498298451822,
+              "pf": 0.7603644111368147,
+              "mdd_pct": 2.200505167121657,
+              "mmr_pct_mean": -1.9452531071342265,
+              "trades": 19
+            },
+            {
+              "start_idx": 288,
+              "end_idx": 888,
+              "spr": -0.005872819248593617,
+              "pf": 0.37399864090236445,
+              "mdd_pct": 3.128341199872954,
+              "mmr_pct_mean": -1.5264722777652708,
+              "trades": 17
+            },
+            {
+              "start_idx": 360,
+              "end_idx": 960,
+              "spr": 0.0,
+              "pf": 0.345866212421027,
+              "mdd_pct": 2.632673184601933,
+              "mmr_pct_mean": 0.0,
+              "trades": 16
+            }
+          ],
+          "summary": {
+            "windows": 6,
+            "median_spr": 0.0,
+            "median_pf": 0.5671815260195896,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 6,
+        "test_walkforward_median_spr": 0.0,
+        "test_walkforward_median_pf": 0.5671815260195896,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 777,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\cost_push_atr0_3_penalty_50ep_20260211_164834_seed777",
+      "results": {
+        "test_reward": -0.027807020050183404,
+        "test_steps": 1000,
+        "test_final_equity": 989.7459152564475,
+        "test_return": -1.0254084743552494,
+        "test_max_drawdown_pct": -2.155368951596556,
+        "test_total_trades": 14,
+        "test_trades": 14,
+        "test_winning_trades": 5,
+        "test_losing_trades": 9,
+        "test_win_rate": 0.35714285714285715,
+        "test_total_pnl": -7.314084743552611,
+        "test_avg_win": 2.001853302030801,
+        "test_avg_loss": -1.9248168059674018,
+        "test_profit_factor": 0.5777904265499644,
+        "test_fitness": 0.0,
+        "test_spr": 0.0,
+        "test_spr_pf": 0.5777904265499644,
+        "test_spr_mdd_pct": 2.155368951596556,
+        "test_spr_mmr_pct_mean": 0.0,
+        "test_spr_trades_per_year": 61.2234273318872,
+        "test_spr_significance": 0.26029917043492173,
+        "test_spr_stagnation_penalty": 0.025307302964569844,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": 0.0,
+              "pf": 0.5777904265499644,
+              "mdd_pct": 2.155368951596556,
+              "mmr_pct_mean": 0.0,
+              "trades": 14
+            },
+            {
+              "start_idx": 72,
+              "end_idx": 672,
+              "spr": 0.0,
+              "pf": 0.4307600606113279,
+              "mdd_pct": 2.092043734247746,
+              "mmr_pct_mean": 0.0,
+              "trades": 15
+            },
+            {
+              "start_idx": 144,
+              "end_idx": 744,
+              "spr": 0.0009871601689166879,
+              "pf": 0.4069051665537217,
+              "mdd_pct": 3.3377576677070935,
+              "mmr_pct_mean": 0.21454920328131946,
+              "trades": 15
+            },
+            {
+              "start_idx": 216,
+              "end_idx": 816,
+              "spr": -0.006197876493397495,
+              "pf": 0.26052529601382557,
+              "mdd_pct": 2.8294419840310345,
+              "mmr_pct_mean": -1.4945658875587808,
+              "trades": 15
+            },
+            {
+              "start_idx": 288,
+              "end_idx": 888,
+              "spr": -0.007982947727088791,
+              "pf": 0.21704989110991452,
+              "mdd_pct": 2.53169013439263,
+              "mmr_pct_mean": -1.024807639894749,
+              "trades": 13
+            },
+            {
+              "start_idx": 360,
+              "end_idx": 960,
+              "spr": 0.0,
+              "pf": 0.49743979946678973,
+              "mdd_pct": 3.0067097662938584,
+              "mmr_pct_mean": 0.0,
+              "trades": 17
+            }
+          ],
+          "summary": {
+            "windows": 6,
+            "median_spr": 0.0,
+            "median_pf": 0.41883261358252477,
+            "positive_frac": 0.16666666666666666
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 6,
+        "test_walkforward_median_spr": 0.0,
+        "test_walkforward_median_pf": 0.41883261358252477,
+        "test_walkforward_positive_frac": 0.16666666666666666,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 789,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\cost_push_atr0_3_penalty_50ep_20260211_164834_seed789",
+      "results": {
+        "test_reward": -0.03332097858122909,
+        "test_steps": 1000,
+        "test_final_equity": 997.4821964166786,
+        "test_return": -0.2517803583321432,
+        "test_max_drawdown_pct": -2.814510571389811,
+        "test_total_trades": 19,
+        "test_trades": 19,
+        "test_winning_trades": 8,
+        "test_losing_trades": 11,
+        "test_win_rate": 0.42105263157894735,
+        "test_total_pnl": 0.7021964166791443,
+        "test_avg_win": 4.600360822226607,
+        "test_avg_loss": -3.2818809237394286,
+        "test_profit_factor": 1.019451052418802,
+        "test_fitness": 0.005542539462076925,
+        "test_spr": 0.005542539462076925,
+        "test_spr_pf": 1.019451052418802,
+        "test_spr_mdd_pct": 2.814510571389811,
+        "test_spr_mmr_pct_mean": 0.19108719492649015,
+        "test_spr_trades_per_year": 83.08893709327549,
+        "test_spr_significance": 0.4794285741173813,
+        "test_spr_stagnation_penalty": 0.16702819956616055,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 600,
+              "spr": 0.03811317195497572,
+              "pf": 1.019451052418802,
+              "mdd_pct": 2.814510571389811,
+              "mmr_pct_mean": 0.3821743898529803,
+              "trades": 19
+            },
+            {
+              "start_idx": 72,
+              "end_idx": 672,
+              "spr": -0.016992494775039495,
+              "pf": 0.6627281075729595,
+              "mdd_pct": 2.669398424170009,
+              "mmr_pct_mean": -0.36116028833325803,
+              "trades": 17
+            },
+            {
+              "start_idx": 144,
+              "end_idx": 744,
+              "spr": 0.008129425466975706,
+              "pf": 0.685251252587389,
+              "mdd_pct": 2.690278204696286,
+              "mmr_pct_mean": 0.7432372128750785,
+              "trades": 16
+            },
+            {
+              "start_idx": 216,
+              "end_idx": 816,
+              "spr": 0.337234289371255,
+              "pf": 1.050771132291184,
+              "mdd_pct": 2.402638662782124,
+              "mmr_pct_mean": 1.7867634869445852,
+              "trades": 14
+            },
+            {
+              "start_idx": 288,
+              "end_idx": 888,
+              "spr": 0.04500478601358819,
+              "pf": 1.3758472258036114,
+              "mdd_pct": 2.090391443243267,
+              "mmr_pct_mean": 0.22720434356739364,
+              "trades": 14
+            },
+            {
+              "start_idx": 360,
+              "end_idx": 960,
+              "spr": 0.0,
+              "pf": 2.091962168670762,
+              "mdd_pct": 2.6964854695770457,
+              "mmr_pct_mean": 0.0,
+              "trades": 17
+            }
+          ],
+          "summary": {
+            "windows": 6,
+            "median_spr": 0.02312129871097571,
+            "median_pf": 1.035111092354993,
+            "positive_frac": 0.6666666666666666
+          },
+          "pass": true,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": true,
+        "test_walkforward_windows": 6,
+        "test_walkforward_median_spr": 0.02312129871097571,
+        "test_walkforward_median_pf": 1.035111092354993,
+        "test_walkforward_positive_frac": 0.6666666666666666,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -0.4392394107864517,
+      "std": 0.4233614454163662,
+      "count": 3
+    },
+    "profit_factor": {
+      "mean": 0.9279808136150286,
+      "std": 0.25686327549622134,
+      "count": 3
+    },
+    "fitness": {
+      "mean": 0.0018475131540256417,
+      "std": 0.0026127781590857555,
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-02-22T22:05:17",
+  "control_prefix": "tailholdout_current_blind10_fast10ep_20260222_184805",
+  "candidate_prefix": "autorescue_blind10_fast10ep_20260222_155708",
+  "base_control": {
+    "mean_test_return_pct": 0.7918716033767592,
+    "mean_test_profit_factor": 1.4630335286115752,
+    "positive_pf_gt_1_count": 7,
+    "wf_pass_count": 0
+  },
+  "base_candidate": {
+    "mean_test_return_pct": 0.9793536029035765,
+    "mean_test_profit_factor": 1.5309304934117423,
+    "positive_pf_gt_1_count": 8,
+    "wf_pass_count": 0
+  },
+  "base_delta_control_minus_candidate": {
+    "mean_return_pct": -0.18748199952681732,
+    "mean_profit_factor": -0.06789696480016705,
+    "positive_pf_gt_1_count": -1,
+    "wf_pass_count": 0
+  },
+  "wf2400_control": {
+    "mean_test_return_pct": 0.7918716033767592,
+    "mean_test_profit_factor": 1.4630335286115752,
+    "positive_pf_gt_1_count": 7,
+    "wf_pass_count": 1
+  },
+  "wf2400_candidate": {
+    "mean_test_return_pct": 0.9793536029035765,
+    "mean_test_profit_factor": 1.5309304934117423,
+    "positive_pf_gt_1_count": 8,
+    "wf_pass_count": 1
+  },
+  "wf2400_delta_control_minus_candidate": {
+    "mean_return_pct": -0.18748199952681732,
+    "mean_profit_factor": -0.06789696480016705,
+    "positive_pf_gt_1_count": -1,
+    "wf_pass_count": 0
+  }
+}

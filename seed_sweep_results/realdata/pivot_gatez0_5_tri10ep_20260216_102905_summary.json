@@ -1,0 +1,242 @@
+{
+  "timestamp": "20260216_102905",
+  "config": {
+    "seeds": [
+      456,
+      777,
+      789
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "pivot_gatez0_5_tri10ep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 5e-05,
+    "flip_penalty": 0.0005,
+    "min_atr_cost_ratio": 0.2,
+    "use_regime_filter": null,
+    "regime_min_vol_z": null,
+    "regime_align_trend": null,
+    "regime_require_trending": null,
+    "cooldown_bars": 6,
+    "min_hold_bars": 3,
+    "max_trades_per_episode": 30,
+    "hold_tie_tau": 0.2,
+    "hold_break_after": 2,
+    "trade_gate_margin": null,
+    "trade_gate_z": 0.5,
+    "r_multiple_reward_weight": null,
+    "r_multiple_reward_clip": null
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\pivot_gatez0_5_tri10ep_20260216_102905_seed456",
+      "results": {
+        "test_reward": 0.00030203799609250124,
+        "test_steps": 300,
+        "test_final_equity": 1020.0504001590537,
+        "test_return": 2.005040015905357,
+        "test_max_drawdown_pct": -1.521892305029276,
+        "test_total_trades": 17,
+        "test_trades": 17,
+        "test_winning_trades": 10,
+        "test_losing_trades": 7,
+        "test_win_rate": 0.5882352941176471,
+        "test_total_pnl": 23.480400159053495,
+        "test_avg_win": 3.5859987727183396,
+        "test_avg_loss": -1.7685125097328427,
+        "test_profit_factor": 2.8967029418251062,
+        "test_fitness": 0.0,
+        "test_spr": 0.0,
+        "test_spr_pf": 2.8967029418251062,
+        "test_spr_mdd_pct": 1.521892305029276,
+        "test_spr_mmr_pct_mean": 0.0,
+        "test_spr_trades_per_year": 260.293670886076,
+        "test_spr_significance": 1.0,
+        "test_spr_stagnation_penalty": 1.0,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 300,
+              "spr": 0.0,
+              "pf": 2.8967029418251062,
+              "mdd_pct": 1.521892305029276,
+              "mmr_pct_mean": 0.0,
+              "trades": 17
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": 0.0,
+            "median_pf": 2.8967029418251062,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": 0.0,
+        "test_walkforward_median_pf": 2.8967029418251062,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 777,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\pivot_gatez0_5_tri10ep_20260216_102905_seed777",
+      "results": {
+        "test_reward": -0.06264899435186017,
+        "test_steps": 300,
+        "test_final_equity": 956.9070732826804,
+        "test_return": -4.309292671731968,
+        "test_max_drawdown_pct": -4.309292671731964,
+        "test_total_trades": 18,
+        "test_trades": 18,
+        "test_winning_trades": 2,
+        "test_losing_trades": 16,
+        "test_win_rate": 0.1111111111111111,
+        "test_total_pnl": -39.73292671731955,
+        "test_avg_win": 2.9195110613328388,
+        "test_avg_loss": -2.8482468024990766,
+        "test_profit_factor": 0.12812754932135945,
+        "test_fitness": 0.0,
+        "test_spr": 0.0,
+        "test_spr_pf": 0.12812754932135947,
+        "test_spr_mdd_pct": 4.28804374862564,
+        "test_spr_mmr_pct_mean": 0.0,
+        "test_spr_trades_per_year": 275.60506329113923,
+        "test_spr_significance": 1.0,
+        "test_spr_stagnation_penalty": 0.0,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 300,
+              "spr": 0.0,
+              "pf": 0.12812754932135947,
+              "mdd_pct": 4.28804374862564,
+              "mmr_pct_mean": 0.0,
+              "trades": 18
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": 0.0,
+            "median_pf": 0.12812754932135947,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": 0.0,
+        "test_walkforward_median_pf": 0.12812754932135947,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 789,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\pivot_gatez0_5_tri10ep_20260216_102905_seed789",
+      "results": {
+        "test_reward": -0.01408690772290819,
+        "test_steps": 300,
+        "test_final_equity": 994.5778455104538,
+        "test_return": -0.5422154489546194,
+        "test_max_drawdown_pct": -1.3899285314689183,
+        "test_total_trades": 1,
+        "test_trades": 1,
+        "test_winning_trades": 0,
+        "test_losing_trades": 1,
+        "test_win_rate": 0.0,
+        "test_total_pnl": -5.002154489546212,
+        "test_avg_win": 0,
+        "test_avg_loss": -5.002154489546212,
+        "test_profit_factor": 0.0,
+        "test_fitness": 0.0,
+        "test_spr": 0.0,
+        "test_spr_pf": 0.0,
+        "test_spr_mdd_pct": 1.5,
+        "test_spr_mmr_pct_mean": 0.0,
+        "test_spr_trades_per_year": 15.311392405063293,
+        "test_spr_significance": 0.0,
+        "test_spr_stagnation_penalty": 0.6329113924050632,
+        "walkforward": {
+          "windows": [
+            {
+              "start_idx": 0,
+              "end_idx": 300,
+              "spr": 0.0,
+              "pf": 0.0,
+              "mdd_pct": 1.5,
+              "mmr_pct_mean": 0.0,
+              "trades": 1
+            }
+          ],
+          "summary": {
+            "windows": 1,
+            "median_spr": 0.0,
+            "median_pf": 0.0,
+            "positive_frac": 0.0
+          },
+          "pass": false,
+          "requirements": {
+            "min_windows": 3,
+            "min_spr": 0.0,
+            "min_pf": 1.0,
+            "min_positive_frac": 0.5
+          }
+        },
+        "test_walkforward_pass": false,
+        "test_walkforward_windows": 1,
+        "test_walkforward_median_spr": 0.0,
+        "test_walkforward_median_pf": 0.0,
+        "test_walkforward_positive_frac": 0.0,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -0.9488227015937434,
+      "std": 2.5937998401271387,
+      "count": 3
+    },
+    "profit_factor": {
+      "mean": 1.0082768303821552,
+      "std": 1.3363430325602363,
+      "count": 3
+    },
+    "fitness": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 3
+    }
+  }
+}

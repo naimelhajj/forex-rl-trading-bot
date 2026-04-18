@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-02-24T13:17:02",
+  "note": "Incumbent horizon cap 0.40 targeted probe versus tuned horizon blind10 baseline.",
+  "rows": [
+    {
+      "seed": 4049,
+      "probe_run_path": "seed_sweep_results/realdata",
+      "probe_return_pct": 0.19205603979215446,
+      "probe_profit_factor": 1.084666547598163,
+      "probe_total_trades": 21,
+      "blind_return_pct": -1.6332783401481255,
+      "blind_profit_factor": 0.4255384579358795,
+      "delta_return_pct": 1.82533437994028,
+      "delta_profit_factor": 0.6591280896622834,
+      "blind_horizon_switched": true
+    },
+    {
+      "seed": 5051,
+      "probe_run_path": "seed_sweep_results/realdata",
+      "probe_return_pct": 1.1777005536348417,
+      "probe_profit_factor": 1.5601224246009613,
+      "probe_total_trades": 17,
+      "blind_return_pct": 1.1777005536348417,
+      "blind_profit_factor": 1.5601224246009613,
+      "delta_return_pct": 0.0,
+      "delta_profit_factor": 0.0,
+      "blind_horizon_switched": true
+    }
+  ],
+  "aggregate": {
+    "mean_probe_return_pct": 0.6848782967134981,
+    "mean_probe_profit_factor": 1.322394486099562,
+    "mean_delta_return_pct": 0.91266718997014,
+    "mean_delta_profit_factor": 0.3295640448311417
+  }
+}

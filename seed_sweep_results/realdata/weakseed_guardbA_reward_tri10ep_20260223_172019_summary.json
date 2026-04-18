@@ -1,0 +1,86 @@
+{
+  "config": "weakseed_guardbA_reward_tri10ep_20260223_172019",
+  "label": "weakseed_guardbA_reward_tri10ep",
+  "generated_at": "2026-02-23T18:19:23",
+  "aggregate_train": {
+    "n_seeds": 3,
+    "mean_test_return_pct": 0.7051727146877518,
+    "mean_test_profit_factor": 1.6754860800788218,
+    "mean_test_trades": 19.666666666666668,
+    "positive_pf_gt_1_count": 2,
+    "wf_pass_count": 0
+  },
+  "aggregate_eval_wf2400": {
+    "n_seeds": 3,
+    "mean_test_return_pct": 0.7199184445777421,
+    "mean_test_profit_factor": 1.6858975298054109,
+    "mean_test_trades": 21.333333333333332,
+    "positive_pf_gt_1_count": 2,
+    "wf_pass_count": 1
+  },
+  "runs": [
+    {
+      "seed": 2027,
+      "run_dir": "seed_sweep_results/realdata/weakseed_guardbA_reward_tri10ep_20260223_172019_seed2027",
+      "train": {
+        "test_return_pct": 1.3381530634406058,
+        "test_profit_factor": 1.643983963140738,
+        "test_total_trades": 20,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 1.0
+      },
+      "eval_wf2400": {
+        "test_return_pct": 1.405035862967785,
+        "test_profit_factor": 1.6404429562002696,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "selector_mode_requested": "auto_rescue",
+      "selector_mode_effective": "tail_holdout",
+      "auto_rescue_triggered": false
+    },
+    {
+      "seed": 8087,
+      "run_dir": "seed_sweep_results/realdata/weakseed_guardbA_reward_tri10ep_20260223_172019_seed8087",
+      "train": {
+        "test_return_pct": 2.0602445904850164,
+        "test_profit_factor": 2.8244132113800315,
+        "test_total_trades": 18,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 1.0
+      },
+      "eval_wf2400": {
+        "test_return_pct": 2.0602445904850164,
+        "test_profit_factor": 2.8244132113800315,
+        "test_total_trades": 18,
+        "test_walkforward_pass": true,
+        "test_walkforward_positive_frac": 0.5769230769230769
+      },
+      "selector_mode_requested": "auto_rescue",
+      "selector_mode_effective": "tail_holdout",
+      "auto_rescue_triggered": false
+    },
+    {
+      "seed": 9091,
+      "run_dir": "seed_sweep_results/realdata/weakseed_guardbA_reward_tri10ep_20260223_172019_seed9091",
+      "train": {
+        "test_return_pct": -1.2828795098623669,
+        "test_profit_factor": 0.5580610657156961,
+        "test_total_trades": 21,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 1.0
+      },
+      "eval_wf2400": {
+        "test_return_pct": -1.305525119719575,
+        "test_profit_factor": 0.5928364218359311,
+        "test_total_trades": 24,
+        "test_walkforward_pass": false,
+        "test_walkforward_positive_frac": 0.5384615384615384
+      },
+      "selector_mode_requested": "auto_rescue",
+      "selector_mode_effective": "tail_holdout",
+      "auto_rescue_triggered": false
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "timestamp": "20260118_203500",
+  "seeds": [
+    456,
+    777,
+    789
+  ],
+  "runs": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_trade_gate_z_0_5_10ep_20260118_195412_seed456\\eval_fast_trade_gate_z_0_5",
+      "test_return": 2.486552257633501,
+      "test_profit_factor": 1.8606469186160715,
+      "test_spr": -0.013872186982814514,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.01507537688442211
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_trade_gate_z_0_5_10ep_20260118_200814_seed777\\eval_fast_trade_gate_z_0_5",
+      "test_return": 0.8737047474569382,
+      "test_profit_factor": 1.4552336717087857,
+      "test_spr": 0.0,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.01507537688442211
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_40_flip_0_0003_trade_penalty_0_trade_gate_z_0_5_10ep_20260118_202155_seed789\\eval_fast_trade_gate_z_0_5",
+      "test_return": 1.73714403929075,
+      "test_profit_factor": 1.614798215889693,
+      "test_spr": 0.35809436637919867,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.02512562814070352
+    }
+  ],
+  "aggregate": {
+    "return_pct_mean": 1.6991336814603963,
+    "profit_factor_mean": 1.6435596020715166,
+    "spr_mean": 0.11474072646546139,
+    "walkforward_pass_count": 0
+  },
+  "note": "Trade-gate z=0.5 (requires Q-gap over HOLD) 10-episode runs; eval uses fast walk-forward slicing."
+}

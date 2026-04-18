@@ -1,0 +1,87 @@
+{
+  "generated_at_utc": "2026-02-19T11:22:16Z",
+  "run_prefix": "guardB5_confirm_blind20ep_20260219_105737",
+  "source": "train_test",
+  "seeds": [
+    1011,
+    2027,
+    3039,
+    4049,
+    5051
+  ],
+  "count": 5,
+  "mean_return_pct": 0.75788354723614,
+  "mean_profit_factor": 1.5623846432770747,
+  "mean_total_trades": 21.4,
+  "mean_spr": -0.03553228937615878,
+  "mean_max_drawdown_pct": -1.5081173958240575,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 1011,
+      "result_file": "seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_seed1011/results/test_results.json",
+      "return_pct": 3.2094959294431957,
+      "profit_factor": 3.1412108466073776,
+      "total_trades": 22,
+      "spr": 0.4104007414997763,
+      "max_drawdown_pct": -1.3348907939163732,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.4104007414997763,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 2027,
+      "result_file": "seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_seed2027/results/test_results.json",
+      "return_pct": -1.3724819490161688,
+      "profit_factor": 0.5619278555573082,
+      "total_trades": 21,
+      "spr": -0.009299837947270533,
+      "max_drawdown_pct": -1.6711719300745627,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.009299837947270533,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 3039,
+      "result_file": "seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_seed3039/results/test_results.json",
+      "return_pct": 0.6194261419052438,
+      "profit_factor": 1.3470928842079364,
+      "total_trades": 25,
+      "spr": -0.011970745551990332,
+      "max_drawdown_pct": -1.359080038758788,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.011970745551990332,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 4049,
+      "result_file": "seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_seed4049/results/test_results.json",
+      "return_pct": 0.7781578791542287,
+      "profit_factor": 1.4403609155120365,
+      "total_trades": 21,
+      "spr": -0.5667916048813093,
+      "max_drawdown_pct": -1.3594944237940672,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": -0.5667916048813093,
+      "walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 5051,
+      "result_file": "seed_sweep_results/realdata/guardB5_confirm_blind20ep_20260219_105737_seed5051/results/test_results.json",
+      "return_pct": 0.5548197346942008,
+      "profit_factor": 1.3213307145007152,
+      "total_trades": 18,
+      "spr": 0.0,
+      "max_drawdown_pct": -1.8159497925764962,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.0,
+      "walkforward_positive_frac": 0.0
+    }
+  ]
+}

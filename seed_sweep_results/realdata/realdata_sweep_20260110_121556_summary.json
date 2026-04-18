@@ -1,0 +1,102 @@
+{
+  "timestamp": "20260110_121556",
+  "config": {
+    "seeds": [
+      456,
+      777
+    ],
+    "episodes": 10,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "realdata_sweep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 8e-05,
+    "flip_penalty": null
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260110_121556_seed456",
+      "results": {
+        "test_reward": -0.13638885104933213,
+        "test_steps": 1000,
+        "test_final_equity": 926.9563044440255,
+        "test_return": -7.304369555597456,
+        "test_max_drawdown_pct": -8.669691674350613,
+        "test_total_trades": 65,
+        "test_trades": 65,
+        "test_winning_trades": 18,
+        "test_losing_trades": 47,
+        "test_win_rate": 0.27692307692307694,
+        "test_total_pnl": -61.1436955559746,
+        "test_avg_win": 3.5011210156456563,
+        "test_avg_loss": -2.641784549736094,
+        "test_profit_factor": 0.5075564762424442,
+        "test_sharpe": -5.0,
+        "test_cagr": -0.5365551281292524,
+        "test_stagnation": 0.9333333333333333,
+        "test_loss_years": 0,
+        "test_fitness": -2.484225512747166,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 926.9563044440255,
+        "status": "ok"
+      }
+    },
+    {
+      "seed": 777,
+      "exit_code": 0,
+      "run_dir": "seed_sweep_results\\realdata\\realdata_sweep_20260110_121556_seed777",
+      "results": {
+        "test_reward": -0.09687518809372277,
+        "test_steps": 1000,
+        "test_final_equity": 964.4134482480662,
+        "test_return": -3.5586551751933815,
+        "test_max_drawdown_pct": -7.2052924378285255,
+        "test_total_trades": 58,
+        "test_trades": 58,
+        "test_winning_trades": 18,
+        "test_losing_trades": 40,
+        "test_win_rate": 0.3103448275862069,
+        "test_total_pnl": -24.456551751933183,
+        "test_avg_win": 4.055550097479195,
+        "test_avg_loss": -2.436411337663967,
+        "test_profit_factor": 0.7490514904660746,
+        "test_sharpe": -2.5953686300751158,
+        "test_cagr": -0.30511500637701916,
+        "test_stagnation": 0.9,
+        "test_loss_years": 0,
+        "test_fitness": -1.1143726773674245,
+        "test_equity_start": 1000.0,
+        "test_equity_end": 964.4134482480662,
+        "status": "ok"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": -5.4315123653954185,
+      "std": 1.8728571902020374,
+      "count": 2
+    },
+    "profit_factor": {
+      "mean": 0.6283039833542594,
+      "std": 0.1207475071118152,
+      "count": 2
+    },
+    "fitness": {
+      "mean": -1.7992990950572954,
+      "std": 0.6849264176898707,
+      "count": 2
+    }
+  }
+}

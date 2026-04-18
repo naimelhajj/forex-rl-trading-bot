@@ -1,0 +1,239 @@
+{
+  "created_at": "2026-02-23T02:15:42",
+  "run_prefix": "autorescue_blind10_fast10ep_20260222_155708",
+  "baseline_profile": "selected_winner_eval_wf2400",
+  "candidate_profile": "fixed_candidate_ep006_wf2400",
+  "baseline_aggregate": {
+    "seeds": 10,
+    "mean_test_return": 0.9793536029035765,
+    "median_test_return": 1.0279100231934568,
+    "mean_test_profit_factor": 1.530930493411742,
+    "mean_test_total_trades": 22.2,
+    "positive_return_count": 8,
+    "pf_ge_1_count": 8,
+    "positive_and_pf_ge_1_count": 8,
+    "walkforward_pass_count": 1
+  },
+  "candidate_ep006_aggregate": {
+    "seeds": 10,
+    "mean_test_return": 0.6678358721181776,
+    "median_test_return": 0.9964294411227592,
+    "mean_test_profit_factor": 1.2807638880471524,
+    "mean_test_total_trades": 20.6,
+    "positive_return_count": 7,
+    "pf_ge_1_count": 7,
+    "positive_and_pf_ge_1_count": 7,
+    "walkforward_pass_count": 1
+  },
+  "delta_candidate_minus_baseline": {
+    "mean_test_return": -0.3115177307853989,
+    "mean_test_profit_factor": -0.2501666053645897,
+    "mean_test_total_trades": -1.5999999999999979,
+    "positive_return_count": -1,
+    "pf_ge_1_count": -1,
+    "positive_and_pf_ge_1_count": -1,
+    "walkforward_pass_count": 0
+  },
+  "per_seed": [
+    {
+      "seed": 10007,
+      "baseline": {
+        "test_return": 0.6520643227142076,
+        "test_profit_factor": 1.2618556645220724,
+        "test_total_trades": 21,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": -1.2227556725539657,
+        "test_profit_factor": 0.5828860165204021,
+        "test_total_trades": 26,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": -1.8748199952681732,
+        "test_profit_factor": -0.6789696480016704,
+        "test_total_trades": 5
+      }
+    },
+    {
+      "seed": 1011,
+      "baseline": {
+        "test_return": 2.3331569443610256,
+        "test_profit_factor": 2.461463494890398,
+        "test_total_trades": 23,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": -0.7451987574186636,
+        "test_profit_factor": 0.7331999545367365,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": -3.078355701779689,
+        "test_profit_factor": -1.7282635403536617,
+        "test_total_trades": -1
+      }
+    },
+    {
+      "seed": 2027,
+      "baseline": {
+        "test_return": -1.07194886729034,
+        "test_profit_factor": 0.5463994077291072,
+        "test_total_trades": 23,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": 0.47342154221574617,
+        "test_profit_factor": 1.1985039160368238,
+        "test_total_trades": 16,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": 1.545370409506086,
+        "test_profit_factor": 0.6521045083077166,
+        "test_total_trades": -7
+      }
+    },
+    {
+      "seed": 3039,
+      "baseline": {
+        "test_return": 0.5694348385155479,
+        "test_profit_factor": 1.1756624870746308,
+        "test_total_trades": 24,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": 1.1091052973654758,
+        "test_profit_factor": 1.3608225323799799,
+        "test_total_trades": 20,
+        "test_walkforward_pass": true
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": 0.5396704588499279,
+        "test_profit_factor": 0.18516004530534902,
+        "test_total_trades": -4
+      }
+    },
+    {
+      "seed": 4049,
+      "baseline": {
+        "test_return": 2.3608933092814866,
+        "test_profit_factor": 2.410369912402805,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": -1.0720763648621512,
+        "test_profit_factor": 0.6790808754295873,
+        "test_total_trades": 17,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": -3.4329696741436377,
+        "test_profit_factor": -1.7312890369732177,
+        "test_total_trades": -5
+      }
+    },
+    {
+      "seed": 5051,
+      "baseline": {
+        "test_return": 1.3051014374576564,
+        "test_profit_factor": 1.5602982071640628,
+        "test_total_trades": 23,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": 2.3838342962348325,
+        "test_profit_factor": 1.8944979247964147,
+        "test_total_trades": 22,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": 1.078732858777176,
+        "test_profit_factor": 0.3341997176323519,
+        "test_total_trades": -1
+      }
+    },
+    {
+      "seed": 6067,
+      "baseline": {
+        "test_return": 2.860084915483996,
+        "test_profit_factor": 2.3218860562787262,
+        "test_total_trades": 25,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": 1.268873066902132,
+        "test_profit_factor": 1.3773284182116488,
+        "test_total_trades": 19,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": -1.5912118485818638,
+        "test_profit_factor": -0.9445576380670775,
+        "test_total_trades": -6
+      }
+    },
+    {
+      "seed": 7079,
+      "baseline": {
+        "test_return": 1.5325508294922185,
+        "test_profit_factor": 1.8108379009026963,
+        "test_total_trades": 24,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": 1.5325508294922185,
+        "test_profit_factor": 1.8108379009026963,
+        "test_total_trades": 24,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": 0.0,
+        "test_profit_factor": 0.0,
+        "test_total_trades": 0
+      }
+    },
+    {
+      "seed": 8087,
+      "baseline": {
+        "test_return": 0.7507186089292572,
+        "test_profit_factor": 1.354911981558095,
+        "test_total_trades": 21,
+        "test_walkforward_pass": true
+      },
+      "candidate_ep006": {
+        "test_return": 0.8837535848800426,
+        "test_profit_factor": 1.2989158403673757,
+        "test_total_trades": 20,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": 0.1330349759507854,
+        "test_profit_factor": -0.05599614119071927,
+        "test_total_trades": -1
+      }
+    },
+    {
+      "seed": 9091,
+      "baseline": {
+        "test_return": -1.4985203099092903,
+        "test_profit_factor": 0.4056198215948277,
+        "test_total_trades": 16,
+        "test_walkforward_pass": false
+      },
+      "candidate_ep006": {
+        "test_return": 2.066850898926109,
+        "test_profit_factor": 1.8715655012898595,
+        "test_total_trades": 20,
+        "test_walkforward_pass": false
+      },
+      "delta_ep006_minus_baseline": {
+        "test_return": 3.5653712088353995,
+        "test_profit_factor": 1.4659456796950319,
+        "test_total_trades": 4
+      }
+    }
+  ]
+}

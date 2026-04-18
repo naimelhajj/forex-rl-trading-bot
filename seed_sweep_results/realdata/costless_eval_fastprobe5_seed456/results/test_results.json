@@ -1,0 +1,100 @@
+{
+  "test_reward": -0.02930573475086776,
+  "test_steps": 1000,
+  "test_final_equity": 992.42311566049,
+  "test_return": -0.7576884339509982,
+  "test_max_drawdown_pct": -1.7876692457937635,
+  "test_total_trades": 20,
+  "test_trades": 20,
+  "test_winning_trades": 4,
+  "test_losing_trades": 16,
+  "test_win_rate": 0.2,
+  "test_total_pnl": -7.576884339509941,
+  "test_avg_win": 4.212993702927056,
+  "test_avg_loss": -1.5268036969511352,
+  "test_profit_factor": 0.6898387971125491,
+  "test_fitness": 0.0,
+  "test_spr": 0.0,
+  "test_spr_pf": 0.6898387971125491,
+  "test_spr_mdd_pct": 1.7876692457937635,
+  "test_spr_mmr_pct_mean": 0.0,
+  "test_spr_trades_per_year": 87.46203904555314,
+  "test_spr_significance": 0.5312227968059626,
+  "test_spr_stagnation_penalty": 0.1807664497469269,
+  "walkforward": {
+    "windows": [
+      {
+        "start_idx": 0,
+        "end_idx": 600,
+        "spr": 0.0,
+        "pf": 0.6898387971125491,
+        "mdd_pct": 1.7876692457937635,
+        "mmr_pct_mean": 0.0,
+        "trades": 20
+      },
+      {
+        "start_idx": 72,
+        "end_idx": 672,
+        "spr": 0.0,
+        "pf": 0.5976959068814348,
+        "mdd_pct": 1.922258210044374,
+        "mmr_pct_mean": 0.0,
+        "trades": 20
+      },
+      {
+        "start_idx": 144,
+        "end_idx": 744,
+        "spr": -0.041985968158924004,
+        "pf": 1.1177318809403158,
+        "mdd_pct": 1.6463681288511618,
+        "mmr_pct_mean": -0.8945970281916288,
+        "trades": 19
+      },
+      {
+        "start_idx": 216,
+        "end_idx": 816,
+        "spr": -0.11022054245891125,
+        "pf": 0.6448367110977103,
+        "mdd_pct": 2.801278586793167,
+        "mmr_pct_mean": -1.4794681140297372,
+        "trades": 22
+      },
+      {
+        "start_idx": 288,
+        "end_idx": 888,
+        "spr": -0.03689146936891218,
+        "pf": 0.6209304365663428,
+        "mdd_pct": 2.789822256281964,
+        "mmr_pct_mean": -0.7557944131176952,
+        "trades": 18
+      },
+      {
+        "start_idx": 360,
+        "end_idx": 960,
+        "spr": 0.0,
+        "pf": 1.1587113804837799,
+        "mdd_pct": 2.55406186538966,
+        "mmr_pct_mean": 0.0,
+        "trades": 20
+      }
+    ],
+    "summary": {
+      "windows": 6,
+      "median_spr": -0.01844573468445609,
+      "median_pf": 0.6673377541051297,
+      "positive_frac": 0.0
+    },
+    "pass": false,
+    "requirements": {
+      "min_windows": 3,
+      "min_spr": 0.0,
+      "min_pf": 1.0,
+      "min_positive_frac": 0.5
+    }
+  },
+  "test_walkforward_pass": false,
+  "test_walkforward_windows": 6,
+  "test_walkforward_median_spr": -0.01844573468445609,
+  "test_walkforward_median_pf": 0.6673377541051297,
+  "test_walkforward_positive_frac": 0.0
+}

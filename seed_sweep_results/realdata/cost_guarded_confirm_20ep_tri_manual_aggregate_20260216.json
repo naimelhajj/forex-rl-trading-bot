@@ -1,0 +1,76 @@
+{
+  "timestamp": "20260216_212114",
+  "config": {
+    "run_prefix": "cost_guarded_confirm_20ep",
+    "episodes": 20,
+    "seeds": [
+      456,
+      777,
+      789
+    ],
+    "max_steps_per_episode": 1000,
+    "trade_penalty": 5e-05,
+    "flip_penalty": 0.0005,
+    "min_atr_cost_ratio": 0.2,
+    "cooldown_bars": 6,
+    "min_hold_bars": 3,
+    "max_trades_per_episode": 30,
+    "trade_gate_z": 0.3,
+    "hold_tie_tau": 0.2,
+    "hold_break_after": 2,
+    "prefill_policy": "random"
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results\\realdata\\cost_guarded_confirm_20ep_20260216_185103_seed456",
+      "status": "ok",
+      "test_return": 1.6014837555393013,
+      "test_profit_factor": 1.5336442561646952,
+      "test_spr": 0.09612029851573387,
+      "test_total_trades": 22,
+      "test_walkforward_pass": true,
+      "test_walkforward_median_spr": 0.2985265207818136,
+      "test_walkforward_median_pf": 1.6625951562723293,
+      "test_walkforward_positive_frac": 0.8333333333333334
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results\\realdata\\cost_guarded_confirm_20ep_20260216_185103_seed777",
+      "status": "ok",
+      "test_return": -2.702148810990934,
+      "test_profit_factor": 0.5208448567275188,
+      "test_spr": -0.00030445247764022016,
+      "test_total_trades": 20,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": -0.011704292239664018,
+      "test_walkforward_median_pf": 0.42125634573675586,
+      "test_walkforward_positive_frac": 0.0
+    },
+    {
+      "seed": 789,
+      "run_dir": "seed_sweep_results\\realdata\\cost_guarded_confirm_20ep_20260216_181840_seed789",
+      "status": "ok",
+      "test_return": 0.9699927137289954,
+      "test_profit_factor": 1.336123671954163,
+      "test_spr": 0.03951764797625127,
+      "test_total_trades": 14,
+      "test_walkforward_pass": true,
+      "test_walkforward_median_spr": 0.23215746834854514,
+      "test_walkforward_median_pf": 1.641751226163004,
+      "test_walkforward_positive_frac": 0.8333333333333334
+    }
+  ],
+  "summary": {
+    "count_ok": 3,
+    "return_pct_mean": -0.04355744724087914,
+    "return_pct_std": 1.897502966800746,
+    "profit_factor_mean": 1.130204261615459,
+    "profit_factor_std": 0.4383626797837273,
+    "spr_mean": 0.0451111646714483,
+    "spr_std": 0.03956344038628032,
+    "positive_return_frac": 0.6666666666666666,
+    "pf_ge_1_frac": 0.6666666666666666,
+    "walkforward_pass_frac": 0.6666666666666666
+  }
+}

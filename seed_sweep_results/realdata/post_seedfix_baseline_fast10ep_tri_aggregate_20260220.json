@@ -1,0 +1,38 @@
+{
+  "config": "post_seedfix_baseline_fast10ep",
+  "n_seeds": 3,
+  "mean_test_return_pct": 0.0,
+  "mean_test_profit_factor": 0.0,
+  "mean_test_trades": 0,
+  "positive_pf_gt_1_count": 0,
+  "wf_pass_count": 0,
+  "runs": [
+    {
+      "seed": 1011,
+      "run_dir": "seed_sweep_results/realdata/post_seedfix_baseline_fast10ep_20260220_184357_seed1011",
+      "test_return_pct": 0.0,
+      "test_profit_factor": 0.0,
+      "test_total_trades": 0,
+      "test_walkforward_pass": false,
+      "test_spr": 0.0
+    },
+    {
+      "seed": 4049,
+      "run_dir": "seed_sweep_results/realdata/post_seedfix_baseline_fast10ep_20260220_184705_seed4049",
+      "test_return_pct": 0.0,
+      "test_profit_factor": 0.0,
+      "test_total_trades": 0,
+      "test_walkforward_pass": false,
+      "test_spr": 0.0
+    },
+    {
+      "seed": 8087,
+      "run_dir": "seed_sweep_results/realdata/post_seedfix_baseline_fast10ep_20260220_185008_seed8087",
+      "test_return_pct": 0.0,
+      "test_profit_factor": 0.0,
+      "test_total_trades": 0,
+      "test_walkforward_pass": false,
+      "test_spr": 0.0
+    }
+  ]
+}

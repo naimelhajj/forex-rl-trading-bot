@@ -1,0 +1,43 @@
+{
+  "max_trades_per_episode": 60,
+  "runs": [
+    {
+      "seed": 456,
+      "summary": "seed_sweep_results\\realdata\\realdata_sweep_20260110_232105_summary.json",
+      "test_return": 0.5234688122269571,
+      "test_profit_factor": 1.1989517686841988,
+      "test_fitness": 0.5749528771412201
+    },
+    {
+      "seed": 777,
+      "summary": "seed_sweep_results\\realdata\\realdata_sweep_20260110_232105_summary.json",
+      "test_return": -1.641181844888262,
+      "test_profit_factor": 0.8885155023739387,
+      "test_fitness": -0.5403105616136898
+    },
+    {
+      "seed": 789,
+      "summary": "seed_sweep_results\\realdata\\realdata_sweep_20260111_001659_summary.json",
+      "test_return": 1.6706574174961242,
+      "test_profit_factor": 1.286335730811347,
+      "test_fitness": 1.5261487064381176
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.18431479494493974,
+      "std": 1.373156682137084,
+      "count": 3
+    },
+    "profit_factor": {
+      "mean": 1.1246010006231615,
+      "std": 0.17070688537558085,
+      "count": 3
+    },
+    "fitness": {
+      "mean": 0.5202636739885493,
+      "std": 0.8445143213056083,
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,58 @@
+﻿{
+    "generated_at_utc":  "2026-02-20T16:11:28Z",
+    "run_prefix":  "rescue8087_micro_10ep_20260220_174533",
+    "source":  "micro_seed8087_fastscreen",
+    "seed":  8087,
+    "count":  4,
+    "best_cfg":  "strict_flow",
+    "results":  [
+                    {
+                        "cfg":  "baseline",
+                        "seed":  8087,
+                        "run_prefix":  "rescue8087_micro_10ep_20260220_174533_baseline",
+                        "run_dir":  "seed_sweep_results\\realdata\\rescue8087_micro_10ep_20260220_174533_baseline_seed8087",
+                        "return_pct":  -0.86486051517180584,
+                        "profit_factor":  0.74595110752762817,
+                        "total_trades":  20,
+                        "spr":  -0.061463938253391616,
+                        "max_drawdown_pct":  -2.067427805454698,
+                        "walkforward_pass":  false
+                    },
+                    {
+                        "cfg":  "loose_flow",
+                        "seed":  8087,
+                        "run_prefix":  "rescue8087_micro_10ep_20260220_174533_loose_flow",
+                        "run_dir":  "seed_sweep_results\\realdata\\rescue8087_micro_10ep_20260220_174533_loose_flow_seed8087",
+                        "return_pct":  1.956078124786176,
+                        "profit_factor":  2.0603763788245821,
+                        "total_trades":  22,
+                        "spr":  0.84802235527084779,
+                        "max_drawdown_pct":  -1.3196341649288563,
+                        "walkforward_pass":  false
+                    },
+                    {
+                        "cfg":  "strict_flow",
+                        "seed":  8087,
+                        "run_prefix":  "rescue8087_micro_10ep_20260220_174533_strict_flow",
+                        "run_dir":  "seed_sweep_results\\realdata\\rescue8087_micro_10ep_20260220_174533_strict_flow_seed8087",
+                        "return_pct":  3.4358530434523078,
+                        "profit_factor":  2.9955112463090039,
+                        "total_trades":  18,
+                        "spr":  0,
+                        "max_drawdown_pct":  -0.91882828062802879,
+                        "walkforward_pass":  false
+                    },
+                    {
+                        "cfg":  "strict_flip",
+                        "seed":  8087,
+                        "run_prefix":  "rescue8087_micro_10ep_20260220_174533_strict_flip",
+                        "run_dir":  "seed_sweep_results\\realdata\\rescue8087_micro_10ep_20260220_174533_strict_flip_seed8087",
+                        "return_pct":  2.3825295079081377,
+                        "profit_factor":  2.2127143640916538,
+                        "total_trades":  20,
+                        "spr":  0,
+                        "max_drawdown_pct":  -1.5766913016580268,
+                        "walkforward_pass":  false
+                    }
+                ]
+}

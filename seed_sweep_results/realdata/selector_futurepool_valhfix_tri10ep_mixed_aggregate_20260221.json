@@ -1,0 +1,35 @@
+{
+  "config": "selector_futurepool_valhfix_tri10ep_mixed_20260221",
+  "n_seeds": 3,
+  "mean_test_return_pct": 0.6878079156966551,
+  "mean_test_profit_factor": 1.2568960056984624,
+  "mean_test_trades": 21,
+  "positive_pf_gt_1_count": 3,
+  "wf_pass_count": 0,
+  "runs": [
+    {
+      "seed": 3039,
+      "run_dir": "seed_sweep_results\\realdata\\selector_futurepool_valhfix_tri10ep_20260221_220213_seed3039",
+      "test_return_pct": 0.5694348385155479,
+      "test_profit_factor": 1.1756624870746308,
+      "test_total_trades": 24,
+      "test_walkforward_pass": false
+    },
+    {
+      "seed": 4049,
+      "run_dir": "seed_sweep_results\\realdata\\selector_futurepool_valhfix_tri10ep_20260221_220213_seed4049",
+      "test_return_pct": 0.8419245858602098,
+      "test_profit_factor": 1.3331698654986837,
+      "test_total_trades": 18,
+      "test_walkforward_pass": false
+    },
+    {
+      "seed": 10007,
+      "run_dir": "seed_sweep_results\\realdata\\selector_futurepool_valhfix_10ep_20260221_195922_seed10007",
+      "test_return_pct": 0.6520643227142076,
+      "test_profit_factor": 1.2618556645220724,
+      "test_total_trades": 21,
+      "test_walkforward_pass": false
+    }
+  ]
+}

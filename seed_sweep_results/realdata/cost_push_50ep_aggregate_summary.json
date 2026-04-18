@@ -1,0 +1,26 @@
+{
+  "timestamp": "20260211_164630",
+  "run_prefix": "cost_push_50ep",
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.1732549815037232,
+      "std": 0.503973152469627,
+      "count": 3
+    },
+    "profit_factor": {
+      "mean": 1.158738454717223,
+      "std": 0.16249495039630546,
+      "count": 3
+    },
+    "fitness": {
+      "mean": -0.029068802170360782,
+      "std": 0.024259219740687496,
+      "count": 3
+    }
+  },
+  "seeds": [
+    "seed_sweep_results/realdata/cost_push_50ep_20260211_100251_seed456/results/test_results.json",
+    "seed_sweep_results/realdata/cost_push_50ep_20260211_121851_seed777/results/test_results.json",
+    "seed_sweep_results/realdata/cost_push_50ep_20260211_143755_seed789/results/test_results.json"
+  ]
+}

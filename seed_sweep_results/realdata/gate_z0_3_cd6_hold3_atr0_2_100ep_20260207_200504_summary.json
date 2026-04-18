@@ -1,0 +1,66 @@
+{
+  "timestamp": "20260207_200504",
+  "config": {
+    "seeds": [
+      456
+    ],
+    "episodes": 100,
+    "pair_files": "pair_files_real.json",
+    "data_dir": ".",
+    "data_mode": "csv",
+    "output_root": "seed_sweep_results\\realdata",
+    "run_prefix": "gate_z0_3_cd6_hold3_atr0_2_100ep",
+    "csv_sep": null,
+    "date_col": null,
+    "time_col": null,
+    "no_symmetry_loss": true,
+    "no_dual_controller": true,
+    "no_strengths": false,
+    "strengths_all": false,
+    "strengths_pair_only": false,
+    "trade_penalty": 0.0,
+    "flip_penalty": 0.0003,
+    "min_atr_cost_ratio": 0.2,
+    "use_regime_filter": null,
+    "regime_min_vol_z": null,
+    "regime_align_trend": null,
+    "regime_require_trending": null,
+    "cooldown_bars": 6,
+    "min_hold_bars": 3,
+    "max_trades_per_episode": 40,
+    "hold_tie_tau": null,
+    "hold_break_after": null,
+    "trade_gate_margin": null,
+    "trade_gate_z": 0.3,
+    "r_multiple_reward_weight": null,
+    "r_multiple_reward_clip": null
+  },
+  "runs": [
+    {
+      "seed": 456,
+      "exit_code": 4294967295,
+      "run_dir": "seed_sweep_results\\realdata\\gate_z0_3_cd6_hold3_atr0_2_100ep_20260207_200504_seed456",
+      "results": {
+        "status": "missing_results",
+        "results_path": "seed_sweep_results\\realdata\\gate_z0_3_cd6_hold3_atr0_2_100ep_20260207_200504_seed456\\eval\\results\\test_results.json"
+      }
+    }
+  ],
+  "aggregate": {
+    "return_pct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    },
+    "profit_factor": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    },
+    "fitness": {
+      "mean": 0.0,
+      "std": 0.0,
+      "count": 0
+    }
+  }
+}

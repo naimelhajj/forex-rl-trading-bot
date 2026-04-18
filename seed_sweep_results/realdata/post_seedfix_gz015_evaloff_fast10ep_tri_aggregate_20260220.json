@@ -1,0 +1,38 @@
+{
+  "config": "post_seedfix_gz015_evaloff_fast10ep",
+  "n_seeds": 3,
+  "mean_test_return_pct": -0.594474802746899,
+  "mean_test_profit_factor": 0.827458971429409,
+  "mean_test_trades": 21.666666666666668,
+  "positive_pf_gt_1_count": 0,
+  "wf_pass_count": 0,
+  "runs": [
+    {
+      "seed": 1011,
+      "run_dir": "seed_sweep_results/realdata/post_seedfix_gz015_evaloff_fast10ep_20260220_192519_seed1011",
+      "test_return_pct": -0.21869069907802796,
+      "test_profit_factor": 0.9092561614435404,
+      "test_total_trades": 23,
+      "test_walkforward_pass": false,
+      "test_spr": 0.048082317847620744
+    },
+    {
+      "seed": 4049,
+      "run_dir": "seed_sweep_results/realdata/post_seedfix_gz015_evaloff_fast10ep_20260220_192519_seed4049",
+      "test_return_pct": -0.009786910182485453,
+      "test_profit_factor": 0.993507398319009,
+      "test_total_trades": 21,
+      "test_walkforward_pass": false,
+      "test_spr": -0.0044670387256103405
+    },
+    {
+      "seed": 8087,
+      "run_dir": "seed_sweep_results/realdata/post_seedfix_gz015_evaloff_fast10ep_20260220_192519_seed8087",
+      "test_return_pct": -1.5549467989801835,
+      "test_profit_factor": 0.5796133545256776,
+      "test_total_trades": 21,
+      "test_walkforward_pass": false,
+      "test_spr": 0.0
+    }
+  ]
+}

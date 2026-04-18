@@ -1,0 +1,60 @@
+{
+  "generated_at_utc": "2026-02-18T08:41:43Z",
+  "run_prefix": "parityfix_hfm_nogate_noprefill_20ep_mixed_20260218",
+  "source": "test_600",
+  "note": "Seed 789 comes from dedicated follow-up run with identical hyperparameters.",
+  "seeds": [
+    456,
+    777,
+    789
+  ],
+  "count": 3,
+  "mean_return_pct": 1.5942443171071519,
+  "mean_profit_factor": 2.4230734201420536,
+  "mean_total_trades": 22.0,
+  "mean_spr": 0.22646656443283633,
+  "mean_max_drawdown_pct": -1.1342029016252182,
+  "walkforward_pass_count": 0,
+  "walkforward_pass_rate": 0.0,
+  "results": [
+    {
+      "seed": 456,
+      "result_file": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_20ep_20260218_010039_seed456/results/test_results.json",
+      "return_pct": 0.25537299998692475,
+      "profit_factor": 1.0649248665866784,
+      "total_trades": 27,
+      "spr": 0.0023317717925705893,
+      "max_drawdown_pct": -2.029347594264605,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.0023317717925705893,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 777,
+      "result_file": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_20ep_20260218_010039_seed777/results/test_results.json",
+      "return_pct": 1.6916219851716985,
+      "profit_factor": 4.212322431401625,
+      "total_trades": 8,
+      "spr": 0.488273639293833,
+      "max_drawdown_pct": -0.4308031180185082,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.488273639293833,
+      "walkforward_positive_frac": 1.0
+    },
+    {
+      "seed": 789,
+      "result_file": "seed_sweep_results/realdata/parityfix_hfm_nogate_noprefill_20ep_seed789_20260218_004702/results/test_results.json",
+      "return_pct": 2.8357379661628324,
+      "profit_factor": 1.9919729624378582,
+      "total_trades": 31,
+      "spr": 0.1887942822121054,
+      "max_drawdown_pct": -0.9424579925925411,
+      "walkforward_pass": false,
+      "walkforward_windows": 1,
+      "walkforward_median_spr": 0.1887942822121054,
+      "walkforward_positive_frac": 1.0
+    }
+  ]
+}

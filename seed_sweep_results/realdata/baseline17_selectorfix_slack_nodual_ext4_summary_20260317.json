@@ -1,0 +1,44 @@
+{
+  "profile": "baseline17_selectorfix_slack_nodual",
+  "seed_count": 4,
+  "seeds": [
+    123,
+    1011,
+    2027,
+    8087
+  ],
+  "mean_return_pct": 1.7066133883941181,
+  "mean_profit_factor": 1.8456090915261718,
+  "positive_with_pf_ge_1_count": 4,
+  "walkforward_pass_count": 4,
+  "per_seed": {
+    "123": {
+      "result_path": "seed_sweep_results/realdata/seed123_baseline17_selectorfix_slack_nodual_20260316_155223_seed123/results/test_results.json",
+      "test_return_pct": 3.4996726438297987,
+      "test_profit_factor": 2.7784361739355536,
+      "test_total_trades": 26,
+      "test_walkforward_pass": true
+    },
+    "1011": {
+      "result_path": "seed_sweep_results/realdata/seed1011_baseline17_selectorfix_slack_nodual_20260315_171432_seed1011/results/test_results.json",
+      "test_return_pct": 0.8311988552038407,
+      "test_profit_factor": 1.3121639292365876,
+      "test_total_trades": 22,
+      "test_walkforward_pass": true
+    },
+    "2027": {
+      "result_path": "seed_sweep_results/realdata/seed2027_baseline17_selectorfix_slack_nodual_20260316_123918_seed2027/results/test_results.json",
+      "test_return_pct": 1.273955423332196,
+      "test_profit_factor": 1.833053557322569,
+      "test_total_trades": 20,
+      "test_walkforward_pass": true
+    },
+    "8087": {
+      "result_path": "seed_sweep_results/realdata/seed8087_baseline17_selectorfix_slack_nodual_20260315_120432_seed8087/results/test_results.json",
+      "test_return_pct": 1.2216266312106372,
+      "test_profit_factor": 1.458782705609977,
+      "test_total_trades": 21,
+      "test_walkforward_pass": true
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "timestamp": "20260118_155408",
+  "seeds": [
+    456,
+    777
+  ],
+  "runs": [
+    {
+      "seed": 456,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_30_flip_0_0003_trade_penalty_0_hold8_cd16_10ep_20260118_120902_seed456",
+      "test_return": -2.000002377675092,
+      "test_profit_factor": 0.6119252463215465,
+      "test_spr": -0.006322130222401053,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": -0.0013123752625572734,
+      "test_walkforward_positive_frac": 0.06030150753768844
+    },
+    {
+      "seed": 777,
+      "run_dir": "seed_sweep_results\\realdata\\max_trades_30_flip_0_0003_trade_penalty_0_hold8_cd16_10ep_20260118_120902_seed777",
+      "test_return": -3.668317151230116,
+      "test_profit_factor": 0.4729560776141802,
+      "test_spr": -0.002361563963734184,
+      "test_walkforward_pass": false,
+      "test_walkforward_median_spr": 0.0,
+      "test_walkforward_positive_frac": 0.4321608040201005
+    }
+  ],
+  "aggregate": {
+    "return_pct_mean": -2.834159764452604,
+    "profit_factor_mean": 0.5424406619678633,
+    "spr_mean": -0.004341847093067619,
+    "walkforward_pass_count": 0
+  },
+  "note": "Hold/cooldown tightening probe (min_hold=8, cooldown=16, max_trades=30) on 10-episode runs."
+}
