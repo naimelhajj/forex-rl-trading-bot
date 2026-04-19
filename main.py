@@ -943,7 +943,13 @@ def evaluate_agent(agent, test_env, config: Config):
         wf_results = [_run_walkforward_slice(test_env, start, end) for start, end in windows]
         sprs = [w["spr"] for w in wf_results]
         pfs = [w["pf"] for w in wf_results]
-        pos_frac = float(sum(1 for s in sprs if s > 0.0) / max(1, len(sprs)))
+        # Filter out low-trade windows from pos_frac (they're noise)
+        wf_min_wt = config.fitness.test_walkforward_window_min_trades
+        qualified_sprs = [w["spr"] for w in wf_results if w.get("trades", 0) >= wf_min_wt]
+        if qualified_sprs:
+            pos_frac = float(sum(1 for s in qualified_sprs if s > 0.0) / len(qualified_sprs))
+        else:
+            pos_frac = 0.0
         median_spr = float(np.median(sprs)) if sprs else 0.0
         median_pf = float(np.median(pfs)) if pfs else 0.0
         wf_pass = (
@@ -958,6 +964,8 @@ def evaluate_agent(agent, test_env, config: Config):
             "windows": wf_results,
             "summary": {
                 "windows": len(wf_results),
+                "qualified_windows": len(qualified_sprs),
+                "filtered_windows": len(wf_results) - len(qualified_sprs),
                 "median_spr": median_spr,
                 "median_pf": median_pf,
                 "positive_frac": pos_frac,
@@ -970,6 +978,7 @@ def evaluate_agent(agent, test_env, config: Config):
                 "min_positive_frac": config.fitness.test_walkforward_min_pos_frac,
                 "min_return_pct": config.fitness.test_walkforward_min_return_pct,
                 "min_trades": config.fitness.test_walkforward_min_trades,
+                "window_min_trades": wf_min_wt,
             },
         }
 
