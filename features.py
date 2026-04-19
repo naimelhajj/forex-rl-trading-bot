@@ -78,6 +78,107 @@ def _rolling_lr_slope(y: pd.Series, window: int) -> pd.Series:
     return pd.Series(slopes, index=y.index)
 
 
+# =========================================================================
+# Panoptic Indicator Helper Functions
+# =========================================================================
+
+def _rolling_spearman(series: pd.Series, window: int) -> pd.Series:
+    """
+    Rolling Spearman rank correlation of price vs time (trend linearity).
+    Mirrors the Panoptic Correlation Gauge.
+    Output: -1 (perfect downtrend) to +1 (perfect uptrend), 0 = no linear trend.
+    """
+    arr = series.values.astype(np.float64)
+    n = len(arr)
+    result = np.zeros(n, dtype=np.float64)
+    W = int(window)
+    if W < 3:
+        return pd.Series(result, index=series.index)
+    
+    for i in range(W - 1, n):
+        window_data = arr[i - W + 1: i + 1]
+        # Rank the price values
+        order = np.argsort(np.argsort(window_data)).astype(np.float64) + 1.0
+        # Time ranks are simply 1..W
+        time_ranks = np.arange(1, W + 1, dtype=np.float64)
+        # Spearman: 1 - 6*sum(d^2) / (n*(n^2-1))
+        d = order - time_ranks
+        sum_d2 = (d * d).sum()
+        result[i] = 1.0 - (6.0 * sum_d2) / (W * (W * W - 1.0))
+    
+    return pd.Series(result, index=series.index)
+
+
+def _rolling_mad(series: pd.Series, window: int) -> Tuple[pd.Series, pd.Series]:
+    """
+    Rolling median and MAD (Median Absolute Deviation).
+    Returns (median, mad) pair.
+    """
+    arr = series.values.astype(np.float64)
+    n = len(arr)
+    medians = np.zeros(n, dtype=np.float64)
+    mads = np.zeros(n, dtype=np.float64)
+    W = int(window)
+    
+    for i in range(W - 1, n):
+        window_data = arr[i - W + 1: i + 1]
+        med = np.median(window_data)
+        medians[i] = med
+        mads[i] = np.median(np.abs(window_data - med))
+    
+    return (pd.Series(medians, index=series.index),
+            pd.Series(mads, index=series.index))
+
+
+def _tanh_compress(x: np.ndarray) -> np.ndarray:
+    """Tanh compression, clipping input to avoid overflow."""
+    x_safe = np.clip(x, -10.0, 10.0)
+    return np.tanh(x_safe)
+
+
+def _compute_cci(close: pd.Series, high: pd.Series, low: pd.Series,
+                 period: int) -> pd.Series:
+    """Commodity Channel Index (CCI)."""
+    tp = (high + low + close) / 3.0
+    tp_sma = tp.rolling(period, min_periods=1).mean()
+    tp_mad = tp.rolling(period, min_periods=1).apply(
+        lambda x: np.mean(np.abs(x - np.mean(x))), raw=True
+    )
+    cci = (tp - tp_sma) / (0.015 * tp_mad + 1e-10)
+    return cci
+
+
+def _compute_ppi(close: pd.Series, high: pd.Series, low: pd.Series,
+                 period: int) -> pd.Series:
+    """
+    Price Position Index — percentile rank of current close within
+    trailing HLC distribution (3x sampling per bar).
+    Mirrors the Panoptic Price Density indicator.
+    Output: 0-100.
+    """
+    c = close.values.astype(np.float64)
+    h = high.values.astype(np.float64)
+    l = low.values.astype(np.float64)
+    n = len(c)
+    result = np.full(n, 50.0, dtype=np.float64)
+    W = int(period)
+    
+    for i in range(W, n):
+        # Build HLC distribution from trailing window (excluding current bar)
+        dist = np.empty(W * 3, dtype=np.float64)
+        for j in range(W):
+            idx = i - W + j
+            dist[j * 3] = h[idx]
+            dist[j * 3 + 1] = l[idx]
+            dist[j * 3 + 2] = c[idx]
+        dist.sort()
+        # Rank of current close
+        rank = np.searchsorted(dist, c[i], side='right')
+        result[i] = (rank / len(dist)) * 100.0
+    
+    return pd.Series(result, index=close.index)
+
+
 def compute_currency_strengths(pair_dfs: Dict[str, pd.DataFrame],
                                currencies: List[str] = None,
                                window: int = 24,
@@ -244,6 +345,9 @@ class FeatureEngineer:
         
         # PATCH 8: Meta-features for regime detection (account-invariant)
         df = self.add_regime_features(df)
+
+        # Panoptic indicator features (from optimized Pine Script indicators)
+        df = self.add_panoptic_features(df)
 
         # Fill NaN values
         df = df.ffill().bfill().fillna(0)
@@ -557,6 +661,12 @@ class FeatureEngineer:
             'hour_sin', 'hour_cos', 'dow_sin', 'dow_cos', 'doy_sin', 'doy_cos',  # Cyclical time
             'top_fractal_confirmed', 'bottom_fractal_confirmed',  # Use CONFIRMED fractals (causal)
             'lr_slope',
+            # Panoptic indicators
+            'spearman_corr_8', 'spearman_corr_20', 'corr_velocity',
+            'slope_velocity', 'slope_acceleration', 'slope_quiet_zone',
+            'cci_norm', 'divergence_bull', 'divergence_bear',
+            'ppi_raw', 'ppi_fast', 'ppi_slow',
+            'dist_nearest_sr', 'sr_zone_position',
             # PATCH 8: Regime meta-features
             'realized_vol_24h_z', 'realized_vol_96h_z',
             'trend_24h', 'trend_96h', 'is_trending'
@@ -612,6 +722,218 @@ class FeatureEngineer:
         # Fill forward and add to dataframe
         df['top_fractal_confirmed'] = pd.Series(top, index=df.index).ffill()
         df['bottom_fractal_confirmed'] = pd.Series(bottom, index=df.index).ffill()
+        
+        return df
+
+    def add_panoptic_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add features derived from Panoptic indicator suite.
+        All features are single-series (no external data needed) and causal.
+        
+        Indicators implemented:
+        1. Correlation Gauge  — Spearman trend linearity + velocity
+        2. Slope Accelerator  — MAD-normalized slope velocity + acceleration
+        3. Divergence Engine   — CCI + divergence detection
+        4. Price Density (PPI) — HLC distribution percentile
+        5. Structure Engine    — K-means S/R clusters + distance
+        """
+        close = df['close'].astype(np.float64)
+        high = df['high'].astype(np.float64)
+        low = df['low'].astype(np.float64)
+        
+        # === 1. CORRELATION GAUGE ===
+        # Spearman rank correlation of price vs time (trend linearity)
+        corr_8 = _rolling_spearman(close, 8)
+        corr_20 = _rolling_spearman(close, 20)
+        # Signal = EMA(2) of raw correlation
+        corr_signal = corr_20.ewm(span=2, adjust=False).mean()
+        # Velocity = change in signal × 10 (rate of trend change)
+        corr_velocity = (corr_signal - corr_signal.shift(1)).fillna(0) * 10.0
+        
+        df['spearman_corr_8'] = corr_8
+        df['spearman_corr_20'] = corr_20
+        df['corr_velocity'] = corr_velocity
+        
+        # === 2. SLOPE ACCELERATOR ===
+        # Macro: LR slope of EMA(close, 1) = close, period 8
+        slope_macro = _rolling_lr_slope(close, 8)
+        # MAD-normalize and tanh-compress → velocity
+        macro_med, macro_mad = _rolling_mad(slope_macro, 500)
+        macro_mad_safe = macro_mad.clip(lower=1e-10)
+        macro_z = (slope_macro - macro_med) / macro_mad_safe
+        slope_velocity = pd.Series(
+            _tanh_compress(macro_z.values * 0.3),
+            index=df.index
+        )
+        
+        # Micro: LR slope period 2, change rate
+        slope_micro = _rolling_lr_slope(close, 2)
+        micro_change = (slope_micro - slope_micro.shift(1)).fillna(0) * 100.0
+        micro_smooth = micro_change.ewm(span=3, adjust=False).mean()
+        micro_med, micro_mad = _rolling_mad(micro_smooth, 500)
+        micro_mad_safe = micro_mad.clip(lower=1e-10)
+        micro_z = (micro_smooth - micro_med) / micro_mad_safe
+        slope_acceleration = pd.Series(
+            _tanh_compress(micro_z.values * 0.3) * 0.8,
+            index=df.index
+        )
+        
+        # Signal line
+        slope_signal = slope_velocity.ewm(span=2, adjust=False).mean()
+        
+        # Quiet zone detection: abs(velocity) <= 20th percentile
+        abs_vel = slope_velocity.abs()
+        quiet_threshold = abs_vel.rolling(250, min_periods=50).quantile(0.20)
+        slope_quiet = (abs_vel <= quiet_threshold).astype(np.float32)
+        
+        df['slope_velocity'] = slope_velocity
+        df['slope_acceleration'] = slope_acceleration
+        df['slope_quiet_zone'] = slope_quiet
+        
+        # === 3. DIVERGENCE ENGINE ===
+        # CCI at optimized period (45 for short-term preset)
+        cci_45 = _compute_cci(close, high, low, 45)
+        # Normalize CCI to roughly -1..+1 range for neural net friendliness
+        df['cci_norm'] = (cci_45 / 200.0).clip(-2.0, 2.0)
+        
+        # Divergence detection using fractal pivots on CCI
+        # Use confirmed pivots (5-bar left, 5-bar right = 10-bar lag)
+        cci_arr = cci_45.values
+        n = len(cci_arr)
+        div_bull = np.zeros(n, dtype=np.float32)
+        div_bear = np.zeros(n, dtype=np.float32)
+        f_bars = 5
+        max_lookback = 230
+        
+        # Track last pivot high/low on CCI
+        last_ph_cci = np.nan
+        last_ph_price = np.nan
+        last_ph_bar = -9999
+        last_pl_cci = np.nan
+        last_pl_price = np.nan
+        last_pl_bar = -9999
+        
+        h_arr = high.values
+        l_arr = low.values
+        
+        for i in range(f_bars, n - f_bars):
+            # Check for pivot high on CCI
+            is_ph = True
+            for j in range(1, f_bars + 1):
+                if cci_arr[i] <= cci_arr[i - j] or cci_arr[i] <= cci_arr[i + j]:
+                    is_ph = False
+                    break
+            if is_ph:
+                if not np.isnan(last_ph_cci) and (i - last_ph_bar) <= max_lookback:
+                    # Bearish divergence: price HH, CCI LH
+                    if h_arr[i] > last_ph_price and cci_arr[i] < last_ph_cci:
+                        div_bear[i + f_bars] = 1.0  # Signal on confirmation bar
+                last_ph_cci = cci_arr[i]
+                last_ph_price = h_arr[i]
+                last_ph_bar = i
+            
+            # Check for pivot low on CCI
+            is_pl = True
+            for j in range(1, f_bars + 1):
+                if cci_arr[i] >= cci_arr[i - j] or cci_arr[i] >= cci_arr[i + j]:
+                    is_pl = False
+                    break
+            if is_pl:
+                if not np.isnan(last_pl_cci) and (i - last_pl_bar) <= max_lookback:
+                    # Bullish divergence: price LL, CCI HL
+                    if l_arr[i] < last_pl_price and cci_arr[i] > last_pl_cci:
+                        div_bull[i + f_bars] = 1.0
+                last_pl_cci = cci_arr[i]
+                last_pl_price = l_arr[i]
+                last_pl_bar = i
+        
+        df['divergence_bull'] = div_bull
+        df['divergence_bear'] = div_bear
+        
+        # === 4. PRICE DENSITY (PPI) ===
+        # Percentile rank in HLC distribution (3x sampling)
+        ppi_raw = _compute_ppi(close, high, low, 15)
+        ppi_fast = ppi_raw.ewm(span=2, adjust=False).mean()
+        ppi_slow = ppi_raw.ewm(span=28, adjust=False).mean()
+        
+        # Normalize to 0-1 for neural net
+        df['ppi_raw'] = ppi_raw / 100.0
+        df['ppi_fast'] = ppi_fast / 100.0
+        df['ppi_slow'] = ppi_slow / 100.0
+        
+        # === 5. STRUCTURE ENGINE (K-Means S/R) ===
+        # Simplified: find pivot highs/lows, cluster with K-means, compute distance
+        atr = df.get('atr')
+        if atr is None:
+            atr = self.compute_atr(df)
+        
+        k_clusters = 3  # Short-term preset
+        pivot_memory_size = 100
+        update_freq = 50
+        
+        # Collect pivots (3-bar left, 3-bar right)
+        dist_nearest = np.zeros(n, dtype=np.float64)
+        sr_position = np.zeros(n, dtype=np.float64)  # -1 below, 0 in zone, +1 above
+        
+        pivot_prices = []
+        for i in range(3, n - 3):
+            # Pivot high
+            if h_arr[i] > h_arr[i-1] and h_arr[i] > h_arr[i-2] and h_arr[i] > h_arr[i-3] \
+               and h_arr[i] > h_arr[i+1] and h_arr[i] > h_arr[i+2] and h_arr[i] > h_arr[i+3]:
+                pivot_prices.append((i, h_arr[i]))
+            # Pivot low
+            if l_arr[i] < l_arr[i-1] and l_arr[i] < l_arr[i-2] and l_arr[i] < l_arr[i-3] \
+               and l_arr[i] < l_arr[i+1] and l_arr[i] < l_arr[i+2] and l_arr[i] < l_arr[i+3]:
+                pivot_prices.append((i, l_arr[i]))
+        
+        # Simple K-means on pivot prices, updated every `update_freq` bars
+        c_arr = close.values
+        atr_arr = atr.values
+        active_levels = np.array([])
+        
+        for i in range(50, n):
+            if i % update_freq == 0 or len(active_levels) == 0:
+                # Gather recent pivots (within last pivot_memory_size pivots before bar i)
+                recent = [p for bar_idx, p in pivot_prices if bar_idx <= i]
+                recent = recent[-pivot_memory_size:]
+                
+                if len(recent) >= k_clusters:
+                    pts = np.array(recent, dtype=np.float64)
+                    # K-means: initialize evenly spaced
+                    p_min, p_max = pts.min(), pts.max()
+                    centroids = np.linspace(p_min, p_max, k_clusters)
+                    
+                    for _ in range(5):  # 5 iterations
+                        # Assign each pivot to nearest centroid
+                        assignments = np.argmin(
+                            np.abs(pts[:, None] - centroids[None, :]), axis=1
+                        )
+                        # Update centroids
+                        for ci in range(k_clusters):
+                            mask = assignments == ci
+                            if mask.any():
+                                centroids[ci] = pts[mask].mean()
+                    
+                    active_levels = np.sort(centroids)
+            
+            if len(active_levels) > 0:
+                current_atr = max(atr_arr[i], 1e-10) if i < len(atr_arr) else 1e-10
+                dists = active_levels - c_arr[i]
+                abs_dists = np.abs(dists)
+                nearest_idx = np.argmin(abs_dists)
+                # ATR-normalized distance to nearest level
+                dist_nearest[i] = dists[nearest_idx] / current_atr
+                # Zone position: within 0.12 * ATR = inside zone
+                zone_h = current_atr * 0.12
+                if abs_dists[nearest_idx] <= zone_h:
+                    sr_position[i] = 0.0  # Inside zone
+                elif dists[nearest_idx] > 0:
+                    sr_position[i] = 1.0  # Below nearest (level is above)
+                else:
+                    sr_position[i] = -1.0  # Above nearest (level is below)
+        
+        df['dist_nearest_sr'] = np.clip(dist_nearest, -5.0, 5.0)
+        df['sr_zone_position'] = sr_position
         
         return df
 
