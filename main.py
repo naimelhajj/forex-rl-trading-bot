@@ -951,7 +951,8 @@ def evaluate_agent(agent, test_env, config: Config):
             median_spr >= config.fitness.test_walkforward_min_spr and
             median_pf >= config.fitness.test_walkforward_min_pf and
             pos_frac >= config.fitness.test_walkforward_min_pos_frac and
-            test_return >= config.fitness.test_walkforward_min_return_pct
+            test_return >= config.fitness.test_walkforward_min_return_pct and
+            trade_count >= config.fitness.test_walkforward_min_trades
         )
         walkforward = {
             "windows": wf_results,
@@ -968,6 +969,7 @@ def evaluate_agent(agent, test_env, config: Config):
                 "min_pf": config.fitness.test_walkforward_min_pf,
                 "min_positive_frac": config.fitness.test_walkforward_min_pos_frac,
                 "min_return_pct": config.fitness.test_walkforward_min_return_pct,
+                "min_trades": config.fitness.test_walkforward_min_trades,
             },
         }
 

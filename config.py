@@ -163,6 +163,7 @@ class FitnessConfig:
     test_walkforward_min_pos_frac: float = 0.5
     test_walkforward_min_windows: int = 3
     test_walkforward_min_return_pct: float = 0.0  # minimum aggregate test return %
+    test_walkforward_min_trades: int = 10  # minimum total test trades
     test_walkforward_window_bars: Optional[int] = None
     test_walkforward_stride_frac: Optional[float] = None
 

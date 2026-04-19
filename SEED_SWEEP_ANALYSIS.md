@@ -82,6 +82,7 @@ meaningless. The model essentially learned to hold and rarely trade.
 
 3. **Monitor for trade count floor:** Consider adding a minimum trades requirement
    to WF pass (e.g., ≥ 10 trades) to catch seed456-type degenerate policies.
+   **Fix applied** in same commit: `test_walkforward_min_trades = 10`.
 
 4. **The min_return_pct fix prevents false positives** like seed314 where WF
    passes but the model actually loses money.
