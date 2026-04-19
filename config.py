@@ -66,6 +66,12 @@ class EnvironmentConfig:
     trade_penalty: float = 0.000065  # PHASE-2.8b: Lower from 0.00007 to 0.000065 (allow 2-3 more trades/ep)
     flip_penalty: float = 0.00077    # PHASE-2.8d Fix Pack D1.3: Raise from 0.0005 to 0.00077 (discourage churn)
     min_atr_cost_ratio: float = 0.0  # Gate new trades unless ATR >= ratio * (spread+slip+commission), 0 disables
+    min_atr_pips_absolute: float = 0.0  # Optional absolute ATR floor in pips for opening new trades, 0 disables
+    eval_min_atr_cost_ratio: Optional[float] = None  # Optional validation/test ATR-cost gate override (None = use training gate)
+    eval_min_atr_pips_absolute: Optional[float] = None  # Optional validation/test absolute ATR floor override (None = use training gate)
+    min_atr_cost_ratio_low_vol_value: float = 0.0  # Optional stronger ATR/cost gate when the chosen vol signal is low
+    min_atr_cost_ratio_low_vol_z_threshold: float = 0.0  # Trigger stronger ATR/cost gate when low-vol signal <= threshold
+    min_atr_cost_ratio_low_vol_signal: str = "realized_vol_24h_z"  # Feature or alias used to trigger low-vol ATR/cost uplift
     use_regime_filter: bool = False  # Gate trades to trending/high-vol regimes
     regime_min_vol_z: float = 0.0  # Minimum realized_vol_24h_z to allow trades (0 disables extra vol gate)
     regime_align_trend: bool = True  # Require trend_96h alignment for LONG/SHORT entries
@@ -156,6 +162,7 @@ class FitnessConfig:
     test_walkforward_min_pf: float = 1.0
     test_walkforward_min_pos_frac: float = 0.5
     test_walkforward_min_windows: int = 3
+    test_walkforward_min_return_pct: float = 0.0  # minimum aggregate test return %
     test_walkforward_window_bars: Optional[int] = None
     test_walkforward_stride_frac: Optional[float] = None
 
@@ -242,12 +249,121 @@ class TrainingConfig:
     anti_regression_alignment_probe_temporal_return_slack_pct: float = 0.30
     anti_regression_alignment_probe_temporal_pf_slack: float = 0.15
     anti_regression_alignment_probe_temporal_positive_frac_slack: float = 0.15
+    # Do not let temporal bias override a later viable incumbent when the
+    # challenger's probe-side MMR is weaker.
+    anti_regression_alignment_probe_temporal_mmr_slack: float = 0.0
+    # Do not let temporal bias override an incumbent that is already robust on
+    # validation lower-quartile return/PF unless the challenger is similar on
+    # those q25 metrics too.
+    anti_regression_alignment_probe_temporal_q25_guard_enabled: bool = True
+    anti_regression_alignment_probe_temporal_q25_return_slack: float = 0.20
+    anti_regression_alignment_probe_temporal_q25_pf_slack: float = 0.05
+    # If the strongest temporal challenger fails the q25 guard, allow a nearby
+    # later temporal candidate to win only when it keeps positive q25 stats and
+    # materially improves validation PF plus probe-side MMR.
+    anti_regression_alignment_probe_temporal_q25_fallback_enabled: bool = True
+    anti_regression_alignment_probe_temporal_q25_fallback_return_slack_pct: float = 0.10
+    anti_regression_alignment_probe_temporal_q25_fallback_pf_slack: float = 0.05
+    anti_regression_alignment_probe_temporal_q25_fallback_probe_mmr_edge_min: float = 0.05
+    anti_regression_alignment_probe_temporal_q25_fallback_val_pf_edge_min: float = 0.20
+    anti_regression_alignment_probe_temporal_q25_fallback_min_val_return_q25: float = 0.0
+    anti_regression_alignment_probe_temporal_q25_fallback_min_val_pf_q25: float = 1.0
     anti_regression_alignment_probe_temporal_require_forward_profit: bool = True
+    # Let a slightly later temporal candidate beat the earliest one only when
+    # the probe itself shows a clear return/PF edge.
+    anti_regression_alignment_probe_temporal_dominance_return_edge_min: float = 0.10
+    anti_regression_alignment_probe_temporal_dominance_pf_edge_min: float = 0.10
     # Allow ep001/ep002 only when full-validation MMR is materially stronger
     # than the incumbent, which avoids broad early-episode bias regressions.
     anti_regression_alignment_probe_early_mmr_rescue_enabled: bool = True
     anti_regression_alignment_probe_early_mmr_min: float = 1.00
     anti_regression_alignment_probe_early_mmr_edge_min: float = 0.50
+    # Rescue fragile incumbents when an earlier checkpoint has materially better
+    # validation lower-quartile return/PF and still passes the cheap probe.
+    anti_regression_alignment_probe_q25_rescue_enabled: bool = True
+    anti_regression_alignment_probe_q25_incumbent_return_q25_max: float = 0.0
+    anti_regression_alignment_probe_q25_incumbent_pf_q25_max: float = 0.75
+    anti_regression_alignment_probe_q25_return_q25_edge_min: float = 0.50
+    anti_regression_alignment_probe_q25_pf_q25_edge_min: float = 0.10
+    anti_regression_alignment_probe_q25_max_episode: int = 8
+    # Rescue fragile incumbents on older/cost-aware slices when another
+    # candidate has materially stronger PF structure and probe-side MMR, even
+    # if its cheap-probe return is not the highest.
+    anti_regression_alignment_probe_pf_mmr_rescue_enabled: bool = True
+    anti_regression_alignment_probe_pf_mmr_incumbent_val_mmr_max: float = -0.25
+    anti_regression_alignment_probe_pf_mmr_probe_mmr_edge_min: float = 0.03
+    anti_regression_alignment_probe_pf_mmr_base_pf_edge_min: float = 0.50
+    anti_regression_alignment_probe_pf_mmr_forward_pf_edge_min: float = 0.25
+    anti_regression_alignment_probe_pf_mmr_positive_frac_slack: float = 0.10
+    anti_regression_alignment_probe_pf_mmr_max_episode: int = 10
+    # Rescue later candidates when the incumbent is validation-fragile but a
+    # later checkpoint has clearly stronger validation PF/MMR and still keeps
+    # positive tail structure.
+    anti_regression_alignment_probe_late_val_rescue_enabled: bool = True
+    anti_regression_alignment_probe_late_val_incumbent_val_mmr_max: float = -0.50
+    anti_regression_alignment_probe_late_val_challenger_val_mmr_min: float = 0.0
+    anti_regression_alignment_probe_late_val_val_pf_edge_min: float = 0.50
+    anti_regression_alignment_probe_late_val_tail_pf_edge_min: float = 0.20
+    anti_regression_alignment_probe_late_val_positive_frac_slack: float = 0.10
+    anti_regression_alignment_probe_late_val_max_episode: int = 12
+    # Rescue later candidates when the incumbent validation PF is weak but a
+    # later checkpoint keeps positive base/forward structure and materially
+    # stronger validation-side MMR.
+    anti_regression_alignment_probe_late_mmr_rescue_enabled: bool = True
+    anti_regression_alignment_probe_late_mmr_incumbent_val_pf_max: float = 1.0
+    anti_regression_alignment_probe_late_mmr_challenger_val_mmr_edge_min: float = 0.75
+    anti_regression_alignment_probe_late_mmr_challenger_forward_pf_min: float = 1.10
+    anti_regression_alignment_probe_late_mmr_positive_frac_slack: float = 0.10
+    anti_regression_alignment_probe_late_mmr_max_episode: int = 12
+    # On low-vol uplift branches, allow a later checkpoint to rescue an early
+    # incumbent when base/alt/tail return structure stays close and tail PF
+    # remains healthy, even if validation q25/MMR are noisy.
+    anti_regression_alignment_probe_low_vol_tail_rescue_enabled: bool = True
+    anti_regression_alignment_probe_low_vol_tail_rescue_max_episode: int = 12
+    anti_regression_alignment_probe_low_vol_tail_rescue_base_return_slack_pct: float = 0.10
+    anti_regression_alignment_probe_low_vol_tail_rescue_alt_return_slack_pct: float = 0.10
+    anti_regression_alignment_probe_low_vol_tail_rescue_tail_return_slack_pct: float = 0.05
+    anti_regression_alignment_probe_low_vol_tail_rescue_min_tail_pf: float = 1.30
+    anti_regression_alignment_probe_low_vol_tail_rescue_positive_frac_slack: float = 0.10
+    # On high cost-gate branches, allow a later checkpoint with materially
+    # stronger tail PF/return to rescue an incumbent with only modest tail
+    # quality, even when validation q25 is slightly lower.
+    anti_regression_alignment_probe_high_cost_tail_rescue_enabled: bool = True
+    anti_regression_alignment_probe_high_cost_tail_rescue_min_costgate: float = 3.5
+    anti_regression_alignment_probe_high_cost_tail_rescue_max_episode: int = 12
+    anti_regression_alignment_probe_high_cost_tail_rescue_min_tail_pf: float = 1.60
+    anti_regression_alignment_probe_high_cost_tail_rescue_tail_pf_edge_min: float = 0.35
+    anti_regression_alignment_probe_high_cost_tail_rescue_tail_return_edge_min: float = 0.20
+    anti_regression_alignment_probe_high_cost_tail_rescue_forward_pf_min: float = 1.15
+    anti_regression_alignment_probe_high_cost_tail_rescue_base_pf_min: float = 1.25
+    anti_regression_alignment_probe_high_cost_tail_rescue_val_pf_q25_min: float = 1.05
+    anti_regression_alignment_probe_high_cost_tail_rescue_positive_frac_slack: float = 0.10
+    # On branches that rely on an absolute ATR floor, allow a later checkpoint
+    # with materially stronger base/alt structure and validation MMR to beat a
+    # weak incumbent even when the cheap probe slightly underestimates it.
+    anti_regression_alignment_probe_abs_atr_late_rescue_enabled: bool = True
+    anti_regression_alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute: float = 8.0
+    anti_regression_alignment_probe_abs_atr_late_rescue_max_costgate: float = 3.0
+    anti_regression_alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max: float = 1.0
+    anti_regression_alignment_probe_abs_atr_late_rescue_max_episode: int = 10
+    anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min: float = 0.25
+    anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min: float = 0.20
+    anti_regression_alignment_probe_abs_atr_late_rescue_base_return_edge_min: float = 0.25
+    anti_regression_alignment_probe_abs_atr_late_rescue_alt_return_edge_min: float = 0.25
+    anti_regression_alignment_probe_abs_atr_late_rescue_base_pf_min: float = 1.15
+    anti_regression_alignment_probe_abs_atr_late_rescue_alt_pf_min: float = 1.15
+    anti_regression_alignment_probe_abs_atr_late_rescue_forward_return_min: float = -0.60
+    anti_regression_alignment_probe_abs_atr_late_rescue_forward_pf_min: float = 0.75
+    anti_regression_alignment_probe_abs_atr_late_rescue_probe_return_slack_pct: float = 0.40
+    anti_regression_alignment_probe_abs_atr_late_rescue_probe_pf_slack: float = 0.10
+    anti_regression_alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min: float = 0.05
+    anti_regression_alignment_probe_abs_atr_late_rescue_positive_frac_slack: float = 0.10
+    # Keep one low-base/high-future candidate in the probe pool so regime-style
+    # recoveries like 8087 ep006 are still compared.
+    anti_regression_alignment_probe_future_divergence_anchor_enabled: bool = True
+    anti_regression_alignment_probe_future_divergence_composite_max: float = 0.0
+    anti_regression_alignment_probe_future_divergence_max_episode: int = 8
+    anti_regression_alignment_probe_future_divergence_max_candidates: int = 1
 
 
 @dataclass

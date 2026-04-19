@@ -431,7 +431,7 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
             active_swap_short = float(sym_cfg.get("short", active_swap_short))
 
     # Build common environment kwargs (all balance-invariant parameters)
-    env_kwargs = dict(
+    train_env_kwargs = dict(
         feature_columns=feature_columns,
         initial_balance=config.environment.initial_balance,
         spread=config.environment.spread,
@@ -453,6 +453,10 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
         trade_penalty=config.environment.trade_penalty,
         flip_penalty=config.environment.flip_penalty,
         min_atr_cost_ratio=config.environment.min_atr_cost_ratio,
+        min_atr_pips_absolute=config.environment.min_atr_pips_absolute,
+        min_atr_cost_ratio_low_vol_value=config.environment.min_atr_cost_ratio_low_vol_value,
+        min_atr_cost_ratio_low_vol_z_threshold=config.environment.min_atr_cost_ratio_low_vol_z_threshold,
+        min_atr_cost_ratio_low_vol_signal=config.environment.min_atr_cost_ratio_low_vol_signal,
         use_regime_filter=config.environment.use_regime_filter,
         regime_min_vol_z=config.environment.regime_min_vol_z,
         regime_align_trend=config.environment.regime_align_trend,
@@ -467,39 +471,55 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
         r_multiple_reward_clip=config.environment.r_multiple_reward_clip,
         fx_lookup=fx_lookup  # Dynamic pip value conversion
     )
+    eval_env_kwargs = dict(train_env_kwargs)
+    if config.environment.eval_min_atr_cost_ratio is not None:
+        eval_env_kwargs['min_atr_cost_ratio'] = config.environment.eval_min_atr_cost_ratio
+    if config.environment.eval_min_atr_pips_absolute is not None:
+        eval_env_kwargs['min_atr_pips_absolute'] = config.environment.eval_min_atr_pips_absolute
     
     print(f"\nEnvironment config:")
-    print(f"  Spread: {env_kwargs['spread']:.5f}")
-    print(f"  Commission: ${env_kwargs['commission']:.2f}")
-    print(f"  Slippage: {env_kwargs['slippage_pips']:.1f} pips")
-    if str(env_kwargs.get('swap_type', 'usd')).lower().startswith('point'):
+    print(f"  Spread: {train_env_kwargs['spread']:.5f}")
+    print(f"  Commission: ${train_env_kwargs['commission']:.2f}")
+    print(f"  Slippage: {train_env_kwargs['slippage_pips']:.1f} pips")
+    if str(train_env_kwargs.get('swap_type', 'usd')).lower().startswith('point'):
         print(f"  Swap type: points")
-        print(f"  Swap long/short: {env_kwargs['swap_long_usd_per_lot_night']:.2f} / {env_kwargs['swap_short_usd_per_lot_night']:.2f} points")
+        print(f"  Swap long/short: {train_env_kwargs['swap_long_usd_per_lot_night']:.2f} / {train_env_kwargs['swap_short_usd_per_lot_night']:.2f} points")
     else:
         print(f"  Swap type: USD/lot/night")
-        print(f"  Swap long/short: ${env_kwargs['swap_long_usd_per_lot_night']:.2f} / ${env_kwargs['swap_short_usd_per_lot_night']:.2f}")
-    print(f"  Swap rollover UTC: {env_kwargs['swap_rollover_hour_utc']:02d}:00 (triple weekday={env_kwargs['swap_triple_weekday']})")
+        print(f"  Swap long/short: ${train_env_kwargs['swap_long_usd_per_lot_night']:.2f} / ${train_env_kwargs['swap_short_usd_per_lot_night']:.2f}")
+    print(f"  Swap rollover UTC: {train_env_kwargs['swap_rollover_hour_utc']:02d}:00 (triple weekday={train_env_kwargs['swap_triple_weekday']})")
     print(f"  Leverage: 1:{config.risk.leverage}")
-    print(f"  Risk/trade: {env_kwargs['risk_per_trade']*100:.2f}%")
-    print(f"  ATR SL mult: {env_kwargs['atr_mult_sl']:.1f}")
-    print(f"  TP mult: {env_kwargs['tp_mult']:.1f}")
-    print(f"  Min hold: {env_kwargs['min_hold_bars']} bars")
-    print(f"  Cooldown: {env_kwargs['cooldown_bars']} bars")
-    print(f"  Max trades/ep: {env_kwargs['max_trades_per_episode']}")
-    print(f"  Disable MOVE_SL: {env_kwargs['disable_move_sl']}")
-    if env_kwargs.get('allowed_actions') is not None:
-        print(f"  Allowed actions: {env_kwargs['allowed_actions']}")
-    print(f"  Reward clip: {env_kwargs['reward_clip']}")
-    print(f"  Holding cost: {env_kwargs['holding_cost']}")
-    print(f"  Flip penalty: {env_kwargs['flip_penalty']}")
-    print(f"  Trade penalty: {env_kwargs['trade_penalty']}")
-    print(f"  Min ATR cost ratio: {env_kwargs['min_atr_cost_ratio']}")
-    print(f"  Regime filter: {env_kwargs['use_regime_filter']}")
-    print(f"  Regime min vol z: {env_kwargs['regime_min_vol_z']}")
-    print(f"  Regime align trend: {env_kwargs['regime_align_trend']}")
-    print(f"  Regime require trending: {env_kwargs['regime_require_trending']}")
-    print(f"  R-multiple reward weight: {env_kwargs['r_multiple_reward_weight']}")
-    print(f"  R-multiple reward clip: {env_kwargs['r_multiple_reward_clip']}")
+    print(f"  Risk/trade: {train_env_kwargs['risk_per_trade']*100:.2f}%")
+    print(f"  ATR SL mult: {train_env_kwargs['atr_mult_sl']:.1f}")
+    print(f"  TP mult: {train_env_kwargs['tp_mult']:.1f}")
+    print(f"  Min hold: {train_env_kwargs['min_hold_bars']} bars")
+    print(f"  Cooldown: {train_env_kwargs['cooldown_bars']} bars")
+    print(f"  Max trades/ep: {train_env_kwargs['max_trades_per_episode']}")
+    print(f"  Disable MOVE_SL: {train_env_kwargs['disable_move_sl']}")
+    if train_env_kwargs.get('allowed_actions') is not None:
+        print(f"  Allowed actions: {train_env_kwargs['allowed_actions']}")
+    print(f"  Reward clip: {train_env_kwargs['reward_clip']}")
+    print(f"  Holding cost: {train_env_kwargs['holding_cost']}")
+    print(f"  Flip penalty: {train_env_kwargs['flip_penalty']}")
+    print(f"  Trade penalty: {train_env_kwargs['trade_penalty']}")
+    print(f"  Train min ATR cost ratio: {train_env_kwargs['min_atr_cost_ratio']}")
+    if train_env_kwargs['min_atr_pips_absolute'] > 0:
+        print(f"  Train min ATR pips absolute: {train_env_kwargs['min_atr_pips_absolute']}")
+    if eval_env_kwargs['min_atr_cost_ratio'] != train_env_kwargs['min_atr_cost_ratio']:
+        print(f"  Eval min ATR cost ratio: {eval_env_kwargs['min_atr_cost_ratio']}")
+    if eval_env_kwargs['min_atr_pips_absolute'] != train_env_kwargs['min_atr_pips_absolute'] and eval_env_kwargs['min_atr_pips_absolute'] > 0:
+        print(f"  Eval min ATR pips absolute: {eval_env_kwargs['min_atr_pips_absolute']}")
+    if train_env_kwargs['min_atr_cost_ratio_low_vol_value'] > train_env_kwargs['min_atr_cost_ratio']:
+        print(
+            f"  Low-vol ATR cost ratio: {train_env_kwargs['min_atr_cost_ratio_low_vol_value']}"
+            f" ({train_env_kwargs['min_atr_cost_ratio_low_vol_signal']} <= {train_env_kwargs['min_atr_cost_ratio_low_vol_z_threshold']})"
+        )
+    print(f"  Regime filter: {train_env_kwargs['use_regime_filter']}")
+    print(f"  Regime min vol z: {train_env_kwargs['regime_min_vol_z']}")
+    print(f"  Regime align trend: {train_env_kwargs['regime_align_trend']}")
+    print(f"  Regime require trending: {train_env_kwargs['regime_require_trending']}")
+    print(f"  R-multiple reward weight: {train_env_kwargs['r_multiple_reward_weight']}")
+    print(f"  R-multiple reward clip: {train_env_kwargs['r_multiple_reward_clip']}")
     print(f"  Train random starts: {getattr(config.training, 'random_episode_start', True)}")
     
     # Create environments with data-specific overrides
@@ -509,7 +529,7 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
         max_steps=config.training.max_steps_per_episode,
         random_episode_start=getattr(config.training, 'random_episode_start', True),
         symbol=primary_pair,
-        **env_kwargs,
+        **train_env_kwargs,
     )
     val_env = ForexTradingEnv(
         data=val_data,
@@ -517,7 +537,7 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
         max_steps=config.training.max_steps_per_episode,
         random_episode_start=False,
         symbol=primary_pair,
-        **env_kwargs,
+        **eval_env_kwargs,
     )
     test_env = ForexTradingEnv(
         data=test_data,
@@ -525,7 +545,7 @@ def create_environments(train_data, val_data, test_data, feature_columns, scaler
         max_steps=config.training.max_steps_per_episode,
         random_episode_start=False,
         symbol=primary_pair,
-        **env_kwargs,
+        **eval_env_kwargs,
     )
     
     print(f"\nEnvironments created:")
@@ -930,7 +950,8 @@ def evaluate_agent(agent, test_env, config: Config):
             len(wf_results) >= config.fitness.test_walkforward_min_windows and
             median_spr >= config.fitness.test_walkforward_min_spr and
             median_pf >= config.fitness.test_walkforward_min_pf and
-            pos_frac >= config.fitness.test_walkforward_min_pos_frac
+            pos_frac >= config.fitness.test_walkforward_min_pos_frac and
+            test_return >= config.fitness.test_walkforward_min_return_pct
         )
         walkforward = {
             "windows": wf_results,
@@ -946,6 +967,7 @@ def evaluate_agent(agent, test_env, config: Config):
                 "min_spr": config.fitness.test_walkforward_min_spr,
                 "min_pf": config.fitness.test_walkforward_min_pf,
                 "min_positive_frac": config.fitness.test_walkforward_min_pos_frac,
+                "min_return_pct": config.fitness.test_walkforward_min_return_pct,
             },
         }
 
@@ -1130,6 +1152,18 @@ def main():
                         help='Override flip penalty')
     parser.add_argument('--min-atr-cost-ratio', type=float, default=None,
                         help='Gate trades unless ATR exceeds cost ratio (0 disables)')
+    parser.add_argument('--min-atr-pips-absolute', type=float, default=None,
+                        help='Gate trades unless ATR in pips exceeds this absolute floor (0 disables)')
+    parser.add_argument('--eval-min-atr-cost-ratio', type=float, default=None,
+                        help='Optional validation/test ATR-cost gate override (defaults to training gate)')
+    parser.add_argument('--eval-min-atr-pips-absolute', type=float, default=None,
+                        help='Optional validation/test absolute ATR floor override (defaults to training gate)')
+    parser.add_argument('--min-atr-cost-ratio-low-vol-value', type=float, default=None,
+                        help='Stronger ATR/cost gate to use when the chosen low-vol signal is low (0 disables)')
+    parser.add_argument('--min-atr-cost-ratio-low-vol-z-threshold', type=float, default=None,
+                        help='Trigger stronger ATR/cost gate when the chosen low-vol signal <= threshold')
+    parser.add_argument('--min-atr-cost-ratio-low-vol-signal', type=str, default=None,
+                        help='Feature name or alias to use for low-vol ATR/cost uplift (default: realized_vol_24h_z; aliases: realized_vol_max_z, realized_vol_min_z)')
     parser.add_argument('--disable-move-sl', dest='disable_move_sl', action='store_true',
                         help='Disable MOVE_SL_CLOSER action (simpler action space)')
     parser.add_argument('--enable-move-sl', dest='disable_move_sl', action='store_false',
@@ -1322,11 +1356,43 @@ def main():
                         help='Allow a temporal-bias challenger to trail incumbent probe PF by up to this amount')
     parser.add_argument('--anti-regression-alignment-probe-temporal-positive-frac-slack', type=float, default=None,
                         help='Allow a temporal-bias challenger to trail incumbent positive-fraction by up to this amount')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-mmr-slack', type=float, default=None,
+                        help='Allow a temporal-bias challenger to trail incumbent probe-side MMR by up to this amount')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-guard', dest='anti_regression_alignment_probe_temporal_q25_guard_enabled', action='store_true',
+                        help='Require temporal-bias challengers to stay close to incumbent validation q25 return/PF when the incumbent is already q25-robust')
+    parser.add_argument('--anti-regression-alignment-probe-no-temporal-q25-guard', dest='anti_regression_alignment_probe_temporal_q25_guard_enabled', action='store_false',
+                        help='Disable q25 guard for temporal-bias challengers')
+    parser.set_defaults(anti_regression_alignment_probe_temporal_q25_guard_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-return-slack', type=float, default=None,
+                        help='Allow a temporal-bias challenger to trail incumbent validation return-q25 by up to this many percentage points when q25 guard is active')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-pf-slack', type=float, default=None,
+                        help='Allow a temporal-bias challenger to trail incumbent validation PF-q25 by up to this amount when q25 guard is active')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback', dest='anti_regression_alignment_probe_temporal_q25_fallback_enabled', action='store_true',
+                        help='If the strongest temporal challenger fails q25 guard, allow a nearby later temporal candidate with positive q25 stats and materially stronger validation PF/probe MMR')
+    parser.add_argument('--anti-regression-alignment-probe-no-temporal-q25-fallback', dest='anti_regression_alignment_probe_temporal_q25_fallback_enabled', action='store_false',
+                        help='Disable the temporal q25 fallback for nearby later candidates')
+    parser.set_defaults(anti_regression_alignment_probe_temporal_q25_fallback_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback-return-slack-pct', type=float, default=None,
+                        help='Allow a temporal q25-fallback challenger to trail incumbent probe return by up to this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback-pf-slack', type=float, default=None,
+                        help='Allow a temporal q25-fallback challenger to trail incumbent probe PF by up to this amount')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback-probe-mmr-edge-min', type=float, default=None,
+                        help='Required probe-side MMR edge for temporal q25-fallback challengers')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback-val-pf-edge-min', type=float, default=None,
+                        help='Required validation PF edge for temporal q25-fallback challengers')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback-min-val-return-q25', type=float, default=None,
+                        help='Minimum validation return-q25 required for temporal q25-fallback challengers')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-q25-fallback-min-val-pf-q25', type=float, default=None,
+                        help='Minimum validation PF-q25 required for temporal q25-fallback challengers')
     parser.add_argument('--anti-regression-alignment-probe-temporal-require-forward-profit', dest='anti_regression_alignment_probe_temporal_require_forward_profit', action='store_true',
                         help='Require temporal-bias challengers to keep positive future/tail return and PF')
     parser.add_argument('--anti-regression-alignment-probe-temporal-allow-forward-loss', dest='anti_regression_alignment_probe_temporal_require_forward_profit', action='store_false',
                         help='Allow temporal-bias challengers even when future/tail return or PF is weak')
     parser.set_defaults(anti_regression_alignment_probe_temporal_require_forward_profit=None)
+    parser.add_argument('--anti-regression-alignment-probe-temporal-dominance-return-edge-min', type=float, default=None,
+                        help='Let a slightly later temporal candidate beat the earliest one only when probe return improves by at least this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-temporal-dominance-pf-edge-min', type=float, default=None,
+                        help='Let a slightly later temporal candidate beat the earliest one only when probe PF improves by at least this amount')
     parser.add_argument('--anti-regression-alignment-probe-early-mmr-rescue', dest='anti_regression_alignment_probe_early_mmr_rescue_enabled', action='store_true',
                         help='Allow ep001/ep002-style rescue only when validation-side MMR is materially stronger than the incumbent')
     parser.add_argument('--anti-regression-alignment-probe-no-early-mmr-rescue', dest='anti_regression_alignment_probe_early_mmr_rescue_enabled', action='store_false',
@@ -1336,6 +1402,158 @@ def main():
                         help='Minimum validation-side MMR required before ep001/ep002-style rescue is considered')
     parser.add_argument('--anti-regression-alignment-probe-early-mmr-edge-min', type=float, default=None,
                         help='Required validation-side MMR edge over incumbent before ep001/ep002-style rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-q25-rescue', dest='anti_regression_alignment_probe_q25_rescue_enabled', action='store_true',
+                        help='Allow an earlier checkpoint to rescue a fragile incumbent when validation lower-quartile return/PF are materially better')
+    parser.add_argument('--anti-regression-alignment-probe-no-q25-rescue', dest='anti_regression_alignment_probe_q25_rescue_enabled', action='store_false',
+                        help='Disable validation lower-quartile rescue for fragile incumbents')
+    parser.set_defaults(anti_regression_alignment_probe_q25_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-q25-incumbent-return-q25-max', type=float, default=None,
+                        help='Maximum incumbent validation return-q25 allowed before q25 rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-q25-incumbent-pf-q25-max', type=float, default=None,
+                        help='Maximum incumbent validation PF-q25 allowed before q25 rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-q25-return-q25-edge-min', type=float, default=None,
+                        help='Required validation return-q25 edge for q25 rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-q25-pf-q25-edge-min', type=float, default=None,
+                        help='Required validation PF-q25 edge for q25 rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-q25-max-episode', type=int, default=None,
+                        help='Latest episode eligible for q25 rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-rescue', dest='anti_regression_alignment_probe_pf_mmr_rescue_enabled', action='store_true',
+                        help='Allow a later candidate to rescue a fragile incumbent when PF structure and probe-side MMR are materially stronger')
+    parser.add_argument('--anti-regression-alignment-probe-no-pf-mmr-rescue', dest='anti_regression_alignment_probe_pf_mmr_rescue_enabled', action='store_false',
+                        help='Disable PF/MMR rescue for fragile incumbents')
+    parser.set_defaults(anti_regression_alignment_probe_pf_mmr_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-incumbent-val-mmr-max', type=float, default=None,
+                        help='Maximum incumbent validation-side MMR allowed before PF/MMR rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-probe-mmr-edge-min', type=float, default=None,
+                        help='Required probe-side MMR edge for PF/MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-base-pf-edge-min', type=float, default=None,
+                        help='Required base PF edge for PF/MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-forward-pf-edge-min', type=float, default=None,
+                        help='Required forward PF edge for PF/MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-positive-frac-slack', type=float, default=None,
+                        help='Allowed shortfall versus incumbent probe positive-fraction for PF/MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-pf-mmr-max-episode', type=int, default=None,
+                        help='Latest episode eligible for PF/MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-val-rescue', dest='anti_regression_alignment_probe_late_val_rescue_enabled', action='store_true',
+                        help='Allow a later candidate to rescue a validation-fragile incumbent when validation PF/MMR are materially stronger')
+    parser.add_argument('--anti-regression-alignment-probe-no-late-val-rescue', dest='anti_regression_alignment_probe_late_val_rescue_enabled', action='store_false',
+                        help='Disable later validation-side PF/MMR rescue')
+    parser.set_defaults(anti_regression_alignment_probe_late_val_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-late-val-incumbent-val-mmr-max', type=float, default=None,
+                        help='Maximum incumbent validation-side MMR allowed before later validation rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-late-val-challenger-val-mmr-min', type=float, default=None,
+                        help='Minimum challenger validation-side MMR required for later validation rescue')
+    parser.add_argument('--anti-regression-alignment-probe-late-val-val-pf-edge-min', type=float, default=None,
+                        help='Required validation PF edge for later validation rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-val-tail-pf-edge-min', type=float, default=None,
+                        help='Required tail PF edge for later validation rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-val-positive-frac-slack', type=float, default=None,
+                        help='Allowed shortfall versus incumbent probe positive-fraction for later validation rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-val-max-episode', type=int, default=None,
+                        help='Latest episode eligible for later validation rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-mmr-rescue', dest='anti_regression_alignment_probe_late_mmr_rescue_enabled', action='store_true',
+                        help='Allow a later candidate to rescue a weak-validation-PF incumbent when validation MMR is materially stronger and base/forward structure stays positive')
+    parser.add_argument('--anti-regression-alignment-probe-no-late-mmr-rescue', dest='anti_regression_alignment_probe_late_mmr_rescue_enabled', action='store_false',
+                        help='Disable later validation-MMR rescue for weak-PF incumbents')
+    parser.set_defaults(anti_regression_alignment_probe_late_mmr_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-late-mmr-incumbent-val-pf-max', type=float, default=None,
+                        help='Maximum incumbent validation PF allowed before later validation-MMR rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-late-mmr-challenger-val-mmr-edge-min', type=float, default=None,
+                        help='Required validation-side MMR edge over incumbent for later validation-MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-mmr-challenger-forward-pf-min', type=float, default=None,
+                        help='Minimum challenger forward PF required for later validation-MMR rescue')
+    parser.add_argument('--anti-regression-alignment-probe-late-mmr-positive-frac-slack', type=float, default=None,
+                        help='Allowed shortfall versus incumbent probe positive-fraction for later validation-MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-late-mmr-max-episode', type=int, default=None,
+                        help='Latest episode eligible for later validation-MMR rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue', dest='anti_regression_alignment_probe_low_vol_tail_rescue_enabled', action='store_true',
+                        help='On low-vol uplift branches, allow a later checkpoint to rescue an early incumbent when base/alt/tail return structure stays close and tail PF remains healthy')
+    parser.add_argument('--anti-regression-alignment-probe-no-low-vol-tail-rescue', dest='anti_regression_alignment_probe_low_vol_tail_rescue_enabled', action='store_false',
+                        help='Disable the low-vol late-tail rescue path')
+    parser.set_defaults(anti_regression_alignment_probe_low_vol_tail_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue-max-episode', type=int, default=None,
+                        help='Latest episode eligible for low-vol late-tail rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue-base-return-slack-pct', type=float, default=None,
+                        help='Allow a low-vol late-tail rescue challenger to trail incumbent base return by up to this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue-alt-return-slack-pct', type=float, default=None,
+                        help='Allow a low-vol late-tail rescue challenger to trail incumbent alt return by up to this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue-tail-return-slack-pct', type=float, default=None,
+                        help='Allow a low-vol late-tail rescue challenger to trail incumbent tail return by up to this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue-min-tail-pf', type=float, default=None,
+                        help='Minimum challenger tail PF required for low-vol late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-low-vol-tail-rescue-positive-frac-slack', type=float, default=None,
+                        help='Allowed shortfall versus incumbent probe positive-fraction for low-vol late-tail rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue', dest='anti_regression_alignment_probe_high_cost_tail_rescue_enabled', action='store_true',
+                        help='On high cost-gate branches, allow a later checkpoint with materially stronger tail PF/return to rescue a modest-tail incumbent')
+    parser.add_argument('--anti-regression-alignment-probe-no-high-cost-tail-rescue', dest='anti_regression_alignment_probe_high_cost_tail_rescue_enabled', action='store_false',
+                        help='Disable the high-cost late-tail rescue path')
+    parser.set_defaults(anti_regression_alignment_probe_high_cost_tail_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-min-costgate', type=float, default=None,
+                        help='Minimum base ATR/cost gate required before high-cost late-tail rescue is active')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-max-episode', type=int, default=None,
+                        help='Latest episode eligible for high-cost late-tail rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-min-tail-pf', type=float, default=None,
+                        help='Minimum challenger tail PF required for high-cost late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-tail-pf-edge-min', type=float, default=None,
+                        help='Minimum challenger tail PF edge over incumbent for high-cost late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-tail-return-edge-min', type=float, default=None,
+                        help='Minimum challenger tail return edge over incumbent for high-cost late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-forward-pf-min', type=float, default=None,
+                        help='Minimum challenger forward PF required for high-cost late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-base-pf-min', type=float, default=None,
+                        help='Minimum challenger base PF required for high-cost late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-val-pf-q25-min', type=float, default=None,
+                        help='Minimum challenger validation PF q25 required for high-cost late-tail rescue')
+    parser.add_argument('--anti-regression-alignment-probe-high-cost-tail-rescue-positive-frac-slack', type=float, default=None,
+                        help='Allowed shortfall versus incumbent probe positive-fraction for high-cost late-tail rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue', dest='anti_regression_alignment_probe_abs_atr_late_rescue_enabled', action='store_true',
+                        help='On absolute-ATR-floor branches, allow a later candidate with materially stronger base/alt structure and validation MMR to rescue a weak incumbent')
+    parser.add_argument('--anti-regression-alignment-probe-no-abs-atr-late-rescue', dest='anti_regression_alignment_probe_abs_atr_late_rescue_enabled', action='store_false',
+                        help='Disable the absolute-ATR late rescue path')
+    parser.set_defaults(anti_regression_alignment_probe_abs_atr_late_rescue_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-min-atr-pips-absolute', type=float, default=None,
+                        help='Minimum absolute ATR floor required before the absolute-ATR late rescue is active')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-max-costgate', type=float, default=None,
+                        help='Maximum base ATR/cost gate allowed before the absolute-ATR late rescue is disabled')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-incumbent-val-pf-max', type=float, default=None,
+                        help='Maximum incumbent validation PF allowed before absolute-ATR late rescue is considered')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-max-episode', type=int, default=None,
+                        help='Latest episode eligible for absolute-ATR late rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-challenger-val-mmr-min', type=float, default=None,
+                        help='Minimum challenger validation MMR required for absolute-ATR late rescue')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-challenger-val-mmr-edge-min', type=float, default=None,
+                        help='Required validation MMR edge over incumbent for absolute-ATR late rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-base-return-edge-min', type=float, default=None,
+                        help='Required base return edge over incumbent for absolute-ATR late rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-alt-return-edge-min', type=float, default=None,
+                        help='Required alternate-window return edge over incumbent for absolute-ATR late rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-base-pf-min', type=float, default=None,
+                        help='Minimum challenger base PF required for absolute-ATR late rescue')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-alt-pf-min', type=float, default=None,
+                        help='Minimum challenger alternate-window PF required for absolute-ATR late rescue')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-forward-return-min', type=float, default=None,
+                        help='Minimum challenger forward return allowed for absolute-ATR late rescue')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-forward-pf-min', type=float, default=None,
+                        help='Minimum challenger forward PF required for absolute-ATR late rescue')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-probe-return-slack-pct', type=float, default=None,
+                        help='Allow an absolute-ATR late rescue challenger to trail incumbent probe return by up to this many percentage points')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-probe-pf-slack', type=float, default=None,
+                        help='Allow an absolute-ATR late rescue challenger to trail incumbent probe PF by up to this amount')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-probe-mmr-edge-min', type=float, default=None,
+                        help='Required probe-side MMR edge over incumbent for absolute-ATR late rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-abs-atr-late-rescue-positive-frac-slack', type=float, default=None,
+                        help='Allowed shortfall versus incumbent probe positive-fraction for absolute-ATR late rescue challengers')
+    parser.add_argument('--anti-regression-alignment-probe-future-divergence-anchor', dest='anti_regression_alignment_probe_future_divergence_anchor_enabled', action='store_true',
+                        help='Include one low-base/high-future checkpoint in the probe pool')
+    parser.add_argument('--anti-regression-alignment-probe-no-future-divergence-anchor', dest='anti_regression_alignment_probe_future_divergence_anchor_enabled', action='store_false',
+                        help='Disable low-base/high-future probe anchors')
+    parser.set_defaults(anti_regression_alignment_probe_future_divergence_anchor_enabled=None)
+    parser.add_argument('--anti-regression-alignment-probe-future-divergence-composite-max', type=float, default=None,
+                        help='Maximum composite score allowed for low-base/high-future probe anchors')
+    parser.add_argument('--anti-regression-alignment-probe-future-divergence-max-episode', type=int, default=None,
+                        help='Latest episode eligible for low-base/high-future probe anchors')
+    parser.add_argument('--anti-regression-alignment-probe-future-divergence-max-candidates', type=int, default=None,
+                        help='Maximum number of low-base/high-future probe anchors to add')
     
     args = parser.parse_args()
     
@@ -1403,6 +1621,18 @@ def main():
         config.environment.flip_penalty = args.flip_penalty
     if args.min_atr_cost_ratio is not None:
         config.environment.min_atr_cost_ratio = args.min_atr_cost_ratio
+    if args.min_atr_pips_absolute is not None:
+        config.environment.min_atr_pips_absolute = args.min_atr_pips_absolute
+    if args.eval_min_atr_cost_ratio is not None:
+        config.environment.eval_min_atr_cost_ratio = args.eval_min_atr_cost_ratio
+    if args.eval_min_atr_pips_absolute is not None:
+        config.environment.eval_min_atr_pips_absolute = args.eval_min_atr_pips_absolute
+    if args.min_atr_cost_ratio_low_vol_value is not None:
+        config.environment.min_atr_cost_ratio_low_vol_value = args.min_atr_cost_ratio_low_vol_value
+    if args.min_atr_cost_ratio_low_vol_z_threshold is not None:
+        config.environment.min_atr_cost_ratio_low_vol_z_threshold = args.min_atr_cost_ratio_low_vol_z_threshold
+    if args.min_atr_cost_ratio_low_vol_signal is not None:
+        config.environment.min_atr_cost_ratio_low_vol_signal = args.min_atr_cost_ratio_low_vol_signal
     if args.disable_move_sl is not None:
         config.environment.disable_move_sl = args.disable_move_sl
     if args.allow_actions is not None:
@@ -1597,9 +1827,65 @@ def main():
             0.0,
             float(args.anti_regression_alignment_probe_temporal_positive_frac_slack),
         )
+    if args.anti_regression_alignment_probe_temporal_mmr_slack is not None:
+        config.training.anti_regression_alignment_probe_temporal_mmr_slack = float(
+            args.anti_regression_alignment_probe_temporal_mmr_slack
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_guard_enabled is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_guard_enabled = bool(
+            args.anti_regression_alignment_probe_temporal_q25_guard_enabled
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_return_slack is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_return_slack = float(
+            args.anti_regression_alignment_probe_temporal_q25_return_slack
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_pf_slack is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_pf_slack = float(
+            args.anti_regression_alignment_probe_temporal_q25_pf_slack
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_enabled is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_enabled = bool(
+            args.anti_regression_alignment_probe_temporal_q25_fallback_enabled
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_return_slack_pct is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_return_slack_pct = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_q25_fallback_return_slack_pct),
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_pf_slack is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_pf_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_q25_fallback_pf_slack),
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_probe_mmr_edge_min is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_probe_mmr_edge_min = float(
+            args.anti_regression_alignment_probe_temporal_q25_fallback_probe_mmr_edge_min
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_val_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_val_pf_edge_min = float(
+            args.anti_regression_alignment_probe_temporal_q25_fallback_val_pf_edge_min
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_min_val_return_q25 is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_min_val_return_q25 = float(
+            args.anti_regression_alignment_probe_temporal_q25_fallback_min_val_return_q25
+        )
+    if args.anti_regression_alignment_probe_temporal_q25_fallback_min_val_pf_q25 is not None:
+        config.training.anti_regression_alignment_probe_temporal_q25_fallback_min_val_pf_q25 = float(
+            args.anti_regression_alignment_probe_temporal_q25_fallback_min_val_pf_q25
+        )
     if args.anti_regression_alignment_probe_temporal_require_forward_profit is not None:
         config.training.anti_regression_alignment_probe_temporal_require_forward_profit = bool(
             args.anti_regression_alignment_probe_temporal_require_forward_profit
+        )
+    if args.anti_regression_alignment_probe_temporal_dominance_return_edge_min is not None:
+        config.training.anti_regression_alignment_probe_temporal_dominance_return_edge_min = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_dominance_return_edge_min),
+        )
+    if args.anti_regression_alignment_probe_temporal_dominance_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_temporal_dominance_pf_edge_min = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_temporal_dominance_pf_edge_min),
         )
     if args.anti_regression_alignment_probe_early_mmr_rescue_enabled is not None:
         config.training.anti_regression_alignment_probe_early_mmr_rescue_enabled = bool(
@@ -1612,6 +1898,280 @@ def main():
     if args.anti_regression_alignment_probe_early_mmr_edge_min is not None:
         config.training.anti_regression_alignment_probe_early_mmr_edge_min = float(
             args.anti_regression_alignment_probe_early_mmr_edge_min
+        )
+    if args.anti_regression_alignment_probe_q25_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_q25_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_q25_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_q25_incumbent_return_q25_max is not None:
+        config.training.anti_regression_alignment_probe_q25_incumbent_return_q25_max = float(
+            args.anti_regression_alignment_probe_q25_incumbent_return_q25_max
+        )
+    if args.anti_regression_alignment_probe_q25_incumbent_pf_q25_max is not None:
+        config.training.anti_regression_alignment_probe_q25_incumbent_pf_q25_max = float(
+            args.anti_regression_alignment_probe_q25_incumbent_pf_q25_max
+        )
+    if args.anti_regression_alignment_probe_q25_return_q25_edge_min is not None:
+        config.training.anti_regression_alignment_probe_q25_return_q25_edge_min = float(
+            args.anti_regression_alignment_probe_q25_return_q25_edge_min
+        )
+    if args.anti_regression_alignment_probe_q25_pf_q25_edge_min is not None:
+        config.training.anti_regression_alignment_probe_q25_pf_q25_edge_min = float(
+            args.anti_regression_alignment_probe_q25_pf_q25_edge_min
+        )
+    if args.anti_regression_alignment_probe_q25_max_episode is not None:
+        config.training.anti_regression_alignment_probe_q25_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_q25_max_episode),
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_pf_mmr_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_incumbent_val_mmr_max is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_incumbent_val_mmr_max = float(
+            args.anti_regression_alignment_probe_pf_mmr_incumbent_val_mmr_max
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_probe_mmr_edge_min is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_probe_mmr_edge_min = float(
+            args.anti_regression_alignment_probe_pf_mmr_probe_mmr_edge_min
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_base_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_base_pf_edge_min = float(
+            args.anti_regression_alignment_probe_pf_mmr_base_pf_edge_min
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_forward_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_forward_pf_edge_min = float(
+            args.anti_regression_alignment_probe_pf_mmr_forward_pf_edge_min
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_positive_frac_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_pf_mmr_positive_frac_slack),
+        )
+    if args.anti_regression_alignment_probe_pf_mmr_max_episode is not None:
+        config.training.anti_regression_alignment_probe_pf_mmr_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_pf_mmr_max_episode),
+        )
+    if args.anti_regression_alignment_probe_late_val_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_late_val_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_late_val_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_late_val_incumbent_val_mmr_max is not None:
+        config.training.anti_regression_alignment_probe_late_val_incumbent_val_mmr_max = float(
+            args.anti_regression_alignment_probe_late_val_incumbent_val_mmr_max
+        )
+    if args.anti_regression_alignment_probe_late_val_challenger_val_mmr_min is not None:
+        config.training.anti_regression_alignment_probe_late_val_challenger_val_mmr_min = float(
+            args.anti_regression_alignment_probe_late_val_challenger_val_mmr_min
+        )
+    if args.anti_regression_alignment_probe_late_val_val_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_late_val_val_pf_edge_min = float(
+            args.anti_regression_alignment_probe_late_val_val_pf_edge_min
+        )
+    if args.anti_regression_alignment_probe_late_val_tail_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_late_val_tail_pf_edge_min = float(
+            args.anti_regression_alignment_probe_late_val_tail_pf_edge_min
+        )
+    if args.anti_regression_alignment_probe_late_val_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_late_val_positive_frac_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_late_val_positive_frac_slack),
+        )
+    if args.anti_regression_alignment_probe_late_val_max_episode is not None:
+        config.training.anti_regression_alignment_probe_late_val_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_late_val_max_episode),
+        )
+    if args.anti_regression_alignment_probe_late_mmr_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_late_mmr_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_late_mmr_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_late_mmr_incumbent_val_pf_max is not None:
+        config.training.anti_regression_alignment_probe_late_mmr_incumbent_val_pf_max = float(
+            args.anti_regression_alignment_probe_late_mmr_incumbent_val_pf_max
+        )
+    if args.anti_regression_alignment_probe_late_mmr_challenger_val_mmr_edge_min is not None:
+        config.training.anti_regression_alignment_probe_late_mmr_challenger_val_mmr_edge_min = float(
+            args.anti_regression_alignment_probe_late_mmr_challenger_val_mmr_edge_min
+        )
+    if args.anti_regression_alignment_probe_late_mmr_challenger_forward_pf_min is not None:
+        config.training.anti_regression_alignment_probe_late_mmr_challenger_forward_pf_min = float(
+            args.anti_regression_alignment_probe_late_mmr_challenger_forward_pf_min
+        )
+    if args.anti_regression_alignment_probe_late_mmr_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_late_mmr_positive_frac_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_late_mmr_positive_frac_slack),
+        )
+    if args.anti_regression_alignment_probe_late_mmr_max_episode is not None:
+        config.training.anti_regression_alignment_probe_late_mmr_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_late_mmr_max_episode),
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_low_vol_tail_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_max_episode is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_low_vol_tail_rescue_max_episode),
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_base_return_slack_pct is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_base_return_slack_pct = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_low_vol_tail_rescue_base_return_slack_pct),
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_alt_return_slack_pct is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_alt_return_slack_pct = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_low_vol_tail_rescue_alt_return_slack_pct),
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_tail_return_slack_pct is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_tail_return_slack_pct = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_low_vol_tail_rescue_tail_return_slack_pct),
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_min_tail_pf is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_min_tail_pf = float(
+            args.anti_regression_alignment_probe_low_vol_tail_rescue_min_tail_pf
+        )
+    if args.anti_regression_alignment_probe_low_vol_tail_rescue_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_low_vol_tail_rescue_positive_frac_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_low_vol_tail_rescue_positive_frac_slack),
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_min_costgate is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_min_costgate = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_high_cost_tail_rescue_min_costgate),
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_max_episode is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_high_cost_tail_rescue_max_episode),
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_min_tail_pf is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_min_tail_pf = float(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_min_tail_pf
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_tail_pf_edge_min is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_tail_pf_edge_min = float(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_tail_pf_edge_min
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_tail_return_edge_min is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_tail_return_edge_min = float(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_tail_return_edge_min
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_forward_pf_min is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_forward_pf_min = float(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_forward_pf_min
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_base_pf_min is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_base_pf_min = float(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_base_pf_min
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_val_pf_q25_min is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_val_pf_q25_min = float(
+            args.anti_regression_alignment_probe_high_cost_tail_rescue_val_pf_q25_min
+        )
+    if args.anti_regression_alignment_probe_high_cost_tail_rescue_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_high_cost_tail_rescue_positive_frac_slack = max(
+            0.0,
+            float(args.anti_regression_alignment_probe_high_cost_tail_rescue_positive_frac_slack),
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_enabled is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_enabled = bool(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_enabled
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_min_atr_pips_absolute
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_max_costgate is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_max_costgate = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_max_costgate
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_incumbent_val_pf_max
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_max_episode is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_abs_atr_late_rescue_max_episode),
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_challenger_val_mmr_edge_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_base_return_edge_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_base_return_edge_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_base_return_edge_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_alt_return_edge_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_alt_return_edge_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_alt_return_edge_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_base_pf_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_base_pf_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_base_pf_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_alt_pf_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_alt_pf_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_alt_pf_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_forward_return_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_forward_return_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_forward_return_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_forward_pf_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_forward_pf_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_forward_pf_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_probe_return_slack_pct is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_probe_return_slack_pct = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_probe_return_slack_pct
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_probe_pf_slack is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_probe_pf_slack = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_probe_pf_slack
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_probe_mmr_edge_min
+        )
+    if args.anti_regression_alignment_probe_abs_atr_late_rescue_positive_frac_slack is not None:
+        config.training.anti_regression_alignment_probe_abs_atr_late_rescue_positive_frac_slack = float(
+            args.anti_regression_alignment_probe_abs_atr_late_rescue_positive_frac_slack
+        )
+    if args.anti_regression_alignment_probe_future_divergence_anchor_enabled is not None:
+        config.training.anti_regression_alignment_probe_future_divergence_anchor_enabled = bool(
+            args.anti_regression_alignment_probe_future_divergence_anchor_enabled
+        )
+    if args.anti_regression_alignment_probe_future_divergence_composite_max is not None:
+        config.training.anti_regression_alignment_probe_future_divergence_composite_max = float(
+            args.anti_regression_alignment_probe_future_divergence_composite_max
+        )
+    if args.anti_regression_alignment_probe_future_divergence_max_episode is not None:
+        config.training.anti_regression_alignment_probe_future_divergence_max_episode = max(
+            1,
+            int(args.anti_regression_alignment_probe_future_divergence_max_episode),
+        )
+    if args.anti_regression_alignment_probe_future_divergence_max_candidates is not None:
+        config.training.anti_regression_alignment_probe_future_divergence_max_candidates = max(
+            0,
+            int(args.anti_regression_alignment_probe_future_divergence_max_candidates),
         )
     
     # Override episodes if specified

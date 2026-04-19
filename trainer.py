@@ -5396,6 +5396,7 @@ class Trainer:
                             "walkforward_min_spr": float(self.config.fitness.test_walkforward_min_spr),
                             "walkforward_min_pf": float(self.config.fitness.test_walkforward_min_pf),
                             "walkforward_min_positive_frac": float(self.config.fitness.test_walkforward_min_pos_frac),
+                            "walkforward_min_return_pct": float(self.config.fitness.test_walkforward_min_return_pct),
                         },
                         "incumbent_filename": incumbent_name,
                         "challenger_filename": challenger_name,
