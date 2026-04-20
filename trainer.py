@@ -1547,7 +1547,7 @@ class Trainer:
         if alignment_probe_stride_frac is not None:
             alignment_probe_stride_frac = max(0.01, float(alignment_probe_stride_frac))
         alignment_probe_use_all_windows = bool(
-            getattr(training_cfg, "anti_regression_alignment_probe_use_all_windows", True)
+            getattr(training_cfg, "anti_regression_alignment_probe_use_all_windows", False)
         )
         alignment_probe_return_edge_min = float(
             getattr(training_cfg, "anti_regression_alignment_probe_return_edge_min", 0.10)
@@ -3309,9 +3309,15 @@ class Trainer:
                 al_rng_state = np.random.get_state()
                 al_py_rng_state = random.getstate()
                 al_orig_val_jitter_draws = getattr(self.config, "VAL_JITTER_DRAWS", None)
+                al_orig_val_min_k = getattr(self.config, "VAL_MIN_K", None)
+                al_orig_val_max_k = getattr(self.config, "VAL_MAX_K", None)
                 try:
                     # Keep probes deterministic and cheap; test evaluation has no jitter averaging.
                     setattr(self.config, "VAL_JITTER_DRAWS", 1)
+                    # Use ~50 windows for probes: enough for reliable ranking, 4x faster than 199.
+                    if not alignment_probe_use_all_windows:
+                        setattr(self.config, "VAL_MIN_K", 40)
+                        setattr(self.config, "VAL_MAX_K", 50)
 
                     total_probes = len(probe_candidates)
                     for idx, candidate in enumerate(probe_candidates):
@@ -3375,6 +3381,10 @@ class Trainer:
                     np.random.set_state(al_rng_state)
                     random.setstate(al_py_rng_state)
                     setattr(self.config, "VAL_JITTER_DRAWS", al_orig_val_jitter_draws)
+                    if al_orig_val_min_k is not None:
+                        setattr(self.config, "VAL_MIN_K", al_orig_val_min_k)
+                    if al_orig_val_max_k is not None:
+                        setattr(self.config, "VAL_MAX_K", al_orig_val_max_k)
 
                 ranked_probe_names = sorted(
                     probe_results.keys(),
